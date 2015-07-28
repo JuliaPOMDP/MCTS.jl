@@ -1,6 +1,10 @@
 The MCTS.jl package is licensed under the MIT "Expat" License:
 
+<<<<<<< HEAD
 > Copyright (c) 2015: Maxim Egorov.
+=======
+> Copyright (c) 2015: David Giongco.
+>>>>>>> 3ec63a1616a7484be64da5ce0a8d5b3d4ab2ec37
 >
 > Permission is hereby granted, free of charge, to any person obtaining
 > a copy of this software and associated documentation files (the
