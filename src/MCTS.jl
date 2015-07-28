@@ -1,10 +1,5 @@
 module MCTS
 
-<<<<<<< HEAD
-# package code goes here
-
-end # module
-=======
 using POMDPs
 import POMDPs: Solver, solve
 
@@ -95,19 +90,17 @@ function simulate(policy::MCTSPolicy, state::State)
         return rollout(state::State, depth::Depth)
     end 
 
-        cS = tree[state]
-        i = indmax(cS.Q + exploration_constant * real(sqrt(complex(log(sum(cS.n))/cS.n))))
-        a = policy.action_map[i]
-        transition!(depth, pomdp, state, a)
-        s_prime = rand(d)
-        reward = reward(pomdp, state, a)
-        q = reward + discount_factor * simulate(s_prime, depth - 1)
-        cS.n[i] += 1
-        cS.q[i] += ((q - cS.q[i]) / (cS.n[i]))
-        return q
-    end
-
-
+    cS = tree[state]
+    i = indmax(cS.Q + exploration_constant * real(sqrt(complex(log(sum(cS.n))/cS.n))))
+    a = policy.action_map[i]
+    transition!(depth, pomdp, state, a)
+    s_prime = rand(d)
+    reward = reward(pomdp, state, a)
+    q = reward + discount_factor * simulate(s_prime, depth - 1)
+    cS.n[i] += 1
+    cS.q[i] += ((q - cS.q[i]) / (cS.n[i]))
+    return q
+end
 
 function rollout(state::State, depth::Depth, policy::MCTSPolicy)
     pomdp = policy.pomdp
@@ -117,18 +110,15 @@ function rollout(state::State, depth::Depth, policy::MCTSPolicy)
     if depth == 0
         return 0
     end
-        action_space = actions(pomdp, state)
-        actions!(action_space, pomdp, state)
-        a = rand(action_space)
+    action_space = actions(pomdp, state)
+    actions!(action_space, pomdp, state)
+    a = rand(action_space)
 
-        transition!(depth, pomdp, state, a)
-        s_prime = rand(d)
-        reward = reward(pomdp, state, a)
+    transition!(depth, pomdp, state, a)
+    s_prime = rand(d)
+    reward = reward(pomdp, state, a)
 
-        return (reward + (discount_factor) * rollout(s_prime, depth - 1))
+    return (reward + (discount_factor) * rollout(s_prime, depth - 1))
 end 
 
-
-#module
-end 
->>>>>>> 3ec63a1616a7484be64da5ce0a8d5b3d4ab2ec37
+end # module
