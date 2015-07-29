@@ -1,4 +1,3 @@
-
 type StateNode
     n::Array{Int64,1}
     Q::Array{Reward,1}
