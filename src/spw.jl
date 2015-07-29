@@ -25,6 +25,7 @@ type MCTSPolicy <: Policy
 	mcts::MCTSSolver
 	pomdp::POMDP
     action_map::Vector{Action}
+    distribution::AbstractDistribution
 end
 
 function MCTSPolicy(mcts::MCTSSolver, pomdp::POMDP)
@@ -33,7 +34,8 @@ function MCTSPolicy(mcts::MCTSSolver, pomdp::POMDP)
     for a in domain(space)
         push!(am, a)
     end
-    return MCTSPolicy(mcts, pomdp, am)
+    d = create_transition(pomdp)
+    return MCTSPolicy(mcts, pomdp, am, d)
 end
 
 #######################
@@ -41,24 +43,23 @@ end
 
 function action(policy::MCTSPolicy, state::State)
     n_iterations = policy.mcts.n_interations
+    depth = policy.mcts.depth
 
     for n = 1:n_iterations
-        simulate(state, depth)
+        simulate(policy, state, depth)
     end
 
     return indmax(policy.mcts.tree[state].Q)
 end
 
-function simulate(policy::MCTSPolicy, state::State)
+function simulate(policy::MCTSPolicy, state::State, depth::Int64)
     pomdp = policy.pomdp
     na = n_actions(pomdp)
 
     n_iterations = policy.mcts.n_interations
-    depth = policy.mcts.depth
     discount_factor = policy.mcts.discount_factor
     tree = policy.mcts.tree
     exploration_constant = policy.mcts.exploration_constant
-    matrix = policy.mcts.M 
 
     if depth == 0
         return 0
@@ -66,38 +67,38 @@ function simulate(policy::MCTSPolicy, state::State)
 
     if !haskey(tree, state)
         tree[state] = StateNode(na)
-        return rollout(state::State, depth::Depth)
+        return rollout(state, depth, policy)
     end 
 
     cS = tree[state]
-    i = indmax(cS.Q + exploration_constant * real(sqrt(complex(log(sum(cS.n))/cS.n))))
+    i = indmax(cS.Q + exploration_constant * real(sqrt(complex(log(sum(cS.n))./cS.n))))
     a = policy.action_map[i]
-    transition!(depth, pomdp, state, a)
+    d = policy.distribution
+    transition!(d, pomdp, state, a)
     s_prime = rand(d)
-    reward = reward(pomdp, state, a)
-    q = reward + discount_factor * simulate(s_prime, depth - 1)
+    println(depth, " ", s_prime, " ", a)
+    r = reward(pomdp, state, a)
+    q = r + discount_factor * simulate(policy, s_prime, depth - 1)
     cS.n[i] += 1
-    cS.q[i] += ((q - cS.q[i]) / (cS.n[i]))
+    cS.Q[i] += ((q - cS.Q[i]) / (cS.n[i]))
     return q
 end
 
 function rollout(state::State, depth::Depth, policy::MCTSPolicy)
     pomdp = policy.pomdp
-    depth = policy.mcts.depth
     discount_factor = policy.mcts.discount_factor
     
     if depth == 0
-        return 0
+        return 0.0
     end
-    action_space = actions(pomdp, state)
+
+    action_space = actions(pomdp)
     actions!(action_space, pomdp, state)
     a = rand(action_space)
-
-    transition!(depth, pomdp, state, a)
+    d = policy.distribution
+    transition!(d, pomdp, state, a)
     s_prime = rand(d)
-    reward = reward(pomdp, state, a)
+    r = reward(pomdp, state, a)
 
-    return (reward + (discount_factor) * rollout(s_prime, depth - 1))
+    return (r + (discount_factor) * rollout(s_prime, depth - 1, policy))
 end 
-
-
