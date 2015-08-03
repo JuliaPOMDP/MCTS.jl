@@ -15,7 +15,7 @@ end
 function MCTSSolver(; n_interations::Int64 = 50, 
                       depth::Int64 = 20,
                       discount_factor::Float64 = 0.99,
-                      exploration_constant::Float64 = 1.0)
+                      exploration_constant::Float64 = 3.0)
     tree = Dict{State, StateNode}()
     return MCTSSolver(n_interations, depth, discount_factor, exploration_constant, tree)
 end
@@ -75,7 +75,6 @@ function simulate(policy::MCTSPolicy, state::State, depth::Int64)
     d = policy.distribution
     transition!(d, pomdp, state, a)
     s_prime = rand(d)
-    println(depth, " ", s_prime, " ", a)
     r = reward(pomdp, state, a)
     q = r + discount_factor * simulate(policy, s_prime, depth - 1)
     cS.n[i] += 1
