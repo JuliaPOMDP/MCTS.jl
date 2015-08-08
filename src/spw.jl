@@ -1,3 +1,4 @@
+
 type StateNode
     n::Array{Int64,1}
     Q::Array{Reward,1}
@@ -5,19 +6,19 @@ type StateNode
 end
 
 type MCTSSolver <: Solver
-	n_interations::Int64			
+	n_iterations::Int64			
 	depth::Int64					
 	discount_factor::Float64		
 	exploration_constant::Float64	
     tree::Dict{State, StateNode}
 end
 
-function MCTSSolver(; n_interations::Int64 = 50, 
+function MCTSSolver(;n_iterations::Int64 = 50, 
                       depth::Int64 = 20,
                       discount_factor::Float64 = 0.99,
                       exploration_constant::Float64 = 3.0)
     tree = Dict{State, StateNode}()
-    return MCTSSolver(n_interations, depth, discount_factor, exploration_constant, tree)
+    return MCTSSolver(n_iterations, depth, discount_factor, exploration_constant, tree)
 end
 
 type MCTSPolicy <: Policy
@@ -33,7 +34,7 @@ function MCTSPolicy(mcts::MCTSSolver, pomdp::POMDP)
     for a in domain(space)
         push!(am, a)
     end
-    d = create_transition(pomdp)
+    d = create_transition_distribution(pomdp)
     return MCTSPolicy(mcts, pomdp, am, d)
 end
 
@@ -41,21 +42,23 @@ end
 
 
 function action(policy::MCTSPolicy, state::State)
-    n_iterations = policy.mcts.n_interations
+    n_iterations = policy.mcts.n_iterations
     depth = policy.mcts.depth
 
     for n = 1:n_iterations
         simulate(policy, state, depth)
     end
 
-    return indmax(policy.mcts.tree[state].Q)
+    i = indmax(policy.mcts.tree[state].Q)
+    return policy.action_map[i]
 end
 
-function simulate(policy::MCTSPolicy, state::State, depth::Int64)
+function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
     pomdp = policy.pomdp
-    na = n_actions(pomdp)
+    #na = n_actions(pomdp)
+    na = 4
 
-    n_iterations = policy.mcts.n_interations
+    n_iterations = policy.mcts.n_iterations
     discount_factor = policy.mcts.discount_factor
     tree = policy.mcts.tree
     exploration_constant = policy.mcts.exploration_constant
@@ -64,7 +67,10 @@ function simulate(policy::MCTSPolicy, state::State, depth::Int64)
         return 0
     end
 
+    #println(state)
+    #println(!haskey(tree, state))
     if !haskey(tree, state)
+        #println("ADDED\n")
         tree[state] = StateNode(na)
         return rollout(state, depth, policy)
     end 
