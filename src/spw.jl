@@ -49,14 +49,14 @@ function action(policy::MCTSPolicy, state::State)
         simulate(policy, state, depth)
     end
 
+
     i = indmax(policy.mcts.tree[state].Q)
     return policy.action_map[i]
 end
 
 function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
     pomdp = policy.pomdp
-    #na = n_actions(pomdp)
-    na = 4
+    na = n_actions(pomdp)
 
     n_iterations = policy.mcts.n_iterations
     discount_factor = policy.mcts.discount_factor
@@ -67,11 +67,8 @@ function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
         return 0
     end
 
-    #println(state)
-    #println(!haskey(tree, state))
     if !haskey(tree, state)
-        #println("ADDED\n")
-        tree[state] = StateNode(na)
+        tree[deepcopy(state)] = StateNode(na)
         return rollout(state, depth, policy)
     end 
 

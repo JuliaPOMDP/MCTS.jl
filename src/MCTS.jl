@@ -8,7 +8,9 @@ export
     MCTSPolicy,
     action,
     simulate,
-    rollout
+    rollout,
+    # SPW
+    StateNode
 
 
 typealias State Any

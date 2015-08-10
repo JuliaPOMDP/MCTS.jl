@@ -57,5 +57,5 @@ for (i,d) in enumerate(1:20), (j,ec) in enumerate(0.0:0.5:4.0)
   println("On: $d, $ec, $i, $j")
   mcts = MCTSSolver(depth=d, exploration_constant=ec)
   policy = MCTSPolicy(mcts, mdp)
-  rewards[i,j] = run_batch(n, mdp, policy, initial_state,eps=0.6)
+  rewards[i,j] = run_batch(n, mdp, policy, initial_state,eps=0.5)
 end
