@@ -1,7 +1,6 @@
 module MCTS
 
 using POMDPs
-import POMDPs: Solver, solve
 
 export 
     MCTSSolver, 
@@ -13,13 +12,10 @@ export
     StateNode
 
 
-typealias State Any
-typealias Action Any
-typealias Depth Int64
 typealias Reward Float64
 
 
 include("spw.jl")
-include("dpw.jl")
+#include("dpw.jl")
 
 end # module

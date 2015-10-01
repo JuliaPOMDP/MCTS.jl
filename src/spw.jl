@@ -1,105 +1,118 @@
-
+# State node in the search tree
 type StateNode
-    n::Array{Int64,1}
-    Q::Array{Reward,1}
-    StateNode(nA) = new(zeros(Int32,nA),zeros(Reward,nA))
+    n::Array{Int64,1} # number of visits at the node for each action
+    Q::Array{Reward,1} # estimated value for each action
+    StateNode(nA) = new(zeros(Int32,nA),zeros(Reward,nA)) # simplified cosntructor
 end
 
-type MCTSSolver <: Solver
-	n_iterations::Int64			
-	depth::Int64					
-	discount_factor::Float64		
-	exploration_constant::Float64	
-    tree::Dict{State, StateNode}
+# MCTS solver type
+type MCTSSolver <: POMDPs.Solver
+	n_iterations::Int64	# number of iterations during each action() call
+	depth::Int64 # the max depth of the tree
+	exploration_constant::Float64 # constant balancing exploration and exploitation
+    tree::Dict{State, StateNode} # the search tree
 end
-
+# solver constructor
 function MCTSSolver(;n_iterations::Int64 = 50, 
                       depth::Int64 = 20,
-                      discount_factor::Float64 = 0.99,
                       exploration_constant::Float64 = 3.0)
     tree = Dict{State, StateNode}()
-    return MCTSSolver(n_iterations, depth, discount_factor, exploration_constant, tree)
+    return MCTSSolver(n_iterations, depth, exploration_constant, tree)
 end
 
-type MCTSPolicy <: Policy
-	mcts::MCTSSolver
-	pomdp::POMDP
-    action_map::Vector{Action}
-    distribution::AbstractDistribution
+# MCTS policy type
+type MCTSPolicy <: POMDPs.Policy
+	mcts::MCTSSolver # containts the solver parameters
+	mdp::POMDP # model
+    action_map::Vector{Action} # for converting action idxs to action types
+    action_space::AbstractSpace # pre-allocated for rollout
+    distribution::AbstractDistribution # pre-allocated for memory efficiency
 end
-
-function MCTSPolicy(mcts::MCTSSolver, pomdp::POMDP)
+# policy constructor
+function MCTSPolicy(mcts::MCTSSolver, mdp::POMDP)
+    # creates the action map
     am = Action[]
-    space = actions(pomdp)
+    space = actions(mdp)
     for a in domain(space)
         push!(am, a)
     end
-    d = create_transition_distribution(pomdp)
-    return MCTSPolicy(mcts, pomdp, am, d)
+    # pre-allocate action space
+    as = actions(mdp)
+    # pre-allocate the state distrbution
+    d = create_transition_distribution(mdp)
+    return MCTSPolicy(mcts, mdp, am, as, d)
 end
 
-#######################
-
-
-function action(policy::MCTSPolicy, state::State)
+# retuns an approximately optimal action
+function POMDPs.action(mdp::POMDP, policy::MCTSPolicy, state::State)
     n_iterations = policy.mcts.n_iterations
     depth = policy.mcts.depth
-
+    # build the tree
     for n = 1:n_iterations
         simulate(policy, state, depth)
     end
-
-
+    # find the index of action with highest q val
     i = indmax(policy.mcts.tree[state].Q)
+    # use map to conver index to mdp action
     return policy.action_map[i]
 end
 
+# runs a simulation from the passed in state to the specified depth
 function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
-    pomdp = policy.pomdp
-    na = n_actions(pomdp)
+    # model parameters
+    mdp = policy.mdp
+    na = n_actions(mdp)
+    discount_factor = discount(mdp) 
 
+    # solver parameters
     n_iterations = policy.mcts.n_iterations
-    discount_factor = policy.mcts.discount_factor
     tree = policy.mcts.tree
     exploration_constant = policy.mcts.exploration_constant
 
-    if depth == 0
-        return 0
-    end
-
-    if !haskey(tree, state)
-        tree[deepcopy(state)] = StateNode(na)
-        return rollout(state, depth, policy)
-    end 
-
-    cS = tree[state]
-    i = indmax(cS.Q + exploration_constant * real(sqrt(complex(log(sum(cS.n))./cS.n))))
-    a = policy.action_map[i]
-    d = policy.distribution
-    transition!(d, pomdp, state, a)
-    s_prime = rand(d)
-    r = reward(pomdp, state, a)
-    q = r + discount_factor * simulate(policy, s_prime, depth - 1)
-    cS.n[i] += 1
-    cS.Q[i] += ((q - cS.Q[i]) / (cS.n[i]))
-    return q
-end
-
-function rollout(state::State, depth::Depth, policy::MCTSPolicy)
-    pomdp = policy.pomdp
-    discount_factor = policy.mcts.discount_factor
-    
+    # once depth is zero return
     if depth == 0
         return 0.0
     end
 
-    action_space = actions(pomdp)
-    actions!(action_space, pomdp, state)
-    a = rand(action_space)
+    # if unexplored state add to the tree and run rollout
+    if !haskey(tree, state)
+        tree[deepcopy(state)] = StateNode(na)
+        return rollout(policy, depth, state)
+    end 
+    # if previously visited node
+    snode = tree[state]
+    # pick action using UCT
+    i = indmax(snode.Q + exploration_constant * real(sqrt(complex(log(sum(snode.n))./snode.n))))
+    a = policy.action_map[i]
+    # transition to a new state
     d = policy.distribution
-    transition!(d, pomdp, state, a)
-    s_prime = rand(d)
-    r = reward(pomdp, state, a)
+    transition(mdp, state, a, d)
+    sp = rand(d)
+    # update the Q and n values
+    r = reward(mdp, state, a)
+    q = r + discount_factor * simulate(policy, sp, depth - 1)
+    snode.n[i] += 1 # increase number of node visits by one
+    snode.Q[i] += ((q - snode.Q[i]) / (snode.n[i])) # moving average of Q value
+    return q
+end
 
-    return (r + (discount_factor) * rollout(s_prime, depth - 1, policy))
+# recursive rollout to specified depth, returns the accumulated discounted reward
+function rollout(policy::MCTSPolicy, depth::Int64, state::State)
+    mdp = policy.mdp
+    d = policy.distribution
+    action_space = policy.action_space
+    discount_factor = discount(mdp) 
+    # finish when depth is zero
+    if depth == 0
+        return 0.0
+    end
+    # follow random rollout policy (pick actions randomly)
+    actions(mdp, state, action_space)
+    a = rand(action_space)
+    # sample the next state
+    transition(mdp, state, a, d)
+    sp = rand(d)
+    # compute reward
+    r = reward(mdp, state, a)
+    return (r + (discount_factor) * rollout(policy, depth - 1, sp))
 end 

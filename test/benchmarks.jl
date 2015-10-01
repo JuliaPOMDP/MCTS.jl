@@ -17,7 +17,6 @@ function POMDPs.simulate(mdp::POMDP,
     while disc > eps && !isterminal(mdp, s)
 
         a = action(policy, s)
-         println("$r, $s, $a")
         r += disc*reward(mdp, s, a)
 
         transition!(trans_dist, mdp, s, a)
@@ -39,19 +38,35 @@ function run_batch(n::Int64,
                    rng=MersenneTwister(rand(Uint32)),
                    eps=0.0)
     rewards = zeros(n)
+    space = states(mdp)
+    s = create_state(mdp)
+    rand!(s, space)
+    while s.bumped && s.done && inreward(s, mdp.reward_states)
+        rand!(s, space) 
+    end
     for i = 1:n
         rewards[i] = simulate(mdp, policy, initial_state, rng, eps)
     end
     return mean(rewards)
 end
 
+function inreward(s::Any, rstates::Any)
+    for rs in rstates
+        if s == rs
+            return true
+        end
+    end
+    return false
+end
 
 ##############################
 
 mdp = GridWorld(10,10)
 rewards = zeros(20, 9)
 initial_state = GridWorldState(1,1)
-n=100
+n=300
+
+
 
 for (i,d) in enumerate(1:20), (j,ec) in enumerate(0.0:0.5:4.0)
   println("On: $d, $ec, $i, $j")
