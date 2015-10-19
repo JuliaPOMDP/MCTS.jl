@@ -24,7 +24,6 @@ actions(mdp::POMDP, s::State, as::ActionSpace) # fills the action space as with 
 transition(mdp::POMDP, s::State, a::Action, d::AbstractDistribution) # fills d with neighboring states reachable from the s,a pair
 rand!(rng::AbstractRNG, s::State, d::AbstractDistribution) # fills s with random sample from distribution d
 reward(mdp::POMDP, s::State, a::Action) # returns the immediate reward of being in state s and performing action a
-
 create_transition_distribution(mdp::POMDP) # initializes a distirbution over states
 ```
 
