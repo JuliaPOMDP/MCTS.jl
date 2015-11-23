@@ -10,14 +10,16 @@ type MCTSSolver <: POMDPs.Solver
 	n_iterations::Int64	# number of iterations during each action() call
 	depth::Int64 # the max depth of the tree
 	exploration_constant::Float64 # constant balancing exploration and exploitation
+    rng::AbstractRNG # random number generator
     tree::Dict{State, StateNode} # the search tree
 end
 # solver constructor
 function MCTSSolver(;n_iterations::Int64 = 50, 
                       depth::Int64 = 20,
-                      exploration_constant::Float64 = 3.0)
+                      exploration_constant::Float64 = 3.0,
+                      rng = MersenneTwister(1))
     tree = Dict{State, StateNode}()
-    return MCTSSolver(n_iterations, depth, exploration_constant, tree)
+    return MCTSSolver(n_iterations, depth, exploration_constant, rng, tree)
 end
 
 # MCTS policy type
@@ -26,6 +28,8 @@ type MCTSPolicy <: POMDPs.Policy
 	mdp::POMDP # model
     action_map::Vector{Action} # for converting action idxs to action types
     action_space::AbstractSpace # pre-allocated for rollout
+    state::State # pre-allocated for sampling
+    action::Action # pre-allocated for sampling
     distribution::AbstractDistribution # pre-allocated for memory efficiency
 end
 # policy constructor
@@ -40,7 +44,14 @@ function MCTSPolicy(mcts::MCTSSolver, mdp::POMDP)
     as = actions(mdp)
     # pre-allocate the state distrbution
     d = create_transition_distribution(mdp)
-    return MCTSPolicy(mcts, mdp, am, as, d)
+    s = create_state(mdp)
+    a = create_action(mdp)
+    return MCTSPolicy(mcts, mdp, am, as, s, a, d)
+end
+
+# for convenience - no computation is done in solve
+function POMDPs.solve(solver::MCTSSolver, mdp::POMDP, policy::MCTSPolicy)
+    policy
 end
 
 # retuns an approximately optimal action
@@ -63,6 +74,8 @@ function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
     mdp = policy.mdp
     na = n_actions(mdp)
     discount_factor = discount(mdp) 
+    sp = policy.state
+    rng = policy.mcts.rng
 
     # solver parameters
     n_iterations = policy.mcts.n_iterations
@@ -87,7 +100,7 @@ function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
     # transition to a new state
     d = policy.distribution
     transition(mdp, state, a, d)
-    sp = rand(d)
+    sp = rand!(rng, sp, d)
     # update the Q and n values
     r = reward(mdp, state, a)
     q = r + discount_factor * simulate(policy, sp, depth - 1)
@@ -102,16 +115,19 @@ function rollout(policy::MCTSPolicy, depth::Int64, state::State)
     d = policy.distribution
     action_space = policy.action_space
     discount_factor = discount(mdp) 
+    rng = policy.mcts.rng
+    sp = policy.state
+    a = policy.action
     # finish when depth is zero
     if depth == 0
         return 0.0
     end
     # follow random rollout policy (pick actions randomly)
     actions(mdp, state, action_space)
-    a = rand(action_space)
+    a = rand!(a, action_space)
     # sample the next state
     transition(mdp, state, a, d)
-    sp = rand(d)
+    sp = rand!(rng, sp, d)
     # compute reward
     r = reward(mdp, state, a)
     return (r + (discount_factor) * rollout(policy, depth - 1, sp))
