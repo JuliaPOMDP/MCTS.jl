@@ -95,11 +95,11 @@ function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
     # if previously visited node
     snode = tree[state]
     # pick action using UCT
-    i = indmax(snode.Q + exploration_constant * real(sqrt(complex(log(sum(snode.n))./snode.n))))
+    i = indmax(snode.Q + exploration_constant * real(sqrt(complex(log(sum(snode.n))./snode.n)))) 
     a = policy.action_map[i]
     # transition to a new state
     d = policy.distribution
-    transition(mdp, state, a, d)
+    d = transition(mdp, state, a, d)
     sp = rand!(rng, sp, d)
     # update the Q and n values
     r = reward(mdp, state, a)
@@ -112,16 +112,16 @@ end
 # recursive rollout to specified depth, returns the accumulated discounted reward
 function rollout(policy::MCTSPolicy, depth::Int64, state::State)
     mdp = policy.mdp
+    # finish when depth is zero or reach terminal state
+    if depth == 0 || isterminal(mdp, state)
+        return 0.0
+    end
     d = policy.distribution
     action_space = policy.action_space
     discount_factor = discount(mdp) 
     rng = policy.mcts.rng
     sp = policy.state
     a = policy.action
-    # finish when depth is zero
-    if depth == 0
-        return 0.0
-    end
     # follow random rollout policy (pick actions randomly)
     actions(mdp, state, action_space)
     a = rand!(rng, a, action_space)
@@ -130,5 +130,5 @@ function rollout(policy::MCTSPolicy, depth::Int64, state::State)
     sp = rand!(rng, sp, d)
     # compute reward
     r = reward(mdp, state, a)
-    return (r + (discount_factor) * rollout(policy, depth - 1, sp))
+    return r + discount_factor * rollout(policy, depth - 1, sp)
 end 
