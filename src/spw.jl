@@ -124,7 +124,7 @@ function rollout(policy::MCTSPolicy, depth::Int64, state::State)
     end
     # follow random rollout policy (pick actions randomly)
     actions(mdp, state, action_space)
-    a = rand!(a, action_space)
+    a = rand!(rng, a, action_space)
     # sample the next state
     transition(mdp, state, a, d)
     sp = rand!(rng, sp, d)
