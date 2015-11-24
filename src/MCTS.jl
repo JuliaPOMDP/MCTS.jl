@@ -15,7 +15,6 @@ export
 typealias Reward Float64
 
 include("policies.jl")
-include("spw.jl")
-#include("dpw.jl")
+include("vanilla.jl")
 
 end # module
