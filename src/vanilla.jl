@@ -125,7 +125,7 @@ function rollout(policy::MCTSPolicy, depth::Int64, state::State)
     # follow the rollout policy 
     a = action(policy.rollout_policy, state)
     # sample the next state
-    transition(mdp, state, a, d)
+    d = transition(mdp, state, a, d)
     sp = rand!(rng, sp, d)
     # compute reward
     r = reward(mdp, state, a)
