@@ -31,9 +31,11 @@ type MCTSPolicy <: POMDPs.Policy
     state::State # pre-allocated for sampling
     action::Action # pre-allocated for sampling
     distribution::AbstractDistribution # pre-allocated for memory efficiency
+    rollout_policy::Policy # used in the rollout evaluation
 end
 # policy constructor
-function MCTSPolicy(mcts::MCTSSolver, mdp::POMDP)
+function MCTSPolicy(mcts::MCTSSolver, mdp::POMDP, 
+                    rollout_policy=RandomPolicy(mdp, mcts.rng)) # random policy is default
     # creates the action map
     am = Action[]
     space = actions(mdp)
@@ -46,7 +48,7 @@ function MCTSPolicy(mcts::MCTSSolver, mdp::POMDP)
     d = create_transition_distribution(mdp)
     s = create_state(mdp)
     a = create_action(mdp)
-    return MCTSPolicy(mcts, mdp, am, as, s, a, d)
+    return MCTSPolicy(mcts, mdp, am, as, s, a, d, rollout_policy)
 end
 
 # for convenience - no computation is done in solve
@@ -55,7 +57,7 @@ function POMDPs.solve(solver::MCTSSolver, mdp::POMDP, policy::MCTSPolicy)
 end
 
 # retuns an approximately optimal action
-function POMDPs.action(mdp::POMDP, policy::MCTSPolicy, state::State)
+function POMDPs.action(policy::MCTSPolicy, state::State)
     n_iterations = policy.mcts.n_iterations
     depth = policy.mcts.depth
     # build the tree
@@ -117,14 +119,11 @@ function rollout(policy::MCTSPolicy, depth::Int64, state::State)
         return 0.0
     end
     d = policy.distribution
-    action_space = policy.action_space
     discount_factor = discount(mdp) 
     rng = policy.mcts.rng
     sp = policy.state
-    a = policy.action
-    # follow random rollout policy (pick actions randomly)
-    actions(mdp, state, action_space)
-    a = rand!(rng, a, action_space)
+    # follow the rollout policy 
+    a = action(policy.rollout_policy, state)
     # sample the next state
     transition(mdp, state, a, d)
     sp = rand!(rng, sp, d)
@@ -132,3 +131,4 @@ function rollout(policy::MCTSPolicy, depth::Int64, state::State)
     r = reward(mdp, state, a)
     return r + discount_factor * rollout(policy, depth - 1, sp)
 end 
+
