@@ -14,9 +14,9 @@ type MCTSSolver <: POMDPs.Solver
     tree::Dict{State, StateNode} # the search tree
 end
 # solver constructor
-function MCTSSolver(;n_iterations::Int64 = 50, 
-                      depth::Int64 = 20,
-                      exploration_constant::Float64 = 3.0,
+function MCTSSolver(;n_iterations::Int64 = 100, 
+                      depth::Int64 = 10,
+                      exploration_constant::Float64 = 1.0,
                       rng = MersenneTwister(1))
     tree = Dict{State, StateNode}()
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, tree)
