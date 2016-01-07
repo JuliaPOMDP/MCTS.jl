@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/sisl/MCTS.jl.svg?branch=master)](https://travis-ci.org/sisl/MCTS.jl)
+[![Coverage Status](https://coveralls.io/repos/sisl/MCTS.jl/badge.svg)](https://coveralls.io/r/sisl/MCTS.jl)
+
 # MCTS
 
 This package implements the Monte-Carlo Tree Search algorithm in Julia for solving Markov decision processes (MDPs).
