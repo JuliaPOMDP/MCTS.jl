@@ -5,6 +5,7 @@ using POMDPs
 export 
     MCTSSolver, 
     MCTSPolicy,
+    solve,
     action,
     simulate,
     rollout,
