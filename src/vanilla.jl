@@ -92,7 +92,7 @@ function POMDPs.action(policy::MCTSPolicy, state::State)
 end
 
 # runs a simulation from the passed in state to the specified depth
-function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
+function simulate(policy::MCTSPolicy, state::State, depth::Int64)
     # model parameters
     mdp = policy.mdp
     na = n_actions(mdp)
@@ -113,7 +113,7 @@ function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
     # if unexplored state add to the tree and run rollout
     if !haskey(tree, state)
         tree[deepcopy(state)] = StateNode(na)
-        return rollout(policy, depth, state)
+        return rollout(policy, state, depth) # TODO(?) upgrade this to some more flexible value estimate
     end 
     # if previously visited node
     snode = tree[state]
@@ -125,7 +125,7 @@ function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
     d = transition(mdp, state, a, d)
     sp = rand!(rng, sp, d)
     # update the Q and n values
-    r = reward(mdp, state, a)
+    r = reward(mdp, state, a, sp)
     q = r + discount_factor * simulate(policy, sp, depth - 1)
     snode.n[i] += 1 # increase number of node visits by one
     snode.Q[i] += ((q - snode.Q[i]) / (snode.n[i])) # moving average of Q value
@@ -133,24 +133,7 @@ function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
 end
 
 # recursive rollout to specified depth, returns the accumulated discounted reward
-# XXX recursion is probably slow
-function rollout(policy::MCTSPolicy, depth::Int64, state::State)
-    mdp = policy.mdp
-    # finish when depth is zero or reach terminal state
-    if depth == 0 || isterminal(mdp, state)
-        return 0.0
-    end
-    d = policy.distribution
-    discount_factor = discount(mdp) 
-    rng = policy.mcts.rng
-    sp = policy.state
-    # follow the rollout policy 
-    a = action(policy.rollout_policy, state)
-    # sample the next state
-    d = transition(mdp, state, a, d)
-    sp = rand!(rng, sp, d)
-    # compute reward
-    r = reward(mdp, state, a)
-    return r + discount_factor * rollout(policy, depth - 1, sp)
-end 
-
+function rollout(policy::MCTSPolicy, s::State, d::Int)
+    sim = MDPRolloutSimulator(rng=policy.mcts.rng, max_steps=d) # TODO(?) add a mechanism to customize this
+    POMDPs.simulate(sim, policy.mdp, policy.rollout_policy, s)
+end
