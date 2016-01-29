@@ -11,7 +11,7 @@ end
 
 function POMDPs.action(policy::RandomPolicy, state::State, a::Action=create_action(policy.mdp))
     action_space = actions(policy.mdp, state, policy.action_space)
-    return rand!(policy.rng, a, policy.action_space)
+    return rand(policy.rng, policy.action_space)
 end
 
 type RandomSolver <: Solver
