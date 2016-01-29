@@ -12,48 +12,69 @@ type MCTSSolver <: POMDPs.Solver
 	exploration_constant::Float64 # constant balancing exploration and exploitation
     rng::AbstractRNG # random number generator
     tree::Dict{State, StateNode} # the search tree
+    rollout_solver::Union{Solver,Policy} # rollout policy
+                                         # if this is a Solver, solve() will be called when solve() is called on the MCTSSolver;
+                                         # if this is a Policy, it will be used directly
 end
 # solver constructor
 function MCTSSolver(;n_iterations::Int64 = 100, 
-                      depth::Int64 = 10,
-                      exploration_constant::Float64 = 1.0,
-                      rng = MersenneTwister(1))
+                     depth::Int64 = 10,
+                     exploration_constant::Float64 = 1.0,
+                     rng = MersenneTwister(1),
+                     rollout_solver=RandomSolver(rng)) # random policy is default
     tree = Dict{State, StateNode}()
-    return MCTSSolver(n_iterations, depth, exploration_constant, rng, tree)
+    return MCTSSolver(n_iterations, depth, exploration_constant, rng, tree, rollout_solver)
 end
 
 # MCTS policy type
 type MCTSPolicy <: POMDPs.Policy
 	mcts::MCTSSolver # containts the solver parameters
 	mdp::POMDP # model
+    rollout_policy::Policy # rollout policy
     action_map::Vector{Action} # for converting action idxs to action types
     action_space::AbstractSpace # pre-allocated for rollout
     state::State # pre-allocated for sampling
     action::Action # pre-allocated for sampling
     distribution::AbstractDistribution # pre-allocated for memory efficiency
-    rollout_policy::Policy # used in the rollout evaluation
+
+    MCTSPolicy()=new() # is it too dangerous to have this?
 end
 # policy constructor
-function MCTSPolicy(mcts::MCTSSolver, mdp::POMDP, 
-                    rollout_policy=RandomPolicy(mdp, mcts.rng)) # random policy is default
+function MCTSPolicy(mcts::MCTSSolver, mdp::POMDP)
+    p = MCTSPolicy()
+    fill_defaults!(p, mcts, mdp)
+    p
+end
+# sets members to suitable default values (broken out of the constructor so that it can be used elsewhere)
+function fill_defaults!(p::MCTSPolicy, solver::MCTSSolver=p.mcts, mdp::POMDP=p.mdp)
+    p.mcts = solver
+    p.mdp = mdp
+    if isa(p.mcts.rollout_solver, Solver)
+        p.rollout_policy = solve(p.mcts.rollout_solver, mdp)
+    else
+        p.rollout_policy = p.mcts.rollout_policy
+    end
+
     # creates the action map
     am = Action[]
     space = actions(mdp)
-    for a in domain(space)
+    for a in iterator(space)
         push!(am, a)
     end
-    # pre-allocate action space
-    as = actions(mdp)
-    # pre-allocate the state distrbution
-    d = create_transition_distribution(mdp)
-    s = create_state(mdp)
-    a = create_action(mdp)
-    return MCTSPolicy(mcts, mdp, am, as, s, a, d, rollout_policy)
+    p.action_map = am
+
+    # pre-allocate
+    p.action_space = actions(mdp)
+    p.distribution = create_transition_distribution(mdp)
+    p.state = create_state(mdp)
+    p.action = create_action(mdp)
+    return p
 end
 
-# for convenience - no computation is done in solve
-function POMDPs.solve(solver::MCTSSolver, mdp::POMDP, policy::MCTSPolicy)
-    policy
+# no computation is done in solve - the solver is just given the mdp model that it will work with
+function POMDPs.solve(solver::MCTSSolver, mdp::POMDP, policy::MCTSPolicy=MCTSPolicy())
+    fill_defaults!(policy, solver, mdp)
+    return policy
 end
 
 # retuns an approximately optimal action
@@ -112,6 +133,7 @@ function POMDPs.simulate(policy::MCTSPolicy, state::State, depth::Int64)
 end
 
 # recursive rollout to specified depth, returns the accumulated discounted reward
+# XXX recursion is probably slow
 function rollout(policy::MCTSPolicy, depth::Int64, state::State)
     mdp = policy.mdp
     # finish when depth is zero or reach terminal state
