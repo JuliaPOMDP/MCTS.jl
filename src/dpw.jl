@@ -136,9 +136,10 @@ function estimate_value(dpw::DPWPolicy, s::State, d::Depth)
 end
 
 function rollout(dpw::DPWPolicy, s::State)
-    simulate(dpw.solver.sim, dpw.mdp, dpw.rollout_policy, s)
+    sim
+    simulate(sim, dpw.mdp, dpw.rollout_policy, s)
 end
 
 function next_action(dpw::DPWPolicy, mdp::POMDP, s::StateNode)
-    rand(actions(mdp, s, dpw._action_space))
+    rand(rng, actions(mdp, s, dpw._action_space))
 end
