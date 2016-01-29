@@ -131,12 +131,12 @@ function simulate(dpw::DPWPolicy,s::State,d::Depth)
 end
 
 # this can be overridden to specify behavior; by default it performs a rollout
-function estimate_value(dpw::DPWPolicy, s::State, d::Depth)
-    rollout(dpw, s)
+function estimate_value(dpw::DPWPolicy, s::State, d::Int)
+    rollout(dpw, s, d)
 end
 
-function rollout(dpw::DPWPolicy, s::State)
-    sim
+function rollout(dpw::DPWPolicy, s::State, d::Int)
+    sim = MDPRolloutSimulator(rng=dpw.solver.rng, max_steps=d) # TODO(?) add a mechanism to customize this
     simulate(sim, dpw.mdp, dpw.rollout_policy, s)
 end
 
