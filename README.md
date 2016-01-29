@@ -17,7 +17,7 @@ Pkg.clone("https://github.com/sisl/MCTS.jl")
 
 ## Usage
 
-The following functions must be defined in order to use DiscreteValueIteration:
+The following functions must be defined in order to use MCTS:
 
 ```julia
 discount(mdp::POMDP) # returns the discount factor
