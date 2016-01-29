@@ -14,7 +14,10 @@ function POMDPs.action(policy::RandomPolicy, state::State, a::Action=create_acti
     return rand!(policy.rng, a, policy.action_space)
 end
 
-# a placeholder for using in a RandomPolicy when the model hasn't been assigned yet
-type ModelNotAvailable <: POMDP end
-type BlankSpace <: AbstractSpace end
-POMDPs.actions(mdp::ModelNotAvailable) = BlankSpace()
+type RandomSolver <: Solver
+    rng::AbstractRNG
+end
+
+function POMDPs.solve(solver::RandomSolver, mdp::POMDP)
+    return RandomPolicy(mdp, solver.rng)
+end
