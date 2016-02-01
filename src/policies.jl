@@ -4,7 +4,7 @@ type RandomPolicy <: Policy
     action_space::AbstractSpace
 end
 # constructor
-function RandomPolicy(mdp::POMDP, rng::AbstractRNG)
+function RandomPolicy(mdp::POMDP, rng::AbstractRNG=MersenneTwister())
     as = actions(mdp)
     return RandomPolicy(mdp, rng, as)
 end

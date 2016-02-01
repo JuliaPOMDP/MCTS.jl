@@ -5,6 +5,8 @@ using POMDPs
 export 
     MCTSSolver, 
     MCTSPolicy,
+    DPWSolver,
+    DPWPolicy,
     solve,
     action,
     # simulate,
@@ -12,11 +14,10 @@ export
     # SPW
     StateNode
 
-
-typealias Reward Float64
-
 include("policies.jl")
 include("simulators.jl")
 include("vanilla.jl")
+include("dpw_solver.jl")
+include("dpw.jl")
 
 end # module

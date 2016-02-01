@@ -1,15 +1,3 @@
-type DPWSolver
-    depth::Int                       # search depth
-    exploration_constant::Float64    # exploration constant- governs trade-off between exploration and exploitation in MCTS
-    n_iterations::Int                # number of iterations
-    k_action::Float64                # first constant controlling action generation
-    alpha_action::Float64            # second constant controlling action generation
-    k_state::Float64                 # first constant controlling transition state generation
-    alpha_state::Float64             # second constant controlling transition state generation
-    rng::AbstractRNG
-    rollout_solver::Union{Policy,Solver}
-end
-
 type StateActionStateNode
     N::Int
     R::Float64
@@ -23,26 +11,42 @@ type StateActionNode
     StateActionNode() = new(Dict{State,StateActionStateNode}(),0,0)
 end
 
-type StateNode
+type DPWStateNode
     A::Dict{Action,StateActionNode}
     N::Int
-    StateNode() = new(Dict{Action,StateActionNode}(),0)
+    DPWStateNode() = new(Dict{Action,StateActionNode}(),0)
 end
 
 type DPWPolicy
     solver::DPWSolver
     mdp::POMDP
-    T::Dict{State,StateNode} 
+    T::Dict{State,DPWStateNode} 
+    rollout_policy::Policy
     _action_space::AbstractSpace
-    DPWPolicy(solver::DPWSolver, mdp::POMDP) = new(solver, mdp, Dict{State,StateNode}(), actions(mdp))
 end
 
-function action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
-    # This function calls simulate and chooses the approximate best action from the reward approximations
-    for i = 1:dpw.solver.n_iterations
-        simulate(dpw, s, dpw.solver.depth)
+DPWPolicy(solver::DPWSolver,
+          mdp::POMDP) = DPWPolicy(solver,
+                                  mdp,
+                                  Dict{State,DPWStateNode}(),
+                                  RandomPolicy(mdp, solver.rng), 
+                                  actions(mdp))
+
+function POMDPs.solve(solver::DPWSolver, mdp::POMDP, p::DPWPolicy=DPWPolicy(solver, mdp))
+    if isa(p.solver.rollout_solver, Solver) 
+        p.rollout_policy = solve(p.solver.rollout_solver, mdp)
+    else
+        p.rollout_policy = p.solver.rollout_solver
     end
-    snode = dpw.T[s]
+    return p
+end
+
+function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
+    # This function calls simulate and chooses the approximate best action from the reward approximations
+    for i = 1:p.solver.n_iterations
+        simulate(p, s, p.solver.depth)
+    end
+    snode = p.T[s]
     best_Q = -Inf
     local best_a
     for (a, sanode) in snode.A
@@ -55,7 +59,7 @@ function action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
     return a # choose action with highest approximate value 
 end
 
-function simulate(dpw::DPWPolicy,s::State,d::Depth)
+function simulate(dpw::DPWPolicy,s::State,d::Int)
     # TODO: reimplement this as a loop instead of a recursion
 
     # This function returns the reward for one iteration of MCTSdpw 
@@ -63,7 +67,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Depth)
         return 0.0 # XXX is this right or should it be a rollout?
     end
     if !haskey(dpw.T,s) # if state is not yet explored, add it to the set of states, perform a rollout 
-        dpw.T[s] = StateNode() # TODO: Mechanism to set N0
+        dpw.T[s] = DPWStateNode() # TODO: Mechanism to set N0
         return estimate_value(dpw,s,d)
     end
 
@@ -72,7 +76,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Depth)
 
     # action progressive widening
     if length(dpw.T[s].A) <= dpw.solver.k_action*dpw.T[s].N^dpw.solver.alpha_action # criterion for new action generation
-        a = next_action(dpw.mdp, snode) # action generation step
+        a = next_action(dpw, dpw.mdp, s) # action generation step
         if !haskey(dpw.T[s].A,a) # make sure we haven't already tried this action
             dpw.T[s].A[a] = StateActionNode() # TODO: Mechanism to set N0, Q0
         end
@@ -122,9 +126,10 @@ function simulate(dpw::DPWPolicy,s::State,d::Depth)
         sasnode.N += 1
     end
 
+    sanode.N += 1
+
     q = r + discount(dpw.mdp)*simulate(dpw,sp,d-1)
 
-    sanode.N += 1
     sanode.Q += (q - sanode.Q)/sanode.N
 
     return q
@@ -137,9 +142,9 @@ end
 
 function rollout(dpw::DPWPolicy, s::State, d::Int)
     sim = MDPRolloutSimulator(rng=dpw.solver.rng, max_steps=d) # TODO(?) add a mechanism to customize this
-    simulate(sim, dpw.mdp, dpw.rollout_policy, s)
+    POMDPs.simulate(sim, dpw.mdp, dpw.rollout_policy, s)
 end
 
-function next_action(dpw::DPWPolicy, mdp::POMDP, s::StateNode)
-    rand(rng, actions(mdp, s, dpw._action_space))
+function next_action(dpw::DPWPolicy, mdp::POMDP, s::State)
+    rand(dpw.solver.rng, actions(mdp, s, dpw._action_space))
 end

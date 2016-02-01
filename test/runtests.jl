@@ -14,3 +14,5 @@ policy = solve(solver, mdp)
 state = GridWorldState(1,1)
 
 a = action(policy, state)
+
+include("dpw_test.jl")
