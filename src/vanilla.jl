@@ -36,6 +36,7 @@ type MCTSPolicy <: POMDPs.Policy
     state::State # pre-allocated for sampling
     action::Action # pre-allocated for sampling
     distribution::AbstractDistribution # pre-allocated for memory efficiency
+    sim::MDPRolloutSimulator # for doing rollouts
 
     MCTSPolicy()=new() # is it too dangerous to have this?
 end
@@ -68,6 +69,7 @@ function fill_defaults!(p::MCTSPolicy, solver::MCTSSolver=p.mcts, mdp::POMDP=p.m
     p.distribution = create_transition_distribution(mdp)
     p.state = create_state(mdp)
     p.action = create_action(mdp)
+    p.sim = MDPRolloutSimulator(rng=solver.rng, max_steps=0)
     return p
 end
 
@@ -134,6 +136,7 @@ end
 
 # recursive rollout to specified depth, returns the accumulated discounted reward
 function rollout(policy::MCTSPolicy, s::State, d::Int)
-    sim = MDPRolloutSimulator(rng=policy.mcts.rng, max_steps=d) # TODO(?) add a mechanism to customize this
+    sim = policy.sim
+    sim.max_steps = d 
     POMDPs.simulate(sim, policy.mdp, policy.rollout_policy, s)
 end
