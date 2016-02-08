@@ -29,7 +29,8 @@ end
 # XXX this is inefficient because it allocates a new transition every time
 function generate(mdp::POMDP, s::State, a::Action, rng::AbstractRNG)
     td = transition(mdp, s, a)
-    sp = rand(rng, td)
+    sp = create_state(mdp)
+    sp = rand(rng, td, sp)
     r = reward(mdp, s, a, sp)
     return (sp, r)
 end
