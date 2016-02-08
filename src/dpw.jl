@@ -17,7 +17,7 @@ type DPWStateNode
     DPWStateNode() = new(Dict{Action,StateActionNode}(),0)
 end
 
-type DPWPolicy
+type DPWPolicy <: Policy
     solver::DPWSolver
     mdp::POMDP
     T::Dict{State,DPWStateNode} 
@@ -43,6 +43,7 @@ end
 
 function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
     # This function calls simulate and chooses the approximate best action from the reward approximations
+    # XXX we probably need to make a copy of the state here
     for i = 1:p.solver.n_iterations
         simulate(p, s, p.solver.depth)
     end
@@ -60,7 +61,7 @@ function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
 end
 
 function simulate(dpw::DPWPolicy,s::State,d::Int)
-    # TODO: reimplement this as a loop instead of a recursion
+    # TODO: reimplement this as a loop instead of a recursion?
 
     # This function returns the reward for one iteration of MCTSdpw 
     if d == 0
@@ -77,21 +78,23 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
     # action progressive widening
     if length(dpw.T[s].A) <= dpw.solver.k_action*dpw.T[s].N^dpw.solver.alpha_action # criterion for new action generation
         a = next_action(dpw, dpw.mdp, s) # action generation step
-        if !haskey(dpw.T[s].A,a) # make sure we haven't already tried this action
-            dpw.T[s].A[a] = StateActionNode() # TODO: Mechanism to set N0, Q0
+        if !haskey(snode.A,a) # make sure we haven't already tried this action
+            snode.A[a] = StateActionNode() # TODO: Mechanism to set N0, Q0
         end
+        # XXX This is different from Mykel's implementation: a should not necessarily be the new a
+        # XXX It is the same as Jon's though
     else # choose an action using UCB criterion
         best_UCB = -Inf
         local a
         sN = snode.N
-        for act in keys(snode.A)
-            sanode = snode.A[act]
+        for (act, sanode) in snode.A
             if sN == 1 && sanode.N == 0
                 UCB = sanode.Q
             else
                 c = dpw.solver.exploration_constant # for clarity
                 UCB = sanode.Q + c*sqrt(log(sN)/sanode.N)
             end
+            @assert isfinite(UCB)
             if UCB > best_UCB
                 best_UCB = UCB
                 a = act
@@ -112,10 +115,10 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
             sanode.V[sp].N += 1
         end
     else # sample from transition states proportional to their occurence in the past
-        rn = rand(dpw.solver.rng, 1:sanode.N)
+        rn = rand(dpw.solver.rng, 1:sanode.N) # this is where Jon's bug was (I think)
         cnt = 0
         local sp
-        for (sp,sasnode) in values(sanode.V)
+        for (sp,sasnode) in sanode.V
             cnt += sasnode.N
             if rn <= cnt
                 break
@@ -126,6 +129,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
         sasnode.N += 1
     end
 
+    # XXX this differs from Mykel's writeup. is it ok?
     sanode.N += 1
 
     q = r + discount(dpw.mdp)*simulate(dpw,sp,d-1)
