@@ -123,7 +123,7 @@ function simulate(policy::MCTSPolicy, state::State, depth::Int64)
     # transition to a new state
     d = policy.distribution
     d = transition(mdp, state, a, d)
-    sp = rand!(rng, sp, d)
+    sp = rand(rng, d, sp)
     # update the Q and n values
     r = reward(mdp, state, a, sp)
     q = r + discount_factor * simulate(policy, sp, depth - 1)
