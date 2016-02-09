@@ -15,7 +15,6 @@ function POMDPs.simulate(sim::MDPRolloutSimulator, mdp::POMDP, policy::Policy, i
     disc = 1.0
     step = 1
     while disc > sim.eps && !isterminal(mdp, s) && step <= sim.max_steps
-        @assert s.remaining >= mdp.distances[s.i,mdp.stop]
         a = action(policy, s)
         s, r = generate(mdp, s, a, sim.rng)
         rew += disc*r
