@@ -21,7 +21,7 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(1),
-                     rollout_solver=RandomSolver(rng)) # random policy is default
+                     rollout_solver = RandomSolver(rng)) # random policy is default
     tree = Dict{State, StateNode}()
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, tree, rollout_solver)
 end

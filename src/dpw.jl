@@ -43,9 +43,9 @@ end
 
 function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
     # This function calls simulate and chooses the approximate best action from the reward approximations
-    # XXX we probably need to make a copy of the state here
+    # XXX do we need to make a copy of the state here?
     for i = 1:p.solver.n_iterations
-        simulate(p, s, p.solver.depth)
+        simulate(p, deepcopy(s), p.solver.depth)
     end
     snode = p.T[s]
     best_Q = -Inf
