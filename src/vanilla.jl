@@ -11,7 +11,6 @@ type MCTSSolver <: POMDPs.Solver
 	depth::Int64 # the max depth of the tree
 	exploration_constant::Float64 # constant balancing exploration and exploitation
     rng::AbstractRNG # random number generator
-    tree::Dict{State, StateNode} # the search tree
     rollout_solver::Union{Solver,Policy} # rollout policy
                                          # if this is a Solver, solve() will be called when solve() is called on the MCTSSolver;
                                          # if this is a Policy, it will be used directly
@@ -22,8 +21,7 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(1),
                      rollout_solver = RandomSolver(rng)) # random policy is default
-    tree = Dict{State, StateNode}()
-    return MCTSSolver(n_iterations, depth, exploration_constant, rng, tree, rollout_solver)
+    return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver)
 end
 
 # MCTS policy type
@@ -31,6 +29,7 @@ type MCTSPolicy <: POMDPs.Policy
 	mcts::MCTSSolver # containts the solver parameters
 	mdp::POMDP # model
     rollout_policy::Policy # rollout policy
+    tree::Dict{State, StateNode} # the search tree
     action_map::Vector{Action} # for converting action idxs to action types
     action_space::AbstractSpace # pre-allocated for rollout
     state::State # pre-allocated for sampling
@@ -65,6 +64,7 @@ function fill_defaults!(p::MCTSPolicy, solver::MCTSSolver=p.mcts, mdp::POMDP=p.m
     p.action_map = am
 
     # pre-allocate
+    p.tree = Dict{State, StateNode}()
     p.action_space = actions(mdp)
     p.distribution = create_transition_distribution(mdp)
     p.state = create_state(mdp)
@@ -88,7 +88,7 @@ function POMDPs.action(policy::MCTSPolicy, state::State)
         simulate(policy, state, depth)
     end
     # find the index of action with highest q val
-    i = indmax(policy.mcts.tree[state].Q)
+    i = indmax(policy.tree[state].Q)
     # use map to conver index to mdp action
     return policy.action_map[i]
 end
@@ -104,7 +104,7 @@ function simulate(policy::MCTSPolicy, state::State, depth::Int64)
 
     # solver parameters
     n_iterations = policy.mcts.n_iterations
-    tree = policy.mcts.tree
+    tree = policy.tree
     exploration_constant = policy.mcts.exploration_constant
 
     # once depth is zero return
