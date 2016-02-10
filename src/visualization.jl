@@ -75,7 +75,7 @@ function Base.writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer{DPW
         </div>
     """
     =#
-    html_string = "woo!"
+    html_string = "visualization doesn't work yet :("
 
     # for debugging
     # outfile  = open("/tmp/pomcp_debug.html","w")
