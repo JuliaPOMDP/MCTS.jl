@@ -7,10 +7,9 @@ export
     MCTSPolicy,
     solve,
     action,
-    # simulate,
     rollout,
-    # SPW
-    StateNode
+    StateNode,
+    TreeVisualizer
 
 
 typealias Reward Float64
@@ -18,5 +17,7 @@ typealias Reward Float64
 include("policies.jl")
 include("simulators.jl")
 include("vanilla.jl")
+
+include("visualization.jl")
 
 end # module
