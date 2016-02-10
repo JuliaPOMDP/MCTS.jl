@@ -5,12 +5,15 @@ using DiscreteValueIteration
 using POMDPs
 
 mdp = GridWorld()
-N = 1000
+N = 100
 rng = MersenneTwister(1)
 init_states = [GridWorldState(rand(rng, 1:mdp.size_x), rand(rng, 1:mdp.size_y)) for i in 1:N]
 
 solvers = Dict(:vi => ValueIterationSolver(),
-               :mcts => MCTSSolver(n_iterations=1000,
+               :mcts1k => MCTSSolver(n_iterations=1000,
+                                   depth=20,
+                                   exploration_constant=10.0),
+               :mcts10k => MCTSSolver(n_iterations=10000,
                                    depth=20,
                                    exploration_constant=10.0),
                :dpw => DPWSolver(n_iterations=1000,
@@ -21,13 +24,6 @@ solvers = Dict(:vi => ValueIterationSolver(),
                                  k_state=100.0,
                                  alpha_action=1.0,
                                  ))
-
-# solvers = Dict(:vi => ValueIterationSolver(),
-#                :mcts1k => MCTSSolver(n_iterations=1000,
-#                                      exploration_constant = 10.0),
-#                :mcts10k => MCTSSolver(n_iterations=10000,
-#                                      exploration_constant = 10.0),
-#                                      )
 
 policies = Dict([(k, solve(s,mdp)) for (k,s) in solvers])
 rewards = SharedArray(Float64, length(solvers), N)
