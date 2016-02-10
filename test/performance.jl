@@ -5,14 +5,16 @@ using DiscreteValueIteration
 using POMDPs
 
 mdp = GridWorld()
-N = 10
+N = 1000
 rng = MersenneTwister(1)
 init_states = [GridWorldState(rand(rng, 1:mdp.size_x), rand(rng, 1:mdp.size_y)) for i in 1:N]
 
 solvers = Dict(:vi => ValueIterationSolver(),
-               :mcts => MCTSSolver(n_iterations=100,
+               :mcts => MCTSSolver(n_iterations=1000,
+                                   depth=20,
                                    exploration_constant=10.0),
-               :dpw => DPWSolver(n_iterations=100,
+               :dpw => DPWSolver(n_iterations=1000,
+                                 depth=20,
                                  exploration_constant=10.0,
                                  k_action=100.0, # these are all just set to large values so that behavior should be equivalent to MCTS
                                  alpha_action=1.0,
@@ -34,6 +36,7 @@ index = Dict([(k, i) for (i, k) in enumerate(keys(solvers))])
 for (k,p) in policies
     println("simulating $k")
     @time @sync @parallel for i in 1:N
+    # @time for i in 1:N
         sim = MCTS.MDPRolloutSimulator(rng=MersenneTwister(i))
         rewards[index[k],i] = simulate(sim, mdp, deepcopy(p), init_states[i])
     end

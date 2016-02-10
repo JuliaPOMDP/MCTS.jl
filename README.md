@@ -7,6 +7,8 @@ This package implements the Monte-Carlo Tree Search algorithm in Julia for solvi
 The user should define the problem according to the API in [POMDPs.jl](https://github.com/sisl/POMDPs.jl). Examples of
 problem definitions can be found in [POMDPModels.jl](https://github.com/sisl/POMDPModels.jl). For an extensive tutorial, see [this](http://nbviewer.ipython.org/github/sisl/POMDPs.jl/blob/master/examples/GridWorld.ipynb) notebook.
 
+Special thanks to Jon Cox for writing the original version of this code.
+
 ## Installation
 
 Start Julia and run the following command:

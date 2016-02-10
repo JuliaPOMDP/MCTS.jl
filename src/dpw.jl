@@ -57,7 +57,7 @@ function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
         end
     end
     # XXX some publications say to choose action that has been visited the most
-    return a # choose action with highest approximate value 
+    return best_a # choose action with highest approximate value 
 end
 
 function simulate(dpw::DPWPolicy,s::State,d::Int)
@@ -76,29 +76,28 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
     snode.N = snode.N + 1
 
     # action progressive widening
-    if length(dpw.T[s].A) <= dpw.solver.k_action*dpw.T[s].N^dpw.solver.alpha_action # criterion for new action generation
-        a = next_action(dpw, dpw.mdp, s) # action generation step
+    if length(snode.A) <= dpw.solver.k_action*snode.N^dpw.solver.alpha_action # criterion for new action generation
+        a = next_action(dpw, dpw.mdp, s, snode) # action generation step
         if !haskey(snode.A,a) # make sure we haven't already tried this action
             snode.A[a] = StateActionNode() # TODO: Mechanism to set N0, Q0
         end
-        # XXX This is different from Mykel's implementation: a should not necessarily be the new a
-        # XXX It is the same as Jon's though
-    else # choose an action using UCB criterion
-        best_UCB = -Inf
-        local a
-        sN = snode.N
-        for (act, sanode) in snode.A
-            if sN == 1 && sanode.N == 0
-                UCB = sanode.Q
-            else
-                c = dpw.solver.exploration_constant # for clarity
-                UCB = sanode.Q + c*sqrt(log(sN)/sanode.N)
-            end
-            @assert isfinite(UCB)
-            if UCB > best_UCB
-                best_UCB = UCB
-                a = act
-            end
+    end
+
+    best_UCB = -Inf
+    local a
+    sN = snode.N
+    for (act, sanode) in snode.A
+        if sN == 1 && sanode.N == 0
+            UCB = sanode.Q
+        else
+            c = dpw.solver.exploration_constant # for clarity
+            UCB = sanode.Q + c*sqrt(log(sN)/sanode.N)
+        end
+        @assert !isnan(UCB)
+        @assert !isequal(UCB, -Inf)
+        if UCB > best_UCB
+            best_UCB = UCB
+            a = act
         end
     end
 
@@ -111,10 +110,10 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
         if !haskey(sanode.V,sp) # if transition state not yet explored, add to set and update reward
             sanode.V[sp] = StateActionStateNode() # TODO: mechanism for assigning N0
             sanode.V[sp].R = r
-        else
-            sanode.V[sp].N += 1
         end
+        sanode.V[sp].N += 1
     else # sample from transition states proportional to their occurence in the past
+        warn("sampling states: |V|=$(length(sanode.V)), N=$(sanode.N)")
         rn = rand(dpw.solver.rng, 1:sanode.N) # this is where Jon's bug was (I think)
         cnt = 0
         local sp
@@ -149,6 +148,6 @@ function rollout(dpw::DPWPolicy, s::State, d::Int)
     POMDPs.simulate(sim, dpw.mdp, dpw.rollout_policy, s)
 end
 
-function next_action(dpw::DPWPolicy, mdp::POMDP, s::State)
+function next_action(dpw::DPWPolicy, mdp::POMDP, s::State, snode::DPWStateNode)
     rand(dpw.solver.rng, actions(mdp, s, dpw._action_space))
 end
