@@ -6,15 +6,16 @@ type TreeVisualizer{PolicyType}
     init_state
 end
 
-function create_json(visualizer::TreeVisualizer{MCTSPolicy})
+function create_json(visualizer::TreeVisualizer{DPWPolicy})
     local root_id
     next_id = 1
     node_dict = Dict{Int,Dict{UTF8String, Any}}()
     for (s, sn) in visualizer.policy.mcts.tree
         children = Vector(Int,0)
+        # create s-a nodes
         for (i,a) in enumerate(visualizer.policy.action_map)
             if sn.n[i] > 0
-                node_dict[next_id]
+                node_dict[next_id] = Dict("info"=>"$a | N:$(sn.n[i]), Q")
                 next_id += 1
             end
         end
@@ -30,7 +31,7 @@ function create_json(visualizer::TreeVisualizer{MCTSPolicy})
     return json, root_id
 end
 
-function Base.writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer{MCTSPolicy})
+function Base.writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer{DPWPolicy})
     json, root_id = create_json(visualizer)
     css = readall(joinpath(dirname(@__FILE__()), "tree_vis.css"))
     js = readall(joinpath(dirname(@__FILE__()), "tree_vis.js"))
