@@ -21,30 +21,47 @@ var svg = d3.select("#treevis").append("svg")
   .append("g")
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-root = treeData[0];
+console.log("tree data:");
+console.log(treeData[rootID]);
+root = createDisplayNode(treeData[rootID]);
 root.x0 = height / 2;
 root.y0 = 0;
-collapse(root);
 update(root);
-console.log("tree should appear")
+console.log("tree should appear");
+
+function createDisplayNode(nd) {
+  var dnode = {"dataID":nd.id,
+               "children":null,
+               "_children":null,
+               "info":nd.info};
+  return dnode;
+}
+
+function initializeChildren(d) {
+  // create children
+  var ndata = treeData[d.dataID];
+  d.children = [];
+  if (ndata.children_ids) {
+    for (var i = 0; i < ndata.children_ids.length; i++) {
+      var id = ndata.children_ids[i];
+      if (!treeData[id]) {
+        alert("bad node id:"+id+" (in node "+d.dataID+")")
+      } else {
+          d.children.push(createDisplayNode(treeData[id]));
+      }
+    }
+  }
+}
+
 /*
-d3.json(datafile, function(error, json_data) {
-    root = json_data;
-    root.x0 = height / 2;
-    root.y0 = 0;
-    update(root);
-});
-*/
-
-// d3.select(self.frameElement).style("height", "500px");
-
 function collapse(d) {
-    if (d.children) {
+    if ("children" in d && d.children) {
         d._children = d.children;
         d._children.forEach(collapse);
         d.children = null;
     }
 }
+*/
 
 function update(source) {
 
@@ -135,12 +152,15 @@ function update(source) {
 
 // Toggle children on click.
 function click(d) {
+  console.log("clicked");
   if (d.children) {
-	d._children = d.children;
-	d.children = null;
+    d._children = d.children;
+    d.children = null;
+  } else if (d._children) {
+    d.children = d._children;
+    d._children = null;
   } else {
-	d.children = d._children;
-	d._children = null;
+    initializeChildren(d);
   }
   update(d);
 }
