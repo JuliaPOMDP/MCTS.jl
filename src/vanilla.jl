@@ -19,7 +19,7 @@ end
 function MCTSSolver(;n_iterations::Int64 = 100, 
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
-                     rng = MersenneTwister(1),
+                     rng = MersenneTwister(),
                      rollout_solver = RandomSolver(rng)) # random policy is default
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver)
 end
