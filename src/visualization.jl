@@ -6,6 +6,8 @@ type TreeVisualizer{PolicyType}
     init_state
 end
 
+node_tag(s) = string(s)
+
 function create_json(visualizer::TreeVisualizer{DPWPolicy})
     local root_id
     next_id = 1
@@ -17,7 +19,9 @@ function create_json(visualizer::TreeVisualizer{DPWPolicy})
         node_dict[next_id] = sd = Dict("id"=>next_id,
                                        "type"=>:state,
                                        "children_ids"=>Array(Int,0),
-                                       "info"=>"$next_id $s N:$(sn.N)")
+                                       "tag"=>node_tag(s),
+                                       "N"=>sn.N
+                                       )
         if s == visualizer.init_state
             root_id = next_id 
         end
@@ -29,7 +33,10 @@ function create_json(visualizer::TreeVisualizer{DPWPolicy})
             node_dict[next_id] = Dict("id"=>next_id,
                                       "type"=>:action,
                                       "children_ids"=>Array(Int,0),
-                                      "info"=>"$next_id $a N:$(san.N), Q:$(@sprintf("%.2g", san.Q))")
+                                      "tag"=>node_tag(a),
+                                      "N"=>san.N,
+                                      "Q"=>san.Q
+                                      )
             push!(sd["children_ids"], next_id)
             sa_dict[(s,a)] = next_id
             next_id += 1
@@ -45,9 +52,11 @@ function create_json(visualizer::TreeVisualizer{DPWPolicy})
                     push!(sad["children_ids"], s_dict[sp])
                 else
                     node_dict[next_id] = Dict("id"=>next_id,
-                                              "type"=>:state,
-                                              "children_ids"=>Array(Int,0),
-                                              "info"=>"$next_id $s N:0")
+                                       "type"=>:state,
+                                       "children_ids"=>Array(Int,0),
+                                       "tag"=>node_tag(sp),
+                                       "N"=>0
+                                       )
                     push!(sad["children_ids"], next_id)
                     next_id += 1
                 end

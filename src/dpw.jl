@@ -64,7 +64,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
     # TODO: reimplement this as a loop instead of a recursion?
 
     # This function returns the reward for one iteration of MCTSdpw 
-    if d == 0
+    if d == 0 || isterminal(dpw.mdp, s)
         return 0.0 # XXX is this right or should it be a rollout?
     end
     if !haskey(dpw.T,s) # if state is not yet explored, add it to the set of states, perform a rollout 
@@ -113,7 +113,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
         end
         sanode.V[sp].N += 1
     else # sample from transition states proportional to their occurence in the past
-        warn("sampling states: |V|=$(length(sanode.V)), N=$(sanode.N)")
+        # warn("sampling states: |V|=$(length(sanode.V)), N=$(sanode.N)")
         rn = rand(dpw.solver.rng, 1:sanode.N) # this is where Jon's bug was (I think)
         cnt = 0
         local sp
