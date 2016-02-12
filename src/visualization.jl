@@ -8,6 +8,7 @@ type TreeVisualizer{PolicyType}
 end
 
 node_tag(s) = string(s)
+tooltip_tag(s) = node_tag(s)
 
 function create_json(visualizer::TreeVisualizer{DPWPolicy})
     local root_id
@@ -21,6 +22,7 @@ function create_json(visualizer::TreeVisualizer{DPWPolicy})
                                        "type"=>:state,
                                        "children_ids"=>Array(Int,0),
                                        "tag"=>node_tag(s),
+                                       "tt_tag"=>tooltip_tag(s),
                                        "N"=>sn.N
                                        )
         if s == visualizer.init_state
@@ -35,6 +37,7 @@ function create_json(visualizer::TreeVisualizer{DPWPolicy})
                                       "type"=>:action,
                                       "children_ids"=>Array(Int,0),
                                       "tag"=>node_tag(a),
+                                      "tt_tag"=>tooltip_tag(a),
                                       "N"=>san.N,
                                       "Q"=>san.Q
                                       )
@@ -56,6 +59,7 @@ function create_json(visualizer::TreeVisualizer{DPWPolicy})
                                        "type"=>:state,
                                        "children_ids"=>Array(Int,0),
                                        "tag"=>node_tag(sp),
+                                       "tt_tag"=>tooltip_tag(sp),
                                        "N"=>0
                                        )
                     push!(sad["children_ids"], next_id)

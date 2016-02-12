@@ -34,10 +34,7 @@ console.log("tree should appear");
 function createDisplayNode(nd) {
   var dnode = {"dataID":nd.id,
                "children":null,
-               "_children":null,
-               "tag":nd.tag,
-               "type":nd.type,
-               "N":nd.N};
+               "_children":null};
   if (nd.type=="action") {
       dnode.Q = nd.Q;
   }
@@ -61,11 +58,12 @@ function initializeChildren(d) {
 }
 
 function tooltip(d) {
-    var tt = d.tag + "\n" +
-    "id: " + d.dataID + "\n" +
-    "N: " + d.N;
-    if (d.type=="action") {
-        tt += "\nQ: " + d.Q;
+    var data = treeData[d.dataID]
+    var tt = data.tt_tag + "\n" +
+    "id: " + data.id + "\n" +
+    "N: " + data.N;
+    if (data.type=="action") {
+        tt += "\nQ: " + data.Q;
     }
     return tt;
 }
@@ -130,17 +128,17 @@ function update(source) {
 	  .style("fill-opacity", 1e-6);
 
   tbox.append("tspan")
-      .text( function(d) { return d.tag; } );
+      .text( function(d) { return treeData[d.dataID].tag; } );
 
   tbox.append("tspan")
       .attr("dy","1.2em")
       .attr("x",0)
-      .text( function(d) {return "N:" + d.N;} );
+      .text( function(d) {return "N:" + treeData[d.dataID].N;} );
 
   tbox.append("tspan")
       .attr("dy","1.2em")
       .attr("x",0)
-      .text( function(d) { if (d.type=="action") {return " Q:" + d.Q.toPrecision(4);}});
+      .text( function(d) { if (treeData[d.dataID].type=="action") {return " Q:" + treeData[d.dataID].Q.toPrecision(4);}});
 
   // tooltip
   nodeEnter.append("title").text(tooltip)
