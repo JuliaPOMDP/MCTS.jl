@@ -1,4 +1,5 @@
 import JSON
+import Base: writemime
 
 # put your policy in one of these to automatically visualize it in a python notebook
 type TreeVisualizer{PolicyType}
@@ -67,7 +68,7 @@ function create_json(visualizer::TreeVisualizer{DPWPolicy})
     return (json, root_id)
 end
 
-function Base.writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer{DPWPolicy})
+function writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer{DPWPolicy})
     json, root_id = create_json(visualizer)
     # write("/tmp/tree_dump.json", json)
     css = readall(joinpath(dirname(@__FILE__()), "tree_vis.css"))

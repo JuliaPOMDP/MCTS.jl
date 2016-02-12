@@ -135,12 +135,12 @@ function update(source) {
   tbox.append("tspan")
       .attr("dy","1.2em")
       .attr("x",0)
-      .text( function(d) {return "N: " + d.N;} );
+      .text( function(d) {return "N:" + d.N;} );
 
   tbox.append("tspan")
       .attr("dy","1.2em")
       .attr("x",0)
-      .text( function(d) { if (d.type=="action") {return " Q: " + d.Q.toPrecision(4);}});
+      .text( function(d) { if (d.type=="action") {return " Q:" + d.Q.toPrecision(4);}});
 
   // tooltip
   nodeEnter.append("title").text(tooltip)

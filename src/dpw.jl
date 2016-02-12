@@ -116,7 +116,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
         # warn("sampling states: |V|=$(length(sanode.V)), N=$(sanode.N)")
         rn = rand(dpw.solver.rng, 1:sanode.N) # this is where Jon's bug was (I think)
         cnt = 0
-        local sp
+        local sp, sasnode
         for (sp,sasnode) in sanode.V
             cnt += sasnode.N
             if rn <= cnt
