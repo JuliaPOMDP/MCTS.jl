@@ -52,7 +52,7 @@ function fill_defaults!(p::MCTSPolicy, solver::MCTSSolver=p.mcts, mdp::POMDP=p.m
     if isa(p.mcts.rollout_solver, Solver)
         p.rollout_policy = solve(p.mcts.rollout_solver, mdp)
     else
-        p.rollout_policy = p.mcts.rollout_policy
+        p.rollout_policy = p.mcts.rollout_solver
     end
 
     # creates the action map

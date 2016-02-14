@@ -1,37 +1,3 @@
-type StateActionStateNode
-    N::Int
-    R::Float64
-    StateActionStateNode() = new(0,0)
-end
-
-type StateActionNode
-    V::Dict{State,StateActionStateNode}
-    N::Int
-    Q::Float64
-    StateActionNode() = new(Dict{State,StateActionStateNode}(),0,0)
-end
-
-type DPWStateNode
-    A::Dict{Action,StateActionNode}
-    N::Int
-    DPWStateNode() = new(Dict{Action,StateActionNode}(),0)
-end
-
-type DPWPolicy <: Policy
-    solver::DPWSolver
-    mdp::POMDP
-    T::Dict{State,DPWStateNode} 
-    rollout_policy::Policy
-    _action_space::AbstractSpace
-end
-
-DPWPolicy(solver::DPWSolver,
-          mdp::POMDP) = DPWPolicy(solver,
-                                  mdp,
-                                  Dict{State,DPWStateNode}(),
-                                  RandomPolicy(mdp, solver.rng), 
-                                  actions(mdp))
-
 function POMDPs.solve(solver::DPWSolver, mdp::POMDP, p::DPWPolicy=DPWPolicy(solver, mdp))
     if isa(p.solver.rollout_solver, Solver) 
         p.rollout_policy = solve(p.solver.rollout_solver, mdp)
@@ -77,7 +43,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
 
     # action progressive widening
     if length(snode.A) <= dpw.solver.k_action*snode.N^dpw.solver.alpha_action # criterion for new action generation
-        a = next_action(dpw, dpw.mdp, s, snode) # action generation step
+        a = next_action(dpw.solver.action_generator, dpw.mdp, s, snode) # action generation step
         if !haskey(snode.A,a) # make sure we haven't already tried this action
             snode.A[a] = StateActionNode() # TODO: Mechanism to set N0, Q0
         end
@@ -146,8 +112,4 @@ end
 function rollout(dpw::DPWPolicy, s::State, d::Int)
     sim = MDPRolloutSimulator(rng=dpw.solver.rng, max_steps=d) # TODO(?) add a mechanism to customize this
     POMDPs.simulate(sim, dpw.mdp, dpw.rollout_policy, s)
-end
-
-function next_action(dpw::DPWPolicy, mdp::POMDP, s::State, snode::DPWStateNode)
-    rand(dpw.solver.rng, actions(mdp, s, dpw._action_space))
 end
