@@ -2,7 +2,7 @@ using MCTS
 using POMDPModels
 using Base.Test
 
-n_iter = 50
+n_iter = 100
 depth = 15
 ec = 1.0
 
@@ -13,6 +13,7 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = action(policy, state)
+@time a = action(policy, state)
 
 include("dpw_test.jl")
+include("aggregation_test.jl")

@@ -1,4 +1,4 @@
-n_iter = 50
+n_iter = 100
 depth = 15
 ec = 3.0
 
@@ -9,4 +9,4 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = action(policy, state)
+@time a = action(policy, state)
