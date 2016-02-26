@@ -17,6 +17,9 @@ export
     RandomActionGenerator,
     TreeVisualizer
 
+abstract AbstractMCTSPolicy <: Policy
+abstract AbstractMCTSSolver <: Solver
+
 include("policies.jl")
 include("simulators.jl")
 include("vanilla.jl")

@@ -9,13 +9,16 @@ assign(ag::NoAggregation, s) = s
 
 # handles statistics for an aggregated state
 type AgNode
-    N::Array{Int64,1} # number of visits at the node for each action
-    Q::Array{Reward,1} # estimated value for each action
-    AgNode(nA) = new(zeros(Int32,nA),zeros(Reward,nA)) # simplified cosntructor
+    N::Int # number of visits at the node for each action
+    sanodes::Vector{StateActionNode} # all of the actions and their statistics
+end
+function AgNode(mdp::POMDP, agstate)
+    ns = StateActionNode[StateActionNode(a, 0, 0.0) for a in iterator(actions(mdp, agstate))]
+    return AgNode(0, ns)
 end
 
 # AgUCT solver type
-type AgUCTSolver <: POMDPs.Solver
+type AgUCTSolver <: AbstractMCTSSolver
 	n_iterations::Int64	# number of iterations during each action() call
 	depth::Int64 # the max depth of the tree
 	exploration_constant::Float64 # constant balancing exploration and exploitation
@@ -35,16 +38,11 @@ function AgUCTSolver(;n_iterations::Int64 = 100,
     return AgUCTSolver(n_iterations, depth, exploration_constant, aggregator, rng, rollout_solver)
 end
 
-type AgUCTPolicy <: POMDPs.Policy
+type AgUCTPolicy <: AbstractMCTSPolicy
 	mcts::AgUCTSolver # containts the solver parameters
 	mdp::POMDP # model
     rollout_policy::Policy # rollout policy
     tree::Dict{Any, AgNode} # maps aggregate states to corresponding nodes
-    action_map::Vector{Action} # for converting action idxs to action types
-    action_space::AbstractSpace # pre-allocated for rollout
-    state::State # pre-allocated for sampling
-    action::Action # pre-allocated for sampling
-    distribution::AbstractDistribution # pre-allocated for memory efficiency
     sim::MDPRolloutSimulator # for doing rollouts
 
     AgUCTPolicy()=new() # is it too dangerous to have this?
@@ -65,20 +63,8 @@ function fill_defaults!(p::AgUCTPolicy, solver::AgUCTSolver=p.mcts, mdp::POMDP=p
         p.rollout_policy = p.mcts.rollout_solver
     end
 
-    # creates the action map
-    am = Action[]
-    space = actions(mdp)
-    for a in iterator(space)
-        push!(am, a)
-    end
-    p.action_map = am
-
     # pre-allocate
     p.tree = Dict{Any, AgNode}()
-    p.action_space = actions(mdp)
-    p.distribution = create_transition_distribution(mdp)
-    p.state = create_state(mdp)
-    p.action = create_action(mdp)
     p.sim = MDPRolloutSimulator(rng=solver.rng, max_steps=0)
     return p
 end
@@ -89,67 +75,17 @@ function POMDPs.solve(solver::AgUCTSolver, mdp::POMDP, policy::AgUCTPolicy=AgUCT
     return policy
 end
 
-# retuns an approximately optimal action
-function POMDPs.action(policy::AgUCTPolicy, state::State)
-    n_iterations = policy.mcts.n_iterations
-    depth = policy.mcts.depth
-    # build the tree
-    for n = 1:n_iterations
-        simulate(policy, state, depth)
-    end
-    # find the index of action with highest q val
-    agstate = assign(policy.mcts.aggregator, state)
-    i = indmax(policy.tree[agstate].Q)
-    # use map to convert index to mdp action
-    return policy.action_map[i]
+function hasnode(policy::AgUCTPolicy, s::State)
+    agstate = assign(policy.mcts.aggregator, s)
+    return haskey(policy.tree, agstate)
 end
 
-# runs a simulation from the passed in state to the specified depth
-function simulate(policy::AgUCTPolicy, state::State, depth::Int64)
-    # model parameters
-    mdp = policy.mdp
-    na = n_actions(mdp)
-    discount_factor = discount(mdp) 
-    sp = policy.state
-    rng = policy.mcts.rng
-
-    # solver parameters
-    n_iterations = policy.mcts.n_iterations
-    tree = policy.tree
-    ec = policy.mcts.exploration_constant
-
-    # once depth is zero return
-    if depth == 0
-        return 0.0
-    end
-
-    agstate = assign(policy.mcts.aggregator, state)
-
-    # if unexplored state add to the tree and run rollout
-    if !haskey(tree, agstate)
-        tree[deepcopy(agstate)] = AgNode(na)
-        return rollout(policy, state, depth) # TODO(?) upgrade this to some more flexible value estimate
-    end 
-    # if previously visited node
-    agnode = tree[agstate]
-    # pick action using UCT
-    i = indmax(agnode.Q + ec * real(sqrt(complex(log(sum(agnode.N))./agnode.N)))) 
-    a = policy.action_map[i]
-    # transition to a new state
-    d = policy.distribution
-    d = transition(mdp, state, a, d)
-    sp = rand(rng, d, sp)
-    # update the Q and n values
-    r = reward(mdp, state, a, sp)
-    q = r + discount_factor * simulate(policy, sp, depth - 1)
-    agnode.N[i] += 1 # increase number of node visits by one
-    agnode.Q[i] += ((q - agnode.Q[i]) / (agnode.N[i])) # moving average of Q value
-    return q
+function insert_node!(policy::AgUCTPolicy, s::State)
+    agstate = assign(policy.mcts.aggregator, s)
+    policy.tree[agstate] = AgNode(policy.mdp, agstate) # 
 end
 
-# recursive rollout to specified depth, returns the accumulated discounted reward
-function rollout(policy::AgUCTPolicy, s::State, d::Int)
-    sim = policy.sim
-    sim.max_steps = d 
-    POMDPs.simulate(sim, policy.mdp, policy.rollout_policy, s)
+function getnode(policy::AgUCTPolicy, s::State)
+    agstate = assign(policy.mcts.aggregator, s)
+    return policy.tree[agstate]
 end

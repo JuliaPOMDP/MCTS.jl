@@ -1,4 +1,4 @@
-n_iter = 100
+n_iter = 1000
 depth = 15
 ec = 3.0
 
