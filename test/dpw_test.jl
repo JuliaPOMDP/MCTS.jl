@@ -1,4 +1,4 @@
-n_iter = 1000
+n_iter = 10000
 depth = 15
 ec = 3.0
 
@@ -9,4 +9,5 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
+a = action(deepcopy(policy), state)
 @time a = action(policy, state)

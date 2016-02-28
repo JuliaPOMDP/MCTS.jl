@@ -2,6 +2,8 @@ type StateActionNode
     action::Action
     N::Int
     Q::Float64
+    _vis_stats::Any # for visualization, will be gibberish if data is not recorded
+    StateActionNode(a::Action, N0::Int, Q0::Float64) = new(a, N0, Q0)
 end
 
 # State node in the search tree
@@ -23,14 +25,16 @@ type MCTSSolver <: AbstractMCTSSolver
     rollout_solver::Union{Solver,Policy} # rollout policy
                                          # if this is a Solver, solve() will be called when solve() is called on the MCTSSolver;
                                          # if this is a Policy, it will be used directly
+    enable_tree_vis::Bool # if true, will record data needed for visualization
 end
 # solver constructor
 function MCTSSolver(;n_iterations::Int64 = 100, 
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(),
-                     rollout_solver = RandomSolver(rng)) # random policy is default
-    return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver)
+                     rollout_solver = RandomSolver(rng), # random policy is default
+                     enable_tree_vis::Bool=false)
+    return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver, enable_tree_vis)
 end
 
 # MCTS policy type
@@ -101,7 +105,7 @@ function simulate(policy::AbstractMCTSPolicy, state::State, depth::Int64)
 
     # if unexplored state add to the tree and run rollout
     if !hasnode(policy, state)
-        insert_node!(policy, state)
+        newnode = insert_node!(policy, state)
         return rollout(policy, state, depth) # TODO(?) upgrade this to some more flexible value estimate
     end 
     # if previously visited node
@@ -111,14 +115,12 @@ function simulate(policy::AbstractMCTSPolicy, state::State, depth::Int64)
     sanode = best_sanode_UCB(snode, policy.mcts.exploration_constant)
 
     # transition to a new state
-    #=
-    d = policy.distribution
-    d = transition(mdp, state, sanode.action, d)
-    sp = rand(rng, d)
-    # update the Q and n values
-    r = reward(mdp, state, sanode.action, sp)
-    =#
     sp, r = generate(mdp, state, sanode.action, rng)
+    
+    if policy.mcts.enable_tree_vis
+        record_visit(policy, sanode, sp)
+    end
+
     q = r + discount_factor * simulate(policy, sp, depth - 1)
     sanode.N += 1
     sanode.Q += ((q - sanode.Q) / (sanode.N)) # moving average of Q value
@@ -135,9 +137,16 @@ end
 # these functions are here so that they can be overridden by the aggregating solver
 hasnode(policy::AbstractMCTSPolicy, s::State) = haskey(policy.tree, s)
 function insert_node!(policy::AbstractMCTSPolicy, s::State)
-    policy.tree[deepcopy(s)] = StateNode(policy.mdp, s)
+    newnode = policy.tree[deepcopy(s)] = StateNode(policy.mdp, s)
+    if policy.mcts.enable_tree_vis
+        for sanode in newnode.sanodes
+            sanode._vis_stats = Set()
+        end
+    end
+    return newnode
 end
 getnode(policy::AbstractMCTSPolicy, s::State) = policy.tree[s]
+record_visit(policy::AbstractMCTSPolicy, sanode::StateActionNode, s) = push!(sanode._vis_stats, s)
 
 # returns the best action based on the Q score
 function best_sanode_Q(snode)

@@ -27,6 +27,7 @@ type AgUCTSolver <: AbstractMCTSSolver
     rollout_solver::Union{Solver,Policy} # rollout policy
                                          # if this is a Solver, solve() will be called when solve() is called on the AgUCTSolver;
                                          # if this is a Policy, it will be used directly
+    enable_tree_vis::Bool
 end
 # solver constructor
 function AgUCTSolver(;n_iterations::Int64 = 100, 
@@ -34,8 +35,9 @@ function AgUCTSolver(;n_iterations::Int64 = 100,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(),
                      aggregator = NoAggregation(),
-                     rollout_solver = RandomSolver(rng)) # random policy is default
-    return AgUCTSolver(n_iterations, depth, exploration_constant, aggregator, rng, rollout_solver)
+                     rollout_solver = RandomSolver(rng), # random policy is default
+                     enable_tree_vis::Bool = false)
+    return AgUCTSolver(n_iterations, depth, exploration_constant, aggregator, rng, rollout_solver, enable_tree_vis)
 end
 
 type AgUCTPolicy <: AbstractMCTSPolicy
@@ -82,10 +84,20 @@ end
 
 function insert_node!(policy::AgUCTPolicy, s::State)
     agstate = assign(policy.mcts.aggregator, s)
-    policy.tree[agstate] = AgNode(policy.mdp, agstate) # 
+    newnode = policy.tree[agstate] = AgNode(policy.mdp, agstate) # 
+    if policy.mcts.enable_tree_vis
+        for sanode in newnode.sanodes
+            sanode._vis_stats = Set()
+        end
+    end
+    return newnode
 end
 
 function getnode(policy::AgUCTPolicy, s::State)
     agstate = assign(policy.mcts.aggregator, s)
     return policy.tree[agstate]
+end
+
+function record_visit(policy::AgUCTPolicy, sanode::StateActionNode, s)
+    push!(sanode._vis_stats, assign(policy.mcts.aggregator, s))
 end
