@@ -2,6 +2,8 @@ abstract Aggregator # assigns states of type S to aggregate states; should have 
 
 # assigns a ground state to an aggregate state
 assign(ag::Aggregator, s) = error("no implementation of assign() for ag::$(typeof(ag)) for AgUCTSolver. Please implement this method to define how to aggregate states.")
+# gives the aggregator information about the mdp at the beginning will be called within solve(::AgUCTSolver, ::POMDP)
+function initialize!(ag::Aggregator, mdp::POMDP) end # do nothing by default
 
 # this simply aggregates states to themselves - for testing purposes
 type NoAggregation <: Aggregator end
@@ -64,6 +66,8 @@ function fill_defaults!(p::AgUCTPolicy, solver::AgUCTSolver=p.mcts, mdp::POMDP=p
     else
         p.rollout_policy = p.mcts.rollout_solver
     end
+
+    initialize!(p.aggregator, mdp)
 
     # pre-allocate
     p.tree = Dict{Any, AgNode}()
