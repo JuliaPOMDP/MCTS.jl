@@ -48,6 +48,7 @@ type AgUCTPolicy <: AbstractMCTSPolicy
     rollout_policy::Policy # rollout policy
     tree::Dict{Any, AgNode} # maps aggregate states to corresponding nodes
     sim::MDPRolloutSimulator # for doing rollouts
+    aggregator::Aggregator # a copy of the aggregator in the solver (a copy is necessary because the aggregator might mutate)
 
     AgUCTPolicy()=new() # is it too dangerous to have this?
 end
@@ -67,6 +68,7 @@ function fill_defaults!(p::AgUCTPolicy, solver::AgUCTSolver=p.mcts, mdp::POMDP=p
         p.rollout_policy = p.mcts.rollout_solver
     end
 
+    p.aggregator = deepcopy(p.mcts.aggregator)
     initialize!(p.aggregator, mdp)
 
     # pre-allocate
