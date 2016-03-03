@@ -110,6 +110,7 @@ function simulate(policy::AbstractMCTSPolicy, state::State, depth::Int64)
     end 
     # if previously visited node
     snode = getnode(policy, state)
+
     # pick action using UCT
     snode.N += 1 # increase number of node visits by one
     sanode = best_sanode_UCB(snode, policy.mcts.exploration_constant)
