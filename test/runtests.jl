@@ -13,7 +13,7 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = action(deepcopy(policy), state)
+a = action(policy, state)
 @time a = action(policy, state)
 
 include("dpw_test.jl")
