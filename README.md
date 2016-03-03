@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/JuliaPOMDP/MCTS.jl.svg?branch=master)](https://travis-ci.org/JuliaPOMDP/MCTS.jl)
-[![Coverage Status](https://coveralls.io/repos/JuliaPOMDP/MCTS.jl/badge.svg)](https://coveralls.io/r/JuliaPOMDP/MCTS.jl)
+[![Coverage Status](https://coveralls.io/repos/github/JuliaPOMDP/MCTS.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaPOMDP/MCTS.jl?branch=master)
 
 # MCTS
 
