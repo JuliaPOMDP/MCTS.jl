@@ -84,12 +84,12 @@ function POMDPs.solve(solver::AgUCTSolver, mdp::POMDP, policy::AgUCTPolicy=AgUCT
 end
 
 function hasnode(policy::AgUCTPolicy, s::State)
-    agstate = assign(policy.mcts.aggregator, s)
+    agstate = assign(policy.aggregator, s)
     return haskey(policy.tree, agstate)
 end
 
 function insert_node!(policy::AgUCTPolicy, s::State)
-    agstate = assign(policy.mcts.aggregator, s)
+    agstate = assign(policy.aggregator, s)
     newnode = policy.tree[agstate] = AgNode(policy.mdp, agstate) # 
     if policy.mcts.enable_tree_vis
         for sanode in newnode.sanodes
@@ -100,10 +100,10 @@ function insert_node!(policy::AgUCTPolicy, s::State)
 end
 
 function getnode(policy::AgUCTPolicy, s::State)
-    agstate = assign(policy.mcts.aggregator, s)
+    agstate = assign(policy.aggregator, s)
     return policy.tree[agstate]
 end
 
 function record_visit(policy::AgUCTPolicy, sanode::StateActionNode, s)
-    push!(sanode._vis_stats, assign(policy.mcts.aggregator, s))
+    push!(sanode._vis_stats, assign(policy.aggregator, s))
 end
