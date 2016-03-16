@@ -45,7 +45,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
     if length(snode.A) <= dpw.solver.k_action*snode.N^dpw.solver.alpha_action # criterion for new action generation
         a = next_action(dpw.solver.action_generator, dpw.mdp, s, snode) # action generation step
         if !haskey(snode.A,a) # make sure we haven't already tried this action
-            snode.A[a] = StateActionNode() # TODO: Mechanism to set N0, Q0
+            snode.A[a] = DPWStateActionNode() # TODO: Mechanism to set N0, Q0
         end
     end
 

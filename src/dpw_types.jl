@@ -8,7 +8,7 @@ type RandomActionGenerator <: ActionGenerator
 end
 
 # type and constructor for the dpw solver
-type DPWSolver <: Solver
+type DPWSolver <: AbstractMCTSSolver
     depth::Int                       # search depth
     exploration_constant::Float64    # exploration constant- governs trade-off between exploration and exploitation in MCTS
     n_iterations::Int                # number of iterations
@@ -42,20 +42,20 @@ type StateActionStateNode
     StateActionStateNode() = new(0,0)
 end
 
-type StateActionNode
+type DPWStateActionNode
     V::Dict{State,StateActionStateNode}
     N::Int
     Q::Float64
-    StateActionNode() = new(Dict{State,StateActionStateNode}(),0,0)
+    DPWStateActionNode() = new(Dict{State,StateActionStateNode}(),0,0)
 end
 
 type DPWStateNode
-    A::Dict{Action,StateActionNode}
+    A::Dict{Action,DPWStateActionNode}
     N::Int
-    DPWStateNode() = new(Dict{Action,StateActionNode}(),0)
+    DPWStateNode() = new(Dict{Action,DPWStateActionNode}(),0)
 end
 
-type DPWPolicy <: Policy
+type DPWPolicy <: AbstractMCTSPolicy
     solver::DPWSolver
     mdp::POMDP
     T::Dict{State,DPWStateNode} 

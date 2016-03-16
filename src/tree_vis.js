@@ -2,7 +2,7 @@
 // ************** Generate the tree diagram	 *****************
 // var margin = {top: 20, right: 120, bottom: 20, left: 120},
 var margin = {top: 20, right: 120, bottom: 80, left: 120},
-	width = $("#treevis").width() - margin.right - margin.left,
+	width = $(div).width() - margin.right - margin.left,
     height = 600 - margin.top - margin.bottom;
     // TODO make height a parameter of TreeVisualizer
 	
@@ -17,7 +17,7 @@ var diagonal = d3.svg.diagonal();
 	//.projection(function(d) { return [d.y, d.x]; });
     // uncomment above to make the tree go horizontally
 
-var svg = d3.select("#treevis").append("svg")
+var svg = d3.select(div).append("svg")
 	.attr("width", width + margin.right + margin.left)
 	.attr("height", height + margin.top + margin.bottom)
   .append("g")
