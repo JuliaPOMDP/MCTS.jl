@@ -1,6 +1,7 @@
 module MCTS
 
 using POMDPs
+using POMDPToolbox
 
 export 
     MCTSSolver, 
@@ -22,11 +23,11 @@ abstract AbstractMCTSSolver <: Solver
 
 include("simulators.jl")
 include("vanilla.jl")
-include("dpw_types.jl")
-include("dpw.jl")
-include("action_gen.jl")
-include("aggregation.jl")
+# include("dpw_types.jl")
+# include("dpw.jl")
+# include("action_gen.jl")
+# include("aggregation.jl")
 
-include("visualization.jl")
+# include("visualization.jl")
 
 end # module

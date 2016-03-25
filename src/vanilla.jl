@@ -11,7 +11,7 @@ type StateNode{A}
     N::Int # number of visits to the node
     sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
-function StateNode{A}(mdp::POMDP, s)
+function StateNode{S,A}(mdp::MDP{S,A}, s::S)
     ns = StateActionNode{A}[StateActionNode{A}(a, 0, 0.0) for a in iterator(actions(mdp, s))] # TODO: mechanism for assigning N0, Q0
     return StateNode{A}(0, ns)
 end
@@ -40,7 +40,7 @@ end
 # MCTS policy type
 type MCTSPolicy{S,A} <: AbstractMCTSPolicy
 	mcts::MCTSSolver # containts the solver parameters
-	mdp::POMDP # model
+	mdp::MDP{S,A} # model
     rollout_policy::Policy # rollout policy
     tree::Dict{S, StateNode{A}} # the search tree
     sim::MDPRolloutSimulator # for doing rollouts
@@ -145,7 +145,7 @@ function insert_node!(policy::AbstractMCTSPolicy, s)
     return newnode
 end
 getnode(policy::AbstractMCTSPolicy, s) = policy.tree[s]
-record_visit(policy::AbstractMCTSPolicy, sanode::StateActionNode, s) = push!(sanode._vis_stats, s)
+record_visit(policy::AbstractMCTSPolicy, sanode::StateActionNode, s) = push!(get(sanode._vis_stats), s)
 
 # returns the best action based on the Q score
 function best_sanode_Q(snode)
