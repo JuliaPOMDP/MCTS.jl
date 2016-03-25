@@ -1,19 +1,19 @@
-type StateActionNode
-    action::Action
+type StateActionNode{A}
+    action::A
     N::Int
     Q::Float64
-    _vis_stats::Any # for visualization, will be gibberish if data is not recorded
-    StateActionNode(a::Action, N0::Int, Q0::Float64) = new(a, N0, Q0)
+    _vis_stats::Nullable{Any} # for visualization, will be gibberish if data is not recorded
+    StateActionNode(a, N0, Q0) = new(a, N0, Q0, Nullable{Any}())
 end
 
 # State node in the search tree
-type StateNode
+type StateNode{A}
     N::Int # number of visits to the node
-    sanodes::Vector{StateActionNode} # all of the actions and their statistics
+    sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
-function StateNode(mdp::POMDP, s::State)
-    ns = StateActionNode[StateActionNode(a, 0, 0.0) for a in iterator(actions(mdp, s))] # TODO: mechanism for assigning N0, Q0
-    return StateNode(0, ns)
+function StateNode{A}(mdp::POMDP, s)
+    ns = StateActionNode{A}[StateActionNode{A}(a, 0, 0.0) for a in iterator(actions(mdp, s))] # TODO: mechanism for assigning N0, Q0
+    return StateNode{A}(0, ns)
 end
 
 # MCTS solver type
@@ -38,24 +38,23 @@ function MCTSSolver(;n_iterations::Int64 = 100,
 end
 
 # MCTS policy type
-type MCTSPolicy <: AbstractMCTSPolicy
+type MCTSPolicy{S,A} <: AbstractMCTSPolicy
 	mcts::MCTSSolver # containts the solver parameters
 	mdp::POMDP # model
     rollout_policy::Policy # rollout policy
-    tree::Dict{State, StateNode} # the search tree
-    distribution::AbstractDistribution # pre-allocated for memory efficiency
+    tree::Dict{S, StateNode{A}} # the search tree
     sim::MDPRolloutSimulator # for doing rollouts
 
     MCTSPolicy()=new() # is it too dangerous to have this?
 end
 # policy constructor
-function MCTSPolicy(mcts::MCTSSolver, mdp::POMDP)
-    p = MCTSPolicy()
+function MCTSPolicy{S,A}(mcts::MCTSSolver, mdp::MDP{S,A})
+    p = MCTSPolicy{S,A}()
     fill_defaults!(p, mcts, mdp)
     p
 end
 # sets members to suitable default values (broken out of the constructor so that it can be used elsewhere)
-function fill_defaults!(p::MCTSPolicy, solver::MCTSSolver=p.mcts, mdp::POMDP=p.mdp)
+function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.mcts, mdp::MDP{S,A}=p.mdp)
     p.mcts = solver
     p.mdp = mdp
     if isa(p.mcts.rollout_solver, Solver)
@@ -65,20 +64,19 @@ function fill_defaults!(p::MCTSPolicy, solver::MCTSSolver=p.mcts, mdp::POMDP=p.m
     end
 
     # pre-allocate
-    p.tree = Dict{State, StateNode}()
-    p.distribution = create_transition_distribution(mdp)
+    p.tree = Dict{S, StateNode{A}}()
     p.sim = MDPRolloutSimulator(rng=solver.rng, max_steps=0)
     return p
 end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve(solver::MCTSSolver, mdp::POMDP, policy::MCTSPolicy=MCTSPolicy())
+function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::MDP{S,A}, policy::MCTSPolicy{S,A}=MCTSPolicy{S,A}())
     fill_defaults!(policy, solver, mdp)
     return policy
 end
 
 # retuns an approximately optimal action
-function POMDPs.action(policy::AbstractMCTSPolicy, state::State)
+function POMDPs.action(policy::AbstractMCTSPolicy, state)
     n_iterations = policy.mcts.n_iterations
     depth = policy.mcts.depth
     # build the tree
@@ -92,7 +90,7 @@ function POMDPs.action(policy::AbstractMCTSPolicy, state::State)
 end
 
 # runs a simulation from the passed in state to the specified depth
-function simulate(policy::AbstractMCTSPolicy, state::State, depth::Int64)
+function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     # model parameters
     mdp = policy.mdp
     discount_factor = discount(mdp) 
@@ -129,15 +127,15 @@ function simulate(policy::AbstractMCTSPolicy, state::State, depth::Int64)
 end
 
 # recursive rollout to specified depth, returns the accumulated discounted reward
-function rollout(policy::AbstractMCTSPolicy, s::State, d::Int)
+function rollout(policy::AbstractMCTSPolicy, s, d::Int)
     sim = policy.sim
     sim.max_steps = d 
     POMDPs.simulate(sim, policy.mdp, policy.rollout_policy, s)
 end
 
 # these functions are here so that they can be overridden by the aggregating solver
-hasnode(policy::AbstractMCTSPolicy, s::State) = haskey(policy.tree, s)
-function insert_node!(policy::AbstractMCTSPolicy, s::State)
+hasnode(policy::AbstractMCTSPolicy, s) = haskey(policy.tree, s)
+function insert_node!(policy::AbstractMCTSPolicy, s)
     newnode = policy.tree[deepcopy(s)] = StateNode(policy.mdp, s)
     if policy.mcts.enable_tree_vis
         for sanode in newnode.sanodes
@@ -146,7 +144,7 @@ function insert_node!(policy::AbstractMCTSPolicy, s::State)
     end
     return newnode
 end
-getnode(policy::AbstractMCTSPolicy, s::State) = policy.tree[s]
+getnode(policy::AbstractMCTSPolicy, s) = policy.tree[s]
 record_visit(policy::AbstractMCTSPolicy, sanode::StateActionNode, s) = push!(sanode._vis_stats, s)
 
 # returns the best action based on the Q score
