@@ -78,6 +78,10 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
             sanode.V[sp].R = r
         end
         sanode.V[sp].N += 1
+
+        # XXX this differs from Mykel's writeup. is it ok?
+        sanode.N += 1
+
     else # sample from transition states proportional to their occurence in the past
         # warn("sampling states: |V|=$(length(sanode.V)), N=$(sanode.N)")
         rn = rand(dpw.solver.rng, 1:sanode.N) # this is where Jon's bug was (I think)
@@ -91,11 +95,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
         end
 
         r = sasnode.R
-        sasnode.N += 1
     end
-
-    # XXX this differs from Mykel's writeup. is it ok?
-    sanode.N += 1
 
     q = r + discount(dpw.mdp)*simulate(dpw,sp,d-1)
 
