@@ -52,7 +52,7 @@ function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
     for (s, sn) in visualizer.policy.tree
         for san in sn.sanodes
             a = san.action
-            for sp in san._vis_stats
+            for sp in get(san._vis_stats)
                 sad = node_dict[sa_dict[(s,a)]]
                 if haskey(s_dict, sp)
                     push!(sad["children_ids"], s_dict[sp])
@@ -74,7 +74,7 @@ function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
     return (json, root_id)
 end
 
-function create_json(visualizer::TreeVisualizer{DPWPolicy})
+function create_json{P<:DPWPolicy}(visualizer::TreeVisualizer{P})
     local root_id
     next_id = 1
     node_dict = Dict{Int, Dict{UTF8String, Any}}()

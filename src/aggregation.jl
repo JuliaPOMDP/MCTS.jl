@@ -1,22 +1,24 @@
+# a UCT Solver that has nodes corresponding to aggregated states (a set of states) instead of individual states
+
 abstract Aggregator # assigns states of type S to aggregate states; should have assign() written for it
 
 # assigns a ground state to an aggregate state
 assign(ag::Aggregator, s) = error("no implementation of assign() for ag::$(typeof(ag)) for AgUCTSolver. Please implement this method to define how to aggregate states.")
-# gives the aggregator information about the mdp at the beginning will be called within solve(::AgUCTSolver, ::POMDP)
-function initialize!(ag::Aggregator, mdp::POMDP) end # do nothing by default
+# gives the aggregator information about the mdp at the beginning will be called within solve(::AgUCTSolver, ::MDP)
+function initialize!(ag::Aggregator, mdp::MDP) end # do nothing by default
 
 # this simply aggregates states to themselves - for testing purposes
 type NoAggregation <: Aggregator end
 assign(ag::NoAggregation, s) = s
 
 # handles statistics for an aggregated state
-type AgNode
+type AgNode{A}
     N::Int # number of visits at the node for each action
-    sanodes::Vector{StateActionNode} # all of the actions and their statistics
+    sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
-function AgNode(mdp::POMDP, agstate)
-    ns = StateActionNode[StateActionNode(a, 0, 0.0) for a in iterator(actions(mdp, agstate))]
-    return AgNode(0, ns)
+function AgNode{S,A}(mdp::MDP{S,A}, agstate)
+    ns = StateActionNode{A}[StateActionNode{A}(a, 0, 0.0) for a in iterator(actions(mdp, agstate))]
+    return AgNode{A}(0, ns)
 end
 
 # AgUCT solver type
@@ -42,24 +44,24 @@ function AgUCTSolver(;n_iterations::Int64 = 100,
     return AgUCTSolver(n_iterations, depth, exploration_constant, aggregator, rng, rollout_solver, enable_tree_vis)
 end
 
-type AgUCTPolicy <: AbstractMCTSPolicy
+type AgUCTPolicy{A} <: AbstractMCTSPolicy
 	mcts::AgUCTSolver # containts the solver parameters
-	mdp::POMDP # model
+	mdp::MDP # model
     rollout_policy::Policy # rollout policy
-    tree::Dict{Any, AgNode} # maps aggregate states to corresponding nodes
+    tree::Dict{Any, AgNode{A}} # maps aggregate states to corresponding nodes
     sim::MDPRolloutSimulator # for doing rollouts
     aggregator::Aggregator # a copy of the aggregator in the solver (a copy is necessary because the aggregator might mutate)
 
     AgUCTPolicy()=new() # is it too dangerous to have this?
 end
 # policy constructor
-function AgUCTPolicy(mcts::AgUCTSolver, mdp::POMDP)
-    p = AgUCTPolicy()
+function AgUCTPolicy{S,A}(mcts::AgUCTSolver, mdp::MDP{S,A})
+    p = AgUCTPolicy{A}()
     fill_defaults!(p, mcts, mdp)
     p
 end
 # sets members to suitable default values (broken out of the constructor so that it can be used elsewhere)
-function fill_defaults!(p::AgUCTPolicy, solver::AgUCTSolver=p.mcts, mdp::POMDP=p.mdp)
+function fill_defaults!{A}(p::AgUCTPolicy{A}, solver::AgUCTSolver=p.mcts, mdp::MDP=p.mdp)
     p.mcts = solver
     p.mdp = mdp
     if isa(p.mcts.rollout_solver, Solver)
@@ -72,23 +74,23 @@ function fill_defaults!(p::AgUCTPolicy, solver::AgUCTSolver=p.mcts, mdp::POMDP=p
     initialize!(p.aggregator, mdp)
 
     # pre-allocate
-    p.tree = Dict{Any, AgNode}()
+    p.tree = Dict{Any, AgNode{A}}()
     p.sim = MDPRolloutSimulator(rng=solver.rng, max_steps=0)
     return p
 end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve(solver::AgUCTSolver, mdp::POMDP, policy::AgUCTPolicy=AgUCTPolicy())
+function POMDPs.solve{S,A}(solver::AgUCTSolver, mdp::MDP{S,A}, policy::AgUCTPolicy=AgUCTPolicy{A}())
     fill_defaults!(policy, solver, mdp)
     return policy
 end
 
-function hasnode(policy::AgUCTPolicy, s::State)
+function hasnode(policy::AgUCTPolicy, s)
     agstate = assign(policy.aggregator, s)
     return haskey(policy.tree, agstate)
 end
 
-function insert_node!(policy::AgUCTPolicy, s::State)
+function insert_node!(policy::AgUCTPolicy, s)
     agstate = assign(policy.aggregator, s)
     newnode = policy.tree[agstate] = AgNode(policy.mdp, agstate) # 
     if policy.mcts.enable_tree_vis
@@ -99,11 +101,11 @@ function insert_node!(policy::AgUCTPolicy, s::State)
     return newnode
 end
 
-function getnode(policy::AgUCTPolicy, s::State)
+function getnode(policy::AgUCTPolicy, s)
     agstate = assign(policy.aggregator, s)
     return policy.tree[agstate]
 end
 
 function record_visit(policy::AgUCTPolicy, sanode::StateActionNode, s)
-    push!(sanode._vis_stats, assign(policy.aggregator, s))
+    push!(get(sanode._vis_stats), assign(policy.aggregator, s))
 end

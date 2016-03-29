@@ -1,4 +1,4 @@
-function POMDPs.solve(solver::DPWSolver, mdp::POMDP, p::DPWPolicy=DPWPolicy(solver, mdp))
+function POMDPs.solve(solver::DPWSolver, mdp::MDP, p::DPWPolicy=DPWPolicy(solver, mdp))
     if isa(p.solver.rollout_solver, Solver) 
         p.rollout_policy = solve(p.solver.rollout_solver, mdp)
     else
@@ -7,7 +7,7 @@ function POMDPs.solve(solver::DPWSolver, mdp::POMDP, p::DPWPolicy=DPWPolicy(solv
     return p
 end
 
-function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
+function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S, a::A=A())
     # This function calls simulate and chooses the approximate best action from the reward approximations
     # XXX do we need to make a copy of the state here?
     for i = 1:p.solver.n_iterations
@@ -26,7 +26,7 @@ function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
     return best_a # choose action with highest approximate value 
 end
 
-function simulate(dpw::DPWPolicy,s::State,d::Int)
+function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
     # TODO: reimplement this as a loop instead of a recursion?
 
     # This function returns the reward for one iteration of MCTSdpw 
@@ -34,7 +34,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
         return 0.0 # XXX is this right or should it be a rollout?
     end
     if !haskey(dpw.T,s) # if state is not yet explored, add it to the set of states, perform a rollout 
-        dpw.T[s] = DPWStateNode() # TODO: Mechanism to set N0
+        dpw.T[s] = DPWStateNode{S,A}() # TODO: Mechanism to set N0
         return estimate_value(dpw,s,d)
     end
 
@@ -45,7 +45,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
     if length(snode.A) <= dpw.solver.k_action*snode.N^dpw.solver.alpha_action # criterion for new action generation
         a = next_action(dpw.solver.action_generator, dpw.mdp, s, snode) # action generation step
         if !haskey(snode.A,a) # make sure we haven't already tried this action
-            snode.A[a] = DPWStateActionNode() # TODO: Mechanism to set N0, Q0
+            snode.A[a] = DPWStateActionNode{S}() # TODO: Mechanism to set N0, Q0
         end
     end
 
@@ -105,11 +105,11 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
 end
 
 # this can be overridden to specify behavior; by default it performs a rollout
-function estimate_value(dpw::DPWPolicy, s::State, d::Int)
+function estimate_value(dpw::DPWPolicy, s, d::Int)
     rollout(dpw, s, d)
 end
 
-function rollout(dpw::DPWPolicy, s::State, d::Int)
+function rollout(dpw::DPWPolicy, s, d::Int)
     sim = MDPRolloutSimulator(rng=dpw.solver.rng, max_steps=d) # TODO(?) add a mechanism to customize this
     POMDPs.simulate(sim, dpw.mdp, dpw.rollout_policy, s)
 end

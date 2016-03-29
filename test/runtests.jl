@@ -15,6 +15,6 @@ state = GridWorldState(1,1)
 
 a = action(policy, state)
 
-# include("dpw_test.jl")
-# include("aggregation_test.jl")
+include("dpw_test.jl")
+include("aggregation_test.jl")
 # include("visualization.jl")
