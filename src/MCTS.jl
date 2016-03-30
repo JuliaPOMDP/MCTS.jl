@@ -1,6 +1,7 @@
 module MCTS
 
 using POMDPs
+using GenerativeModels
 using POMDPToolbox
 
 export 
@@ -21,7 +22,6 @@ export
 abstract AbstractMCTSPolicy <: Policy
 abstract AbstractMCTSSolver <: Solver
 
-include("simulators.jl")
 include("vanilla.jl")
 include("dpw_types.jl")
 include("dpw.jl")
