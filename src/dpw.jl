@@ -1,4 +1,4 @@
-function POMDPs.solve(solver::DPWSolver, mdp::MDP, p::DPWPolicy=DPWPolicy(solver, mdp))
+function POMDPs.solve(solver::DPWSolver, mdp::PermissiveMDP, p::DPWPolicy=DPWPolicy(solver, mdp))
     if isa(p.solver.rollout_solver, Solver) 
         p.rollout_policy = solve(p.solver.rollout_solver, mdp)
     else

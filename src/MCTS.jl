@@ -22,6 +22,15 @@ export
 abstract AbstractMCTSPolicy <: Policy
 abstract AbstractMCTSSolver <: Solver
 
+"""
+Includes all MDPs and POMDPs, this allows MCTS to be used with a POMDP.
+
+When a POMDP is supplied, MCTS solves the fully-observable relaxation. Note also that every MDP is a PermissiveMDP.
+
+This may be removed in the future.
+"""
+typealias PermissiveMDP{S,A,_} POMDP{S,A,_}
+
 include("vanilla.jl")
 include("dpw_types.jl")
 include("dpw.jl")

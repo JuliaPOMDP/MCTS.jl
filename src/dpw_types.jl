@@ -57,13 +57,13 @@ end
 
 type DPWPolicy{S,A} <: AbstractMCTSPolicy
     solver::DPWSolver
-    mdp::MDP{S,A}
+    mdp::PermissiveMDP
     T::Dict{S,DPWStateNode{S,A}} 
     rollout_policy::Policy
 end
 
 DPWPolicy{S,A}(solver::DPWSolver,
-               mdp::MDP{S,A}) = DPWPolicy{S,A}(solver,
+               mdp::PermissiveMDP{S,A}) = DPWPolicy{S,A}(solver,
                                                mdp,
                                                Dict{S,DPWStateNode{S,A}}(),
                                                RandomPolicy(mdp, rng=solver.rng))

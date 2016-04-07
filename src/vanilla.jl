@@ -11,7 +11,7 @@ type StateNode{A}
     N::Int # number of visits to the node
     sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
-function StateNode{S,A}(mdp::MDP{S,A}, s::S)
+function StateNode{S,A,_}(mdp::PermissiveMDP{S,A,_}, s::S)
     ns = StateActionNode{A}[StateActionNode{A}(a, 0, 0.0) for a in iterator(actions(mdp, s))] # TODO: mechanism for assigning N0, Q0
     return StateNode{A}(0, ns)
 end
@@ -40,7 +40,7 @@ end
 # MCTS policy type
 type MCTSPolicy{S,A} <: AbstractMCTSPolicy
 	mcts::MCTSSolver # containts the solver parameters
-	mdp::MDP{S,A} # model
+	mdp::PermissiveMDP # model
     rollout_policy::Policy # rollout policy
     tree::Dict{S, StateNode{A}} # the search tree
     sim::MDPRolloutSimulator # for doing rollouts
@@ -48,13 +48,13 @@ type MCTSPolicy{S,A} <: AbstractMCTSPolicy
     MCTSPolicy()=new() # is it too dangerous to have this?
 end
 # policy constructor
-function MCTSPolicy{S,A}(mcts::MCTSSolver, mdp::MDP{S,A})
+function MCTSPolicy{S,A,_}(mcts::MCTSSolver, mdp::PermissiveMDP{S,A,_})
     p = MCTSPolicy{S,A}()
     fill_defaults!(p, mcts, mdp)
     p
 end
 # sets members to suitable default values (broken out of the constructor so that it can be used elsewhere)
-function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.mcts, mdp::MDP{S,A}=p.mdp)
+function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.mcts, mdp::PermissiveMDP=p.mdp)
     p.mcts = solver
     p.mdp = mdp
     if isa(p.mcts.rollout_solver, Solver)
@@ -70,7 +70,7 @@ function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.mcts, mdp:
 end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::MDP{S,A}, policy::MCTSPolicy{S,A}=MCTSPolicy{S,A}())
+function POMDPs.solve{S,A,_}(solver::MCTSSolver, mdp::PermissiveMDP{S,A,_}, policy::MCTSPolicy{S,A}=MCTSPolicy{S,A}())
     fill_defaults!(policy, solver, mdp)
     return policy
 end
