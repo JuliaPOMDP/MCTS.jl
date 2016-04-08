@@ -71,7 +71,7 @@ function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
 
     # state progressive widening
     if length(sanode.V) <= dpw.solver.k_state*sanode.N^dpw.solver.alpha_state # criterion for new transition state consideration
-        sp, r = generate(dpw.mdp, s, a, dpw.solver.rng) # choose a new state and get reward
+        sp, r = generate_sr(dpw.mdp, s, a, dpw.solver.rng) # choose a new state and get reward
 
         if !haskey(sanode.V,sp) # if transition state not yet explored, add to set and update reward
             sanode.V[sp] = StateActionStateNode() # TODO: mechanism for assigning N0
