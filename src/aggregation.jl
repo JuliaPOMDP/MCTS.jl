@@ -5,7 +5,7 @@ abstract Aggregator # assigns states of type S to aggregate states; should have 
 # assigns a ground state to an aggregate state
 assign(ag::Aggregator, s) = error("no implementation of assign() for ag::$(typeof(ag)) for AgUCTSolver. Please implement this method to define how to aggregate states.")
 # gives the aggregator information about the mdp at the beginning will be called within solve(::AgUCTSolver, ::MDP)
-function initialize!(ag::Aggregator, mdp::MDP) end # do nothing by default
+function initialize!(ag::Aggregator, mdp::PermissiveMDP) end # do nothing by default
 
 # this simply aggregates states to themselves - for testing purposes
 type NoAggregation <: Aggregator end
@@ -16,7 +16,7 @@ type AgNode{A}
     N::Int # number of visits at the node for each action
     sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
-function AgNode{S,A}(mdp::MDP{S,A}, agstate)
+function AgNode{S,A}(mdp::PermissiveMDP{S,A}, agstate)
     ns = StateActionNode{A}[StateActionNode{A}(a, 0, 0.0) for a in iterator(actions(mdp, agstate))]
     return AgNode{A}(0, ns)
 end
@@ -55,13 +55,13 @@ type AgUCTPolicy{A} <: AbstractMCTSPolicy
     AgUCTPolicy()=new() # is it too dangerous to have this?
 end
 # policy constructor
-function AgUCTPolicy{S,A}(mcts::AgUCTSolver, mdp::MDP{S,A})
+function AgUCTPolicy{S,A}(mcts::AgUCTSolver, mdp::PermissiveMDP{S,A})
     p = AgUCTPolicy{A}()
     fill_defaults!(p, mcts, mdp)
     p
 end
 # sets members to suitable default values (broken out of the constructor so that it can be used elsewhere)
-function fill_defaults!{A}(p::AgUCTPolicy{A}, solver::AgUCTSolver=p.mcts, mdp::MDP=p.mdp)
+function fill_defaults!{A}(p::AgUCTPolicy{A}, solver::AgUCTSolver=p.mcts, mdp::PermissiveMDP=p.mdp)
     p.mcts = solver
     p.mdp = mdp
     if isa(p.mcts.rollout_solver, Solver)
@@ -80,7 +80,7 @@ function fill_defaults!{A}(p::AgUCTPolicy{A}, solver::AgUCTSolver=p.mcts, mdp::M
 end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve{S,A}(solver::AgUCTSolver, mdp::MDP{S,A}, policy::AgUCTPolicy=AgUCTPolicy{A}())
+function POMDPs.solve{S,A}(solver::AgUCTSolver, mdp::PermissiveMDP{S,A}, policy::AgUCTPolicy=AgUCTPolicy{A}())
     fill_defaults!(policy, solver, mdp)
     return policy
 end
