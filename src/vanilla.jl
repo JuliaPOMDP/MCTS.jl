@@ -114,7 +114,7 @@ function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     sanode = best_sanode_UCB(snode, policy.mcts.exploration_constant)
 
     # transition to a new state
-    sp, r = generate(mdp, state, sanode.action, rng)
+    sp, r = generate_sr(mdp, state, sanode.action, rng)
     
     if policy.mcts.enable_tree_vis
         record_visit(policy, sanode, sp)
