@@ -9,6 +9,7 @@ state = GridWorldState(1,1)
 a = action(policy, state)
 
 v = TreeVisualizer(policy, state)
+json = MCTS.create_json(v)
 
 # dpw
 solver = DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec)
@@ -21,3 +22,4 @@ state = GridWorldState(1,1)
 a = action(policy, state)
 
 v = TreeVisualizer(policy, state)
+json = MCTS.create_json(v)
