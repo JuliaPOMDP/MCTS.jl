@@ -7,6 +7,6 @@ notifications:
   email: false
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.clone("https://github.com/sisl/POMDPs.jl"); Pkg.clone("https://github.com/sisl/POMDPModels.jl"); Pkg.clone("https://github.com/sisl/POMDPToolbox.jl"); Pkg.clone("https://github.com/JuliaPOMDP/GenerativeModels.jl"); Pkg.test("MCTS"; coverage=true)'
+  - julia --check-bounds=yes -e 'Pkg.clone("https://github.com/sisl/POMDPs.jl"); Pkg.clone("https://github.com/sisl/POMDPModels.jl"); Pkg.clone("https://github.com/sisl/POMDPToolbox.jl"); Pkg.clone("https://github.com/JuliaPOMDP/GenerativeModels.jl"); Pkg.clone(pwd()); Pkg.test("MCTS"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("MCTS")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
