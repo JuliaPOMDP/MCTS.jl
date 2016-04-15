@@ -3,8 +3,8 @@ abstract ActionGenerator
 
 type RandomActionGenerator <: ActionGenerator
     rng::AbstractRNG
-    action_space
-    RandomActionGenerator(rng::AbstractRNG=MersenneTwister(), action_space=nothing) = new(rng, action_space)
+    action_space::Nullable{AbstractSpace}
+    RandomActionGenerator(rng::AbstractRNG=MersenneTwister(), action_space=nothing) = new(rng, Nullable{AbstractSpace}(action_space))
 end
 
 # type and constructor for the dpw solver
@@ -42,29 +42,29 @@ type StateActionStateNode
     StateActionStateNode() = new(0,0)
 end
 
-type DPWStateActionNode
-    V::Dict{State,StateActionStateNode}
+type DPWStateActionNode{S}
+    V::Dict{S,StateActionStateNode}
     N::Int
     Q::Float64
-    DPWStateActionNode() = new(Dict{State,StateActionStateNode}(),0,0)
+    DPWStateActionNode() = new(Dict{S,StateActionStateNode}(),0,0)
 end
 
-type DPWStateNode
-    A::Dict{Action,DPWStateActionNode}
+type DPWStateNode{S,A}
+    A::Dict{A,DPWStateActionNode{S}}
     N::Int
-    DPWStateNode() = new(Dict{Action,DPWStateActionNode}(),0)
+    DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 
-type DPWPolicy <: AbstractMCTSPolicy
+type DPWPolicy{S,A} <: AbstractMCTSPolicy
     solver::DPWSolver
-    mdp::POMDP
-    T::Dict{State,DPWStateNode} 
+    mdp::Union{POMDP{S,A},MDP{S,A}}
+    T::Dict{S,DPWStateNode{S,A}} 
     rollout_policy::Policy
 end
 
-DPWPolicy(solver::DPWSolver,
-          mdp::POMDP) = DPWPolicy(solver,
-                                  mdp,
-                                  Dict{State,DPWStateNode}(),
-                                  RandomPolicy(mdp, solver.rng))
+DPWPolicy{S,A}(solver::DPWSolver,
+               mdp::Union{POMDP{S,A},MDP{S,A}}) = DPWPolicy{S,A}(solver,
+                                               mdp,
+                                               Dict{S,DPWStateNode{S,A}}(),
+                                               RandomPolicy(mdp, rng=solver.rng))
 

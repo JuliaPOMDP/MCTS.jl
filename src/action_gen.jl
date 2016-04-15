@@ -1,6 +1,6 @@
-function next_action(gen::RandomActionGenerator, mdp::POMDP, s::State, snode::DPWStateNode)
-    if gen.action_space == nothing
-        gen.action_space = actions(mdp)
+function next_action{S,A}(gen::RandomActionGenerator, mdp::Union{POMDP,MDP}, s, snode::DPWStateNode{S,A})
+    if isnull(gen.action_space) 
+        gen.action_space = Nullable{AbstractSpace}(actions(mdp))
     end
-    rand(gen.rng, actions(mdp, s, gen.action_space))
+    rand(gen.rng, actions(mdp, s, get(gen.action_space)))
 end
