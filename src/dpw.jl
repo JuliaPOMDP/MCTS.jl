@@ -110,6 +110,6 @@ function estimate_value(dpw::DPWPolicy, s, d::Int)
 end
 
 function rollout(dpw::DPWPolicy, s, d::Int)
-    sim = MDPRolloutSimulator(rng=dpw.solver.rng, max_steps=d) # TODO(?) add a mechanism to customize this
+    sim = RolloutSimulator(rng=dpw.solver.rng, max_steps=d) # TODO(?) add a mechanism to customize this
     POMDPs.simulate(sim, dpw.mdp, dpw.rollout_policy, s)
 end

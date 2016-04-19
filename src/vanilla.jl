@@ -43,7 +43,7 @@ type MCTSPolicy{S,A} <: AbstractMCTSPolicy
 	mdp::Union{POMDP,MDP} # model
     rollout_policy::Policy # rollout policy
     tree::Dict{S, StateNode{A}} # the search tree
-    sim::MDPRolloutSimulator # for doing rollouts
+    sim::RolloutSimulator # for doing rollouts
 
     MCTSPolicy()=new() # is it too dangerous to have this?
 end
@@ -65,7 +65,7 @@ function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.mcts, mdp:
 
     # pre-allocate
     p.tree = Dict{S, StateNode{A}}()
-    p.sim = MDPRolloutSimulator(rng=solver.rng, max_steps=0)
+    p.sim = RolloutSimulator(rng=solver.rng, max_steps=0)
     return p
 end
 
