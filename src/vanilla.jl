@@ -38,7 +38,7 @@ function MCTSSolver(;n_iterations::Int64 = 100,
 end
 
 # MCTS policy type
-type MCTSPolicy{S,A} <: AbstractMCTSPolicy
+type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S}
 	mcts::MCTSSolver # containts the solver parameters
 	mdp::Union{POMDP,MDP} # model
     rollout_policy::Policy # rollout policy

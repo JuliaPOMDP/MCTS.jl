@@ -19,7 +19,7 @@ export
     RandomActionGenerator,
     TreeVisualizer
 
-abstract AbstractMCTSPolicy <: Policy
+abstract AbstractMCTSPolicy{S} <: Policy{S}
 abstract AbstractMCTSSolver <: Solver
 
 

@@ -55,7 +55,7 @@ type DPWStateNode{S,A}
     DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 
-type DPWPolicy{S,A} <: AbstractMCTSPolicy
+type DPWPolicy{S,A} <: AbstractMCTSPolicy{S}
     solver::DPWSolver
     mdp::Union{POMDP{S,A},MDP{S,A}}
     T::Dict{S,DPWStateNode{S,A}} 

@@ -44,7 +44,7 @@ function AgUCTSolver(;n_iterations::Int64 = 100,
     return AgUCTSolver(n_iterations, depth, exploration_constant, aggregator, rng, rollout_solver, enable_tree_vis)
 end
 
-type AgUCTPolicy{A} <: AbstractMCTSPolicy
+type AgUCTPolicy{S,A} <: AbstractMCTSPolicy{S}
 	mcts::AgUCTSolver # containts the solver parameters
 	mdp::MDP # model
     rollout_policy::Policy # rollout policy
@@ -56,12 +56,12 @@ type AgUCTPolicy{A} <: AbstractMCTSPolicy
 end
 # policy constructor
 function AgUCTPolicy{S,A}(mcts::AgUCTSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
-    p = AgUCTPolicy{A}()
+    p = AgUCTPolicy{S,A}()
     fill_defaults!(p, mcts, mdp)
     p
 end
 # sets members to suitable default values (broken out of the constructor so that it can be used elsewhere)
-function fill_defaults!{A}(p::AgUCTPolicy{A}, solver::AgUCTSolver=p.mcts, mdp::Union{POMDP,MDP}=p.mdp)
+function fill_defaults!{S,A}(p::AgUCTPolicy{S,A}, solver::AgUCTSolver=p.mcts, mdp::Union{POMDP,MDP}=p.mdp)
     p.mcts = solver
     p.mdp = mdp
     if isa(p.mcts.rollout_solver, Solver)
@@ -80,7 +80,7 @@ function fill_defaults!{A}(p::AgUCTPolicy{A}, solver::AgUCTSolver=p.mcts, mdp::U
 end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve{S,A}(solver::AgUCTSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::AgUCTPolicy=AgUCTPolicy{A}())
+function POMDPs.solve{S,A}(solver::AgUCTSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::AgUCTPolicy=AgUCTPolicy{S,A}())
     fill_defaults!(policy, solver, mdp)
     return policy
 end
