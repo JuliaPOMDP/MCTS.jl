@@ -7,7 +7,14 @@ type TreeVisualizer{PolicyType}
     init_state
 end
 
+"""
+Return text to display below the node corresponding to state or action s
+"""
 node_tag(s) = string(s)
+
+"""
+Return text to display in the tooltip for the node corresponding to state or action s
+"""
 tooltip_tag(s) = node_tag(s)
 
 function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
