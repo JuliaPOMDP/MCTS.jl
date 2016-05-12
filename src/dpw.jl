@@ -35,6 +35,7 @@ function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
     end
     if !haskey(dpw.T,s) # if state is not yet explored, add it to the set of states, perform a rollout 
         dpw.T[s] = DPWStateNode{S,A}() # TODO: Mechanism to set N0
+        dpw.T[s].N += 1
         return estimate_value(dpw,s,d)
     end
 
@@ -79,12 +80,10 @@ function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
         end
         sanode.V[sp].N += 1
 
-        # XXX this differs from Mykel's writeup. is it ok?
-        sanode.N += 1
-
     else # sample from transition states proportional to their occurence in the past
         # warn("sampling states: |V|=$(length(sanode.V)), N=$(sanode.N)")
-        rn = rand(dpw.solver.rng, 1:sanode.N) # this is where Jon's bug was (I think)
+        total_N = reduce(add_N, 0, values(sanode.V))
+        rn = rand(dpw.solver.rng, 1:total_N) # this is where Jon's bug was (I think)
         cnt = 0
         local sp, sasnode
         for (sp,sasnode) in sanode.V
@@ -99,10 +98,18 @@ function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
 
     q = r + discount(dpw.mdp)*simulate(dpw,sp,d-1)
 
+    sanode.N += 1
+
     sanode.Q += (q - sanode.Q)/sanode.N
 
     return q
 end
+
+"""
+Add the N's of two sas nodes - for use in reduce
+"""
+add_N(a::StateActionStateNode, b::StateActionStateNode) = a.N + b.N
+add_N(a::Int, b::StateActionStateNode) = a + b.N
 
 # this can be overridden to specify behavior; by default it performs a rollout
 function estimate_value(dpw::DPWPolicy, s, d::Int)
