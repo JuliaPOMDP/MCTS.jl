@@ -7,11 +7,27 @@ type TreeVisualizer{PolicyType}
     init_state
 end
 
+"""
+Return text to display below the node corresponding to state or action s
+"""
 node_tag(s) = string(s)
+
+"""
+Return text to display in the tooltip for the node corresponding to state or action s
+"""
 tooltip_tag(s) = node_tag(s)
 
 function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
-    local root_id
+    # check to see if visualization was enabled
+    if !visualizer.policy.mcts.enable_tree_vis
+        error("""
+                Tree visualization was not enabled for this policy.
+                    
+                Construct the solver with $(typeof(visualizer.policy.mcts))(enable_tree_vis=true, ...) to enable.
+            """)
+    end
+
+    root_id = -1
     next_id = 1
     node_dict = Dict{Int, Dict{UTF8String, Any}}()
     s_dict = Dict{Any, Int}()
@@ -48,11 +64,17 @@ function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
         end
     end
 
+    if root_id < 0
+        error("""
+                MCTS tree visualization: Policy does not have a node for the specified state.
+            """)
+    end
+
     # go back and refill action nodes
     for (s, sn) in visualizer.policy.tree
         for san in sn.sanodes
             a = san.action
-            for sp in san._vis_stats
+            for sp in get(san._vis_stats)
                 sad = node_dict[sa_dict[(s,a)]]
                 if haskey(s_dict, sp)
                     push!(sad["children_ids"], s_dict[sp])
@@ -74,8 +96,8 @@ function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
     return (json, root_id)
 end
 
-function create_json(visualizer::TreeVisualizer{DPWPolicy})
-    local root_id
+function create_json{P<:DPWPolicy}(visualizer::TreeVisualizer{P})
+    root_id = -1
     next_id = 1
     node_dict = Dict{Int, Dict{UTF8String, Any}}()
     s_dict = Dict{Any, Int}()
@@ -110,6 +132,13 @@ function create_json(visualizer::TreeVisualizer{DPWPolicy})
             next_id += 1
         end
     end
+
+    if root_id < 0
+        error("""
+                MCTS tree visualization: Policy does not have a node for the specified state.
+            """)
+    end
+
 
     # go back and refill action nodes
     for (s, sn) in visualizer.policy.T

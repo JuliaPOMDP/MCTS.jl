@@ -1,6 +1,8 @@
 module MCTS
 
 using POMDPs
+using GenerativeModels
+using POMDPToolbox
 
 export 
     MCTSSolver, 
@@ -17,11 +19,10 @@ export
     RandomActionGenerator,
     TreeVisualizer
 
-abstract AbstractMCTSPolicy <: Policy
+abstract AbstractMCTSPolicy{S} <: Policy{S}
 abstract AbstractMCTSSolver <: Solver
 
-include("policies.jl")
-include("simulators.jl")
+
 include("vanilla.jl")
 include("dpw_types.jl")
 include("dpw.jl")

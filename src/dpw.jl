@@ -1,4 +1,4 @@
-function POMDPs.solve(solver::DPWSolver, mdp::POMDP, p::DPWPolicy=DPWPolicy(solver, mdp))
+function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP}, p::DPWPolicy=DPWPolicy(solver, mdp))
     if isa(p.solver.rollout_solver, Solver) 
         p.rollout_policy = solve(p.solver.rollout_solver, mdp)
     else
@@ -7,7 +7,7 @@ function POMDPs.solve(solver::DPWSolver, mdp::POMDP, p::DPWPolicy=DPWPolicy(solv
     return p
 end
 
-function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
+function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S, a::A=A())
     # This function calls simulate and chooses the approximate best action from the reward approximations
     # XXX do we need to make a copy of the state here?
     for i = 1:p.solver.n_iterations
@@ -26,7 +26,7 @@ function POMDPs.action(p::DPWPolicy, s::State, a::Action=create_action(p.mdp))
     return best_a # choose action with highest approximate value 
 end
 
-function simulate(dpw::DPWPolicy,s::State,d::Int)
+function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
     # TODO: reimplement this as a loop instead of a recursion?
 
     # This function returns the reward for one iteration of MCTSdpw 
@@ -34,7 +34,8 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
         return 0.0 # XXX is this right or should it be a rollout?
     end
     if !haskey(dpw.T,s) # if state is not yet explored, add it to the set of states, perform a rollout 
-        dpw.T[s] = DPWStateNode() # TODO: Mechanism to set N0
+        dpw.T[s] = DPWStateNode{S,A}() # TODO: Mechanism to set N0
+        dpw.T[s].N += 1
         return estimate_value(dpw,s,d)
     end
 
@@ -45,7 +46,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
     if length(snode.A) <= dpw.solver.k_action*snode.N^dpw.solver.alpha_action # criterion for new action generation
         a = next_action(dpw.solver.action_generator, dpw.mdp, s, snode) # action generation step
         if !haskey(snode.A,a) # make sure we haven't already tried this action
-            snode.A[a] = DPWStateActionNode() # TODO: Mechanism to set N0, Q0
+            snode.A[a] = DPWStateActionNode{S}() # TODO: Mechanism to set N0, Q0
         end
     end
 
@@ -71,7 +72,7 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
 
     # state progressive widening
     if length(sanode.V) <= dpw.solver.k_state*sanode.N^dpw.solver.alpha_state # criterion for new transition state consideration
-        sp, r = generate(dpw.mdp, s, a, dpw.solver.rng) # choose a new state and get reward
+        sp, r = generate_sr(dpw.mdp, s, a, dpw.solver.rng) # choose a new state and get reward
 
         if !haskey(sanode.V,sp) # if transition state not yet explored, add to set and update reward
             sanode.V[sp] = StateActionStateNode() # TODO: mechanism for assigning N0
@@ -79,12 +80,10 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
         end
         sanode.V[sp].N += 1
 
-        # XXX this differs from Mykel's writeup. is it ok?
-        sanode.N += 1
-
     else # sample from transition states proportional to their occurence in the past
         # warn("sampling states: |V|=$(length(sanode.V)), N=$(sanode.N)")
-        rn = rand(dpw.solver.rng, 1:sanode.N) # this is where Jon's bug was (I think)
+        total_N = reduce(add_N, 0, values(sanode.V))
+        rn = rand(dpw.solver.rng, 1:total_N) # this is where Jon's bug was (I think)
         cnt = 0
         local sp, sasnode
         for (sp,sasnode) in sanode.V
@@ -99,17 +98,25 @@ function simulate(dpw::DPWPolicy,s::State,d::Int)
 
     q = r + discount(dpw.mdp)*simulate(dpw,sp,d-1)
 
+    sanode.N += 1
+
     sanode.Q += (q - sanode.Q)/sanode.N
 
     return q
 end
 
+"""
+Add the N's of two sas nodes - for use in reduce
+"""
+add_N(a::StateActionStateNode, b::StateActionStateNode) = a.N + b.N
+add_N(a::Int, b::StateActionStateNode) = a + b.N
+
 # this can be overridden to specify behavior; by default it performs a rollout
-function estimate_value(dpw::DPWPolicy, s::State, d::Int)
+function estimate_value(dpw::DPWPolicy, s, d::Int)
     rollout(dpw, s, d)
 end
 
-function rollout(dpw::DPWPolicy, s::State, d::Int)
-    sim = MDPRolloutSimulator(rng=dpw.solver.rng, max_steps=d) # TODO(?) add a mechanism to customize this
+function rollout(dpw::DPWPolicy, s, d::Int)
+    sim = RolloutSimulator(rng=dpw.solver.rng, max_steps=d) # TODO(?) add a mechanism to customize this
     POMDPs.simulate(sim, dpw.mdp, dpw.rollout_policy, s)
 end

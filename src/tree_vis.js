@@ -28,8 +28,29 @@ console.log(treeData[rootID]);
 root = createDisplayNode(treeData[rootID]);
 root.x0 = width / 2;
 root.y0 = 0;
+
+// find maxima and minima for 
+var maxQ = 0.0;
+var minQ = 0.0;
+var maxN = 0;
+for (var id in treeData) {
+  data = treeData[id];
+  if (data.type=="action") {
+    if (data.Q > maxQ) {
+      maxQ = data.Q
+    } else if (data.Q < minQ) {
+      minQ = data.Q
+    }
+    if (data.N > maxN) {
+      maxN = data.N
+    }
+  }
+}
+console.log("maxN: " + maxN)
+
 update(root);
 console.log("tree should appear");
+
 
 function createDisplayNode(nd) {
   var dnode = {"dataID":nd.id,
@@ -175,6 +196,8 @@ function update(source) {
   // Enter any new links at the parent's previous position.
   link.enter().insert("path", "g")
 	  .attr("class", "link")
+      .style("stroke-width", function(d) {
+          return 10.0*Math.log(treeData[d.target.dataID].N+1)/Math.log(maxN) + "px";})
 	  .attr("d", function(d) {
 		var o = {x: source.x0, y: source.y0};
 		return diagonal({source: o, target: o});

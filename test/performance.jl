@@ -33,7 +33,7 @@ for (k,p) in policies
     println("simulating $k")
     @time @sync @parallel for i in 1:N
     # @time for i in 1:N
-        sim = MCTS.MDPRolloutSimulator(rng=MersenneTwister(i))
+        sim = MCTS.RolloutSimulator(rng=MersenneTwister(i))
         rewards[index[k],i] = simulate(sim, mdp, deepcopy(p), init_states[i])
     end
 end
