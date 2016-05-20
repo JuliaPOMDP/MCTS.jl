@@ -1,6 +1,6 @@
 using POMDPs
 
-POMDPs.add("GenerativeModels")
-POMDPs.add("POMDPToolbox")
-POMDPs.add("POMDPModels")
+POMDPs.add("GenerativeModels", false)
+POMDPs.add("POMDPToolbox", false)
+POMDPs.add("POMDPModels", false)
 
