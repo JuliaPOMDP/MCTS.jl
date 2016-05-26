@@ -170,7 +170,7 @@ function writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer)
     # write("/tmp/tree_dump.json", json)
     css = readall(joinpath(dirname(@__FILE__()), "tree_vis.css"))
     js = readall(joinpath(dirname(@__FILE__()), "tree_vis.js"))
-    div = "trevis$(randstring())"
+    div = "treevis$(randstring())"
 
     html_string = """
         <div id="$div">
