@@ -16,9 +16,39 @@ function StateNode{S,A}(mdp::Union{POMDP{S,A},MDP{S,A}}, s::S)
     return StateNode{A}(0, ns)
 end
 
-# MCTS solver type
+"""
+MCTS solver type
+
+Fields:
+
+    n_iterations::Int64
+        Number of iterations during each action() call.
+        default: 100
+
+    depth::Int64:
+        Maximum rollout horizon and tree depth.
+        default: 10
+
+    exploration_constant::Float64: 
+        Specified how much the solver should explore.
+        In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
+        default: 1.0
+
+    rng::AbstractRNG:
+        Random number generator
+
+    rollout_solver::Union{Solver,Policy}:
+        Rollout policy or solver.
+        If this is a Policy, it will be used directly in rollouts;
+        If it is a Solver, solve() will be called when solve() is called on the MCTSSolver
+        default: RandomSolver(rng)
+
+    enable_tree_vis::Bool:
+        If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.
+        default: false
+"""
 type MCTSSolver <: AbstractMCTSSolver
-	n_iterations::Int64	# number of iterations during each action() call
+	n_iterations::Int64
 	depth::Int64 # the max depth of the tree
 	exploration_constant::Float64 # constant balancing exploration and exploitation
     rng::AbstractRNG # random number generator
@@ -27,7 +57,12 @@ type MCTSSolver <: AbstractMCTSSolver
                                          # if this is a Policy, it will be used directly
     enable_tree_vis::Bool # if true, will record data needed for visualization
 end
-# solver constructor
+
+"""
+MCTS solver constructor.
+
+Use keyword arguments to specify values for the fields.
+"""
 function MCTSSolver(;n_iterations::Int64 = 100, 
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,

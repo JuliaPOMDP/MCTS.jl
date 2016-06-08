@@ -197,7 +197,7 @@ function update(source) {
   link.enter().insert("path", "g")
 	  .attr("class", "link")
       .style("stroke-width", function(d) {
-          return 10.0*Math.log(treeData[d.target.dataID].N+1)/Math.log(maxN) + "px";})
+          return 10.0*Math.log(treeData[d.target.dataID].N+2)/Math.log(maxN) + "px";})
 	  .attr("d", function(d) {
 		var o = {x: source.x0, y: source.y0};
 		return diagonal({source: o, target: o});
