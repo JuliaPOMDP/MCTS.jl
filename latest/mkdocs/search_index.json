@@ -1,0 +1,69 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "MCTS\n\n\nThis package implements the Monte-Carlo Tree Search algorithm in Julia for solving Markov decision processes (MDPs). The user should define the problem according to the API in \nPOMDPs.jl\n. Examples of problem definitions can be found in \nPOMDPModels.jl\n. For an extensive tutorial, see \nthis\n notebook.\n\n\nSpecial thanks to Jon Cox for writing the original version of this code.\n\n\n\n\nInstallation\n\n\nAfter installing \nPOMDPs.jl\n, start Julia and run the following command:\n\n\nusing POMDPs\nPOMDPs.add(\nMCTS\n)\n\n\n\n\n\n\nUsage\n\n\nProblems should be defined using the \nPOMDPs.jl interface\n. Use of the \nGenerativeModels.jl\n package to define state transition and reward sampling. The following functions should be implemented for the problem:\n\n\ngenerate_sr(mdp::MDP, s, a, rng::AbstractRNG)\ndiscount(mdp::MDP)\nactions(mdp::MDP)\nactions(mdp::MDP, s::State, as::ActionSpace)\nisterminal(mdp::MDP, s::State)\n\n\n\n\nTo use the default random rollout policy, an action space sampling function\n\n\nrand(rng::AbstractRNG, action_space::AbstractSpace)\n\n\n\n\nmust also be implemented.\n\n\nProblems that do \nnot\n use \nGenerativeModels.jl\n can be used with MCTS.jl, but must have the following three functions defined \ninstead of\n \ngenerate_sr\n.\n\n\ntransition(mdp::MDP, s, a, d::AbstractDistribution)\nrand(rng::AbstractRNG, d::AbstractDistribution)\nreward(mdp::MDP, s, a)\n\n\n\n\nOnce the above functions are defined, the solver can be called with the following syntax:\n\n\nusing MyMDP # module containing your MDP type and the associated functions\nusing MCTS\n\nmdp = MyMDP() # initializes the MDP\nsolver = MCTSSolver(n_iterations=50, depth=20, exploration_constant=5.0) # initializes the Solver type\npolicy = solve(solver, mdp) # initializes the policy\n\n\n\n\nBy default, the solver will use a random policy for rollouts. If you want to pass in a custom rollout policy you can run:\n\n\nrollout_policy = MyCustomPolicy() # of type Policy, and has method action(rollout_policy::MyCustomPolicy, s::State)\nsolver = MCTSSolver(rollout_solver=rollout_policy) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0\n# note that the rollout_solver optional argument can be a solver or a policy\npolicy = solve(solver, mdp)\n\n\n\n\nSince Monte-Carlo Tree Search is an online method, the solve function simply specifies the mdp model to the solver (which is embedded in the policy object). (Note that an MCTSPolicy can also be constructed directly without calling \nsolve()\n.) The computation is done during calls to the action function. To extract the policy for a given state, simply call the action function:\n\n\ns = create_state(mdp) # this can be any valid state\na = action(polciy, s) # returns the action for state s\n\n\n\n\n\n\nSolver Variants\n\n\nThere are currently three variants of the MCTS solver. They are documented in detail in the following sections:\n\n\n\n\nVanilla\n\n\nDouble Progressive Widening\n\n\nAggregating Solver\n\n\n\n\nVisualization of the search tree in jupyter notebooks is covered in the following section:\n\n\n\n\nVisualization", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/#mcts", 
+            "text": "This package implements the Monte-Carlo Tree Search algorithm in Julia for solving Markov decision processes (MDPs). The user should define the problem according to the API in  POMDPs.jl . Examples of problem definitions can be found in  POMDPModels.jl . For an extensive tutorial, see  this  notebook.  Special thanks to Jon Cox for writing the original version of this code.", 
+            "title": "MCTS"
+        }, 
+        {
+            "location": "/#installation", 
+            "text": "After installing  POMDPs.jl , start Julia and run the following command:  using POMDPs\nPOMDPs.add( MCTS )", 
+            "title": "Installation"
+        }, 
+        {
+            "location": "/#usage", 
+            "text": "Problems should be defined using the  POMDPs.jl interface . Use of the  GenerativeModels.jl  package to define state transition and reward sampling. The following functions should be implemented for the problem:  generate_sr(mdp::MDP, s, a, rng::AbstractRNG)\ndiscount(mdp::MDP)\nactions(mdp::MDP)\nactions(mdp::MDP, s::State, as::ActionSpace)\nisterminal(mdp::MDP, s::State)  To use the default random rollout policy, an action space sampling function  rand(rng::AbstractRNG, action_space::AbstractSpace)  must also be implemented.  Problems that do  not  use  GenerativeModels.jl  can be used with MCTS.jl, but must have the following three functions defined  instead of   generate_sr .  transition(mdp::MDP, s, a, d::AbstractDistribution)\nrand(rng::AbstractRNG, d::AbstractDistribution)\nreward(mdp::MDP, s, a)  Once the above functions are defined, the solver can be called with the following syntax:  using MyMDP # module containing your MDP type and the associated functions\nusing MCTS\n\nmdp = MyMDP() # initializes the MDP\nsolver = MCTSSolver(n_iterations=50, depth=20, exploration_constant=5.0) # initializes the Solver type\npolicy = solve(solver, mdp) # initializes the policy  By default, the solver will use a random policy for rollouts. If you want to pass in a custom rollout policy you can run:  rollout_policy = MyCustomPolicy() # of type Policy, and has method action(rollout_policy::MyCustomPolicy, s::State)\nsolver = MCTSSolver(rollout_solver=rollout_policy) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0\n# note that the rollout_solver optional argument can be a solver or a policy\npolicy = solve(solver, mdp)  Since Monte-Carlo Tree Search is an online method, the solve function simply specifies the mdp model to the solver (which is embedded in the policy object). (Note that an MCTSPolicy can also be constructed directly without calling  solve() .) The computation is done during calls to the action function. To extract the policy for a given state, simply call the action function:  s = create_state(mdp) # this can be any valid state\na = action(polciy, s) # returns the action for state s", 
+            "title": "Usage"
+        }, 
+        {
+            "location": "/#solver-variants", 
+            "text": "There are currently three variants of the MCTS solver. They are documented in detail in the following sections:   Vanilla  Double Progressive Widening  Aggregating Solver   Visualization of the search tree in jupyter notebooks is covered in the following section:   Visualization", 
+            "title": "Solver Variants"
+        }, 
+        {
+            "location": "/vanilla/", 
+            "text": "Vanilla\n\n\nThe \"vanilla\" solver is the most basic version of MCTS. It works well with small discrete state and action spaces.\n\n\nThe solver fields are used to specify solver parameters. All of them can be specified as keyword arguments to the solver constructor.\n\n\n#\n\n\nMCTS.MCTSSolver\n \n \nType\n.\n\n\nMCTS solver type\n\n\nFields:\n\n\nn_iterations::Int64\n    Number of iterations during each action() call.\n    default: 100\n\ndepth::Int64:\n    Maximum rollout horizon and tree depth.\n    default: 10\n\nexploration_constant::Float64: \n    Specified how much the solver should explore.\n    In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.\n    default: 1.0\n\nrng::AbstractRNG:\n    Random number generator\n\nrollout_solver::Union{Solver,Policy}:\n    Rollout policy or solver.\n    If this is a Policy, it will be used directly in rollouts;\n    If it is a Solver, solve() will be called when solve() is called on the MCTSSolver\n    default: RandomSolver(rng)\n\nenable_tree_vis::Bool:\n    If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.\n    default: false", 
+            "title": "Vanilla"
+        }, 
+        {
+            "location": "/vanilla/#vanilla", 
+            "text": "The \"vanilla\" solver is the most basic version of MCTS. It works well with small discrete state and action spaces.  The solver fields are used to specify solver parameters. All of them can be specified as keyword arguments to the solver constructor.  #  MCTS.MCTSSolver     Type .  MCTS solver type  Fields:  n_iterations::Int64\n    Number of iterations during each action() call.\n    default: 100\n\ndepth::Int64:\n    Maximum rollout horizon and tree depth.\n    default: 10\n\nexploration_constant::Float64: \n    Specified how much the solver should explore.\n    In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.\n    default: 1.0\n\nrng::AbstractRNG:\n    Random number generator\n\nrollout_solver::Union{Solver,Policy}:\n    Rollout policy or solver.\n    If this is a Policy, it will be used directly in rollouts;\n    If it is a Solver, solve() will be called when solve() is called on the MCTSSolver\n    default: RandomSolver(rng)\n\nenable_tree_vis::Bool:\n    If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.\n    default: false", 
+            "title": "Vanilla"
+        }, 
+        {
+            "location": "/dpw/", 
+            "text": "Double Progressive Widening\n\n\n(No documentation yet)", 
+            "title": "DPW"
+        }, 
+        {
+            "location": "/dpw/#double-progressive-widening", 
+            "text": "(No documentation yet)", 
+            "title": "Double Progressive Widening"
+        }, 
+        {
+            "location": "/aggregation/", 
+            "text": "Aggregating Solver\n\n\n(No documentation yet)", 
+            "title": "Aggregation"
+        }, 
+        {
+            "location": "/aggregation/#aggregating-solver", 
+            "text": "(No documentation yet)", 
+            "title": "Aggregating Solver"
+        }, 
+        {
+            "location": "/visualization/", 
+            "text": "Visualization\n\n\n(No documentation yet)", 
+            "title": "Visualization"
+        }, 
+        {
+            "location": "/visualization/#visualization", 
+            "text": "(No documentation yet)", 
+            "title": "Visualization"
+        }
+    ]
+}
