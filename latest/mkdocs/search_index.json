@@ -37,12 +37,12 @@
         }, 
         {
             "location": "/dpw/", 
-            "text": "Double Progressive Widening\n\n\n(No documentation yet)", 
+            "text": "Double Progressive Widening\n\n\n(No documentation yet)\n\n\nSee the paper at \nhttps://hal.archives-ouvertes.fr/file/index/docid/542673/filename/c0mcts.pdf\n for a description.", 
             "title": "DPW"
         }, 
         {
             "location": "/dpw/#double-progressive-widening", 
-            "text": "(No documentation yet)", 
+            "text": "(No documentation yet)  See the paper at  https://hal.archives-ouvertes.fr/file/index/docid/542673/filename/c0mcts.pdf  for a description.", 
             "title": "Double Progressive Widening"
         }, 
         {
