@@ -57,12 +57,12 @@
         }, 
         {
             "location": "/visualization/", 
-            "text": "Visualization\n\n\n(No documentation yet)", 
+            "text": "Visualization\n\n\n(No documentation yet)\n\n\nPlease run the jupyter notebook notebooks/Test_Visualization.ipynb for an example. You must re-run all cells on your local machine for it to work. Click on the node to expand it.", 
             "title": "Visualization"
         }, 
         {
             "location": "/visualization/#visualization", 
-            "text": "(No documentation yet)", 
+            "text": "(No documentation yet)  Please run the jupyter notebook notebooks/Test_Visualization.ipynb for an example. You must re-run all cells on your local machine for it to work. Click on the node to expand it.", 
             "title": "Visualization"
         }
     ]
