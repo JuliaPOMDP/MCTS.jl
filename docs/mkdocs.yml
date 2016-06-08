@@ -22,3 +22,7 @@ docs_dir: 'build'
 
 pages:
   - Home: index.md
+  - Vanilla: vanilla.md
+  - DPW: dpw.md
+  - Aggregation: aggregation.md
+  - Visualization: visualization.md
