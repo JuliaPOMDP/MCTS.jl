@@ -20,7 +20,7 @@ POMDPs.add("MCTS")
 
 ## Documentation
 
-Documentation can be found on the following site: [juliapomdp.github.io/MCTS.jl/latest]()
+Documentation can be found on the following site: juliapomdp.github.io/MCTS.jl/latest/
 
 ## Usage Example
 
