@@ -4,7 +4,11 @@ os:
 julia:
   - release
 notifications:
-  email: false
+  email:
+    recipients:
+      - sunbergzach@gmail.com
+    on_failure: always
+    on_success: change
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia --check-bounds=yes -e 'Pkg.clone("https://github.com/sisl/POMDPs.jl"); Pkg.clone("https://github.com/sisl/POMDPModels.jl"); Pkg.clone("https://github.com/sisl/POMDPDistributions.jl"); Pkg.clone("https://github.com/sisl/POMDPToolbox.jl"); Pkg.clone("https://github.com/JuliaPOMDP/GenerativeModels.jl"); Pkg.clone(pwd()); Pkg.test("MCTS"; coverage=true)'

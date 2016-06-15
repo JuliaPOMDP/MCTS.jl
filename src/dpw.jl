@@ -7,7 +7,7 @@ function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP}, p::DPWPolicy=DPW
     return p
 end
 
-function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S, a::A=create_action(mdp))
+function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S, a::A=create_action(p.mdp))
     # This function calls simulate and chooses the approximate best action from the reward approximations
     # XXX do we need to make a copy of the state here?
     for i = 1:p.solver.n_iterations
