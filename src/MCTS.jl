@@ -17,6 +17,7 @@ export
     StateNode,
     ActionGenerator,
     RandomActionGenerator,
+    next_action,
     TreeVisualizer
 
 abstract AbstractMCTSPolicy{S} <: Policy{S}
@@ -28,6 +29,7 @@ include("dpw_types.jl")
 include("dpw.jl")
 include("action_gen.jl")
 include("aggregation.jl")
+include("util.jl")
 
 include("visualization.jl")
 

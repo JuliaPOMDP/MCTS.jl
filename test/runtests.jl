@@ -25,3 +25,6 @@ include("aggregation_test.jl")
 
 println("Testing visualization constructor.")
 include("visualization.jl")
+
+println("Testing other functions.")
+include("other.jl")

@@ -102,7 +102,7 @@ function create_json{P<:DPWPolicy}(visualizer::TreeVisualizer{P})
     node_dict = Dict{Int, Dict{UTF8String, Any}}()
     s_dict = Dict{Any, Int}()
     sa_dict = Dict{Any, Int}()
-    for (s, sn) in visualizer.policy.T
+    for (s, sn) in visualizer.policy.tree
         # create state node
         node_dict[next_id] = sd = Dict("id"=>next_id,
                                        "type"=>:state,
@@ -141,7 +141,7 @@ function create_json{P<:DPWPolicy}(visualizer::TreeVisualizer{P})
 
 
     # go back and refill action nodes
-    for (s, sn) in visualizer.policy.T
+    for (s, sn) in visualizer.policy.tree
         for (a, san) in sn.A
             for (sp, sasn) in san.V
                 sad = node_dict[sa_dict[(s,a)]]

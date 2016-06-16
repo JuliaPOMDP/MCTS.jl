@@ -13,7 +13,7 @@ function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S, a::A=create_action(p.mdp))
     for i = 1:p.solver.n_iterations
         simulate(p, deepcopy(s), p.solver.depth)
     end
-    snode = p.T[s]
+    snode = p.tree[s]
     best_Q = -Inf
     local best_a
     for (a, sanode) in snode.A
@@ -33,13 +33,13 @@ function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
     if d == 0 || isterminal(dpw.mdp, s)
         return 0.0 # XXX is this right or should it be a rollout?
     end
-    if !haskey(dpw.T,s) # if state is not yet explored, add it to the set of states, perform a rollout 
-        dpw.T[s] = DPWStateNode{S,A}() # TODO: Mechanism to set N0
-        dpw.T[s].N += 1
+    if !haskey(dpw.tree,s) # if state is not yet explored, add it to the set of states, perform a rollout 
+        dpw.tree[s] = DPWStateNode{S,A}() # TODO: Mechanism to set N0
+        dpw.tree[s].N += 1
         return estimate_value(dpw,s,d)
     end
 
-    snode = dpw.T[s] # save current state node so we do not have to iterate through map many times
+    snode = dpw.tree[s] # save current state node so we do not have to iterate through map many times
     snode.N = snode.N + 1
 
     # action progressive widening

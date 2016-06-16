@@ -58,7 +58,7 @@ end
 type DPWPolicy{S,A} <: AbstractMCTSPolicy{S}
     solver::DPWSolver
     mdp::Union{POMDP{S,A},MDP{S,A}}
-    T::Dict{S,DPWStateNode{S,A}} 
+    tree::Dict{S,DPWStateNode{S,A}} 
     rollout_policy::Policy
 end
 
