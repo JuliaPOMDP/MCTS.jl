@@ -177,16 +177,17 @@ function writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer)
         <style>
             $css
         </style>
-        <script src="http://d3js.org/d3.v3.js"></script>
         <script>
             var treeData = $json;
             var rootID = $root_id;
-            var div = "#$div";
+            var div = "$div";
             $js
         </script>
         </div>
     """
     # html_string = "visualization doesn't work yet :("
+
+    # <script src="http://d3js.org/d3.v3.js"></script>
 
     # for debugging
     # outfile  = open("/tmp/pomcp_debug.html","w")
