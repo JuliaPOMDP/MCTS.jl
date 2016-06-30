@@ -2,6 +2,8 @@ using MCTS
 using POMDPModels
 using Base.Test
 
+@show MCTS.required_methods()
+
 n_iter = 50
 depth = 15
 ec = 1.0

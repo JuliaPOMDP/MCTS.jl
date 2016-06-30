@@ -33,4 +33,15 @@ include("util.jl")
 
 include("visualization.jl")
 
+function required_methods()
+    println("Note: the required_methods() list of functions for MCTS contains generate_sr() from the GenerativeModels package. Alternatively, it is sufficient to define transition() and reward() from POMDPs instead.")
+    return [
+        generate_sr,
+        discount,
+        actions,
+        isterminal,
+        rand
+    ]
+end
+
 end # module
