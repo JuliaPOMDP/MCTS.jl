@@ -1,5 +1,6 @@
 # MCTS
 
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliapomdp.github.io/MCTS.jl/latest)
 [![Build Status](https://travis-ci.org/JuliaPOMDP/MCTS.jl.svg?branch=master)](https://travis-ci.org/JuliaPOMDP/MCTS.jl)
 [![Coverage Status](https://coveralls.io/repos/github/JuliaPOMDP/MCTS.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaPOMDP/MCTS.jl?branch=master)
 
