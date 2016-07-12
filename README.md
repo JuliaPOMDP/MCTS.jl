@@ -6,7 +6,7 @@
 
 This package implements the Monte-Carlo Tree Search algorithm in Julia for solving Markov decision processes (MDPs).
 The user should define the problem according to the API in [POMDPs.jl](https://github.com/JuliaPOMDP/POMDPs.jl) and [GenerativeModels.jl](https://github.com/JuliaPOMDP/GenerativeModels.jl). Examples of
-problem definitions can be found in [POMDPModels.jl](https://github.com/JuliaPOMDP/POMDPModels.jl). For an extensive tutorial, see [this](http://nbviewer.ipython.org/JuliaPOMDP/sisl/POMDPs.jl/blob/master/examples/GridWorld.ipynb) notebook.
+problem definitions can be found in [POMDPModels.jl](https://github.com/JuliaPOMDP/POMDPModels.jl). For an extensive tutorial, see [this](http://nbviewer.ipython.org/JuliaPOMDP/POMDPs.jl/blob/master/examples/GridWorld.ipynb) notebook.
 
 Special thanks to Jon Cox for writing the original version of this code.
 
@@ -33,3 +33,5 @@ solver = MCTSSolver(n_iterations=50, depth=20, exploration_constant=5.0)
 policy = solve(solver, mdp)
 a = action(policy, s)
 ```
+
+See [this notebook](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) for an example of how to visualize the search tree.

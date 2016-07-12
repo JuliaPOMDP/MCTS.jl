@@ -78,7 +78,7 @@ Pages = [
 Depth = 2
 ```
 
-Visualization of the search tree in jupyter notebooks is covered in the following section:
+Visualization of the search tree in jupyter notebooks (see [example](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) is covered in the following section:
 ```@contents
 Pages = [
     "visualization.md"
