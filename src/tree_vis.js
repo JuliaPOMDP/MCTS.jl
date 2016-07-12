@@ -10,7 +10,7 @@ var i = 0,
 	root;
 
 if (typeof d3 === 'undefined') {
-    loadScript("http://d3js.org/d3.v3.js", showTree)
+    loadScript("https://d3js.org/d3.v3.js", showTree)
 } else {
     showTree()
 }
