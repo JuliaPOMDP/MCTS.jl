@@ -123,6 +123,10 @@ function POMDPs.action(policy::AbstractMCTSPolicy, state)
     # use map to conver index to mdp action
     return best.action
 end
+# new-definition of action for use with RolloutSimulator in POMDPToolbox
+function POMDPs.action(policy::AbstractMCTSPolicy, state, action)
+  POMDPs.action(policy, state)
+end
 
 # runs a simulation from the passed in state to the specified depth
 function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
