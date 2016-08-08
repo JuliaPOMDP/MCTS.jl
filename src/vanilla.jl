@@ -11,6 +11,7 @@ type StateNode{A}
     N::Int # number of visits to the node
     sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
+
 function StateNode{S,A}(mdp::Union{POMDP{S,A},MDP{S,A}}, s::S)
     ns = StateActionNode{A}[StateActionNode{A}(a, 0, 0.0) for a in iterator(actions(mdp, s))] # TODO: mechanism for assigning N0, Q0
     return StateNode{A}(0, ns)
@@ -103,6 +104,11 @@ function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.mcts, mdp:
     p.sim = RolloutSimulator(rng=solver.rng, max_steps=0)
     return p
 end
+
+"""
+Delete existing decision tree.
+"""
+function clear_tree!{S,A}(p::MCTSPolicy{S,A}) p.tree = Dict{S, StateNode{A}}() end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
 function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy{S,A}=MCTSPolicy{S,A}())

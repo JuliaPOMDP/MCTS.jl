@@ -7,6 +7,11 @@ function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP}, p::DPWPolicy=DPW
     return p
 end
 
+"""
+Delete existing decision tree.
+"""
+function clear_tree!{S,A}(p::DPWPolicy{S,A}) p.tree = Dict{S, DPWStateNode{S,A}}() end
+
 function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S, a::A=create_action(p.mdp))
     # This function calls simulate and chooses the approximate best action from the reward approximations
     # XXX do we need to make a copy of the state here?

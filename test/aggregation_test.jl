@@ -6,3 +6,6 @@ policy = solve(solver, mdp)
 state = GridWorldState(1,1)
 
 a = action(policy, state)
+
+clear_tree!(policy)
+@test isempty(policy.tree)

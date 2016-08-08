@@ -79,6 +79,11 @@ function fill_defaults!{S,A}(p::AgUCTPolicy{S,A}, solver::AgUCTSolver=p.mcts, md
     return p
 end
 
+"""
+Delete existing decision tree.
+"""
+function clear_tree!{S,A}(p::AgUCTPolicy{S,A}) p.tree = Dict{Any, AgNode{A}}() end
+
 # no computation is done in solve - the solver is just given the mdp model that it will work with
 function POMDPs.solve{S,A}(solver::AgUCTSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::AgUCTPolicy=AgUCTPolicy{S,A}())
     fill_defaults!(policy, solver, mdp)

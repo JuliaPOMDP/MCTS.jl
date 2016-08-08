@@ -18,7 +18,8 @@ export
     ActionGenerator,
     RandomActionGenerator,
     next_action,
-    TreeVisualizer
+    TreeVisualizer,
+    clear_tree!
 
 abstract AbstractMCTSPolicy{S} <: Policy{S}
 abstract AbstractMCTSSolver <: Solver
