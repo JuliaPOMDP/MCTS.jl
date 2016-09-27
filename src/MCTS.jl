@@ -4,6 +4,8 @@ using POMDPs
 using GenerativeModels
 using POMDPToolbox
 
+using Compat
+
 export 
     MCTSSolver, 
     MCTSPolicy,

@@ -168,8 +168,8 @@ end
 function Base.show(f::IO, m::MIME"text/html", visualizer::TreeVisualizer)
     json, root_id = create_json(visualizer)
     # write("/tmp/tree_dump.json", json)
-    css = readstring(joinpath(dirname(@__FILE__()), "tree_vis.css"))
-    js = readstring(joinpath(dirname(@__FILE__()), "tree_vis.js"))
+    css = @compat readstring(joinpath(dirname(@__FILE__()), "tree_vis.css"))
+    js = @compat readstring(joinpath(dirname(@__FILE__()), "tree_vis.js"))
     div = "treevis$(randstring())"
 
     html_string = """

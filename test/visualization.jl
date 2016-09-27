@@ -23,3 +23,6 @@ a = action(policy, state)
 
 v = TreeVisualizer(policy, state)
 json = MCTS.create_json(v)
+
+dummy = IOBuffer()
+show(dummy, MIME("text/html"), v)
