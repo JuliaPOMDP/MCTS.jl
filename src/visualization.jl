@@ -1,5 +1,4 @@
 import JSON
-import Base: writemime
 
 # put your policy in one of these to automatically visualize it in a python notebook
 type TreeVisualizer{PolicyType}
@@ -29,7 +28,7 @@ function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
 
     root_id = -1
     next_id = 1
-    node_dict = Dict{Int, Dict{UTF8String, Any}}()
+    node_dict = Dict{Int, Dict{String, Any}}()
     s_dict = Dict{Any, Int}()
     sa_dict = Dict{Any, Int}()
     for (s, sn) in visualizer.policy.tree
@@ -99,7 +98,7 @@ end
 function create_json{P<:DPWPolicy}(visualizer::TreeVisualizer{P})
     root_id = -1
     next_id = 1
-    node_dict = Dict{Int, Dict{UTF8String, Any}}()
+    node_dict = Dict{Int, Dict{String, Any}}()
     s_dict = Dict{Any, Int}()
     sa_dict = Dict{Any, Int}()
     for (s, sn) in visualizer.policy.tree
@@ -165,11 +164,12 @@ function create_json{P<:DPWPolicy}(visualizer::TreeVisualizer{P})
     return (json, root_id)
 end
 
-function writemime(f::IO, ::MIME"text/html", visualizer::TreeVisualizer)
+# function stringmime(m::MIME"text/html", visualizer::TreeVisualizer)
+function Base.show(f::IO, m::MIME"text/html", visualizer::TreeVisualizer)
     json, root_id = create_json(visualizer)
     # write("/tmp/tree_dump.json", json)
-    css = readall(joinpath(dirname(@__FILE__()), "tree_vis.css"))
-    js = readall(joinpath(dirname(@__FILE__()), "tree_vis.js"))
+    css = readstring(joinpath(dirname(@__FILE__()), "tree_vis.css"))
+    js = readstring(joinpath(dirname(@__FILE__()), "tree_vis.js"))
     div = "treevis$(randstring())"
 
     html_string = """
