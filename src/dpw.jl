@@ -32,11 +32,9 @@ function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S, a::A=create_action(p.mdp))
 end
 
 function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
-    # TODO: reimplement this as a loop instead of a recursion?
-
     # This function returns the reward for one iteration of MCTSdpw 
     if d == 0 || isterminal(dpw.mdp, s)
-        return 0.0 # XXX is this right or should it be a rollout?
+        return 0.0
     end
     if !haskey(dpw.tree,s) # if state is not yet explored, add it to the set of states, perform a rollout 
         dpw.tree[s] = DPWStateNode{S,A}() # TODO: Mechanism to set N0

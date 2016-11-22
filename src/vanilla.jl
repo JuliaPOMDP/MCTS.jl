@@ -56,6 +56,7 @@ type MCTSSolver <: AbstractMCTSSolver
     rollout_solver::Union{Solver,Policy} # rollout policy
                                          # if this is a Solver, solve() will be called when solve() is called on the MCTSSolver;
                                          # if this is a Policy, it will be used directly
+    prior_knowledge::Any # a custom object that encodes any prior knowledge about the problem - to be used in init_N, init_Q, and estimate_value
     enable_tree_vis::Bool # if true, will record data needed for visualization
 end
 
@@ -69,12 +70,13 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(),
                      rollout_solver = RandomSolver(rng), # random policy is default
+                     prior_knowledge = nothing,
                      enable_tree_vis::Bool=false)
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver, enable_tree_vis)
 end
 
 # MCTS policy type
-type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S}
+type MCTSPolicy{S, A, PriorKnowledgeType} <: AbstractMCTSPolicy{S, PriorKnowledgeType}
 	mcts::MCTSSolver # containts the solver parameters
 	mdp::Union{POMDP,MDP} # model
     rollout_policy::Policy # rollout policy
@@ -84,8 +86,8 @@ type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S}
     MCTSPolicy()=new() # is it too dangerous to have this?
 end
 # policy constructor
-function MCTSPolicy{S,A}(mcts::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
-    p = MCTSPolicy{S,A}()
+function MCTSPolicy{S,A,PKT}(mcts::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
+    p = MCTSPolicy{S,A,typeof(mcts.prior_knowledge)}()
     fill_defaults!(p, mcts, mdp)
     p
 end
@@ -149,7 +151,7 @@ function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     # if unexplored state add to the tree and run rollout
     if !hasnode(policy, state)
         newnode = insert_node!(policy, state)
-        return rollout(policy, state, depth) # TODO(?) upgrade this to some more flexible value estimate
+        return estimate_value(policy, state, depth) # TODO(?) upgrade this to some more flexible value estimate
     end 
     # if previously visited node
     snode = getnode(policy, state)
@@ -170,6 +172,18 @@ function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     sanode.Q += ((q - sanode.Q) / (sanode.N)) # moving average of Q value
     return q
 end
+
+# TODO: document
+"""
+Return an estimate of the value.
+
+By default, this runs a rollout simulation with the rollout policy.
+"""
+function estimate_value{S,A,PriorKnowledgeType}(policy::AbstractMCTSPolicy
+
+end
+
+
 
 # recursive rollout to specified depth, returns the accumulated discounted reward
 function rollout(policy::AbstractMCTSPolicy, s, d::Int)
