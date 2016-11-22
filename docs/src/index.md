@@ -67,13 +67,12 @@ a = action(polciy, s) # returns the action for state s
 
 ## Solver Variants
 
-There are currently three variants of the MCTS solver. They are documented in detail in the following sections:
+There are currently two variants of the MCTS solver. They are documented in detail in the following sections:
 
 ```@contents
 Pages = [
     "vanilla.md",
     "dpw.md",
-    "aggregation.md"
 ]
 Depth = 2
 ```

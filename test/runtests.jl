@@ -26,9 +26,6 @@ clear_tree!(policy)
 println("Testing DPW solver.")
 include("dpw_test.jl")
 
-println("Testing aggregating MCTS solver.")
-include("aggregation_test.jl")
-
 println("Testing visualization.")
 include("visualization.jl")
 nbinclude("../notebooks/Test_Visualization.ipynb")

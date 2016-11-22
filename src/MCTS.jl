@@ -11,8 +11,6 @@ export
     MCTSPolicy,
     DPWSolver,
     DPWPolicy,
-    AgUCTSolver,
-    AgUCTPolicy,
     solve,
     action,
     rollout,
@@ -31,7 +29,6 @@ include("vanilla.jl")
 include("dpw_types.jl")
 include("dpw.jl")
 include("action_gen.jl")
-include("aggregation.jl")
 include("util.jl")
 
 include("visualization.jl")
