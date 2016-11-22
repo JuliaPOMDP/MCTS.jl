@@ -19,6 +19,7 @@ type DPWSolver <: AbstractMCTSSolver
     rng::AbstractRNG
     rollout_solver::Union{Policy,Solver} # if this is a Solver, solve() will be called to get the rollout policy
                                          # if this is a Policy, it will be used for rollouts directly
+    prior_knowledge::Any             # a custom object that encodes any prior knowledge about the problem - to be used in init_N, init_Q, and estimate_value
     action_generator::ActionGenerator
 end
 
@@ -32,8 +33,9 @@ function DPWSolver(;depth::Int=10,
                     alpha_state::Float64=0.5,
                     rng::AbstractRNG=MersenneTwister(),
                     rollout_solver::Union{Policy,Solver}=RandomSolver(rng),
+                    prior_knowledge=nothing,
                     action_generator::ActionGenerator=RandomActionGenerator(rng))
-    DPWSolver(depth, exploration_constant, n_iterations, k_action, alpha_action, k_state, alpha_state, rng, rollout_solver,action_generator)
+    DPWSolver(depth, exploration_constant, n_iterations, k_action, alpha_action, k_state, alpha_state, rng, rollout_solver, prior_knowledge, action_generator)
 end
 
 type StateActionStateNode
@@ -46,7 +48,7 @@ type DPWStateActionNode{S}
     V::Dict{S,StateActionStateNode}
     N::Int
     Q::Float64
-    DPWStateActionNode() = new(Dict{S,StateActionStateNode}(),0,0)
+    DPWStateActionNode(N,Q) = new(Dict{S,StateActionStateNode}(), N, Q)
 end
 
 type DPWStateNode{S,A}
@@ -55,16 +57,16 @@ type DPWStateNode{S,A}
     DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 
-type DPWPolicy{S,A} <: AbstractMCTSPolicy{S}
+type DPWPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledgeType}
     solver::DPWSolver
     mdp::Union{POMDP{S,A},MDP{S,A}}
     tree::Dict{S,DPWStateNode{S,A}} 
     rollout_policy::Policy
 end
 
-DPWPolicy{S,A}(solver::DPWSolver,
-               mdp::Union{POMDP{S,A},MDP{S,A}}) = DPWPolicy{S,A}(solver,
-                                               mdp,
-                                               Dict{S,DPWStateNode{S,A}}(),
-                                               RandomPolicy(mdp, rng=solver.rng))
-
+function DPWPolicy{S,A}(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
+    return DPWPolicy{S,A,typeof(solver.prior_knowledge)}(solver,
+                                   mdp,
+                                   Dict{S,DPWStateNode{S,A}}(),
+                                   RandomPolicy(mdp, rng=solver.rng))
+end

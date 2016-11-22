@@ -18,11 +18,11 @@ tooltip_tag(s) = node_tag(s)
 
 function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
     # check to see if visualization was enabled
-    if !visualizer.policy.mcts.enable_tree_vis
+    if !visualizer.policy.solver.enable_tree_vis
         error("""
                 Tree visualization was not enabled for this policy.
                     
-                Construct the solver with $(typeof(visualizer.policy.mcts))(enable_tree_vis=true, ...) to enable.
+                Construct the solver with $(typeof(visualizer.policy.solver))(enable_tree_vis=true, ...) to enable.
             """)
     end
 

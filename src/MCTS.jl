@@ -19,12 +19,15 @@ export
     RandomActionGenerator,
     next_action,
     TreeVisualizer,
-    clear_tree!
+    clear_tree!,
+    estimate_value,
+    init_N,
+    init_Q
 
-abstract AbstractMCTSPolicy{S} <: Policy{S}
+abstract AbstractMCTSPolicy{S,A,PriorKnowledgeType} <: Policy{S}
 abstract AbstractMCTSSolver <: Solver
 
-
+include("prior_knowledge.jl")
 include("vanilla.jl")
 include("dpw_types.jl")
 include("dpw.jl")
