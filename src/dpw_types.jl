@@ -3,8 +3,8 @@ abstract ActionGenerator
 
 type RandomActionGenerator <: ActionGenerator
     rng::AbstractRNG
-    action_space::Nullable{AbstractSpace}
-    RandomActionGenerator(rng::AbstractRNG=MersenneTwister(), action_space=nothing) = new(rng, Nullable{AbstractSpace}(action_space))
+    action_space::Nullable{Any} # should be Nullable{AbstractSpace}, but https://github.com/JuliaIO/JLD.jl/issues/106
+    RandomActionGenerator(rng::AbstractRNG=MersenneTwister(), action_space=nothing) = new(rng, action_space==nothing ? Nullable{Any}(): Nullable{Any}(action_space))
 end
 
 # type and constructor for the dpw solver
