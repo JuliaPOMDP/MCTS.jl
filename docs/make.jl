@@ -5,6 +5,6 @@ makedocs()
 deploydocs(
     deps = Deps.pip("mkdocs", "python-markdown-math"),
     repo = "github.com/JuliaPOMDP/MCTS.jl.git",
-    julia = "release",
+    julia = "0.5",
     osname = "linux"
 )
