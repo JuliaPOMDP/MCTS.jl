@@ -1,7 +1,7 @@
 site_name:        MCTS.jl
 repo_url:         https://github.com/JuliaPOMDP/MCTS.jl
-site_description: Description...
-site_author:      USER_NAME
+site_description: Monte Carlo Tree Search implemented in Julia
+site_author:      Zachary Sunberg
 
 theme: readthedocs
 
@@ -24,5 +24,3 @@ pages:
   - Home: index.md
   - Vanilla: vanilla.md
   - DPW: dpw.md
-  - Aggregation: aggregation.md
-  - Visualization: visualization.md
