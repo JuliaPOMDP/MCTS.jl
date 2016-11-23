@@ -41,15 +41,18 @@ Fields:
     rollout_solver::Union{Solver,Policy}:
         Rollout policy or solver.
         If this is a Policy, it will be used directly in rollouts;
-        If it is a Solver, solve() will be called when solve() is called on the MCTSSolver
+        If it is a Solver, solve() will be called when solve() is called on 
+        the MCTSSolver
         default: RandomSolver(rng)
 
-    prior_knowledge::Any
-        An object containing any prior knowledge. Implement estimate_value, init_N, and init_Q to use this.
+    prior_knowledge::Any:
+        An object containing any prior knowledge. Implement estimate_value,
+        init_N, and init_Q to use this.
         default: nothing
 
     enable_tree_vis::Bool:
-        If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.
+        If this is true, extra information needed for tree visualization will
+        be recorded. If it is false, the tree cannot be visualized.
         default: false
 """
 type MCTSSolver <: AbstractMCTSSolver
@@ -65,7 +68,7 @@ type MCTSSolver <: AbstractMCTSSolver
 end
 
 """
-MCTS solver constructor.
+    MCTSSolver()
 
 Use keyword arguments to specify values for the fields.
 """

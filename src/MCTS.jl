@@ -27,6 +27,23 @@ export
 abstract AbstractMCTSPolicy{S,A,PriorKnowledgeType} <: Policy{S}
 abstract AbstractMCTSSolver <: Solver
 
+# public accessors for MCTS policy fields
+"""
+Return the mdp that the MCTS planner is using to plan.
+"""
+mdp(p::AbstractMCTSPolicy)
+
+"""
+Return the rollout policy that the MCTS planner is using.
+"""
+rollout_policy(p::AbstractMCTSPolicy) = p.solver.rollout_policy
+
+"""
+Return the additional prior knowledge object.
+"""
+prior_knowledge(p::AbstractMCTSPolicy) = p.solver.prior_knowledge
+
+
 include("prior_knowledge.jl")
 include("vanilla.jl")
 include("dpw_types.jl")
