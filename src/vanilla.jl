@@ -46,6 +46,7 @@ Fields:
 
     prior_knowledge::Any
         An object containing any prior knowledge. Implement estimate_value, init_N, and init_Q to use this.
+        default: nothing
 
     enable_tree_vis::Bool:
         If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.
@@ -78,7 +79,6 @@ function MCTSSolver(;n_iterations::Int64 = 100,
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver, prior_knowledge, enable_tree_vis)
 end
 
-# MCTS policy type
 type MCTSPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledgeType}
 	solver::MCTSSolver # containts the solver parameters
 	mdp::Union{POMDP,MDP} # model
@@ -87,13 +87,16 @@ type MCTSPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledge
 
     MCTSPolicy()=new() # is it too dangerous to have this?
 end
-# policy constructor
+
 function MCTSPolicy{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
     p = MCTSPolicy{S,A,typeof(solver.prior_knowledge)}()
     fill_defaults!(p, solver, mdp)
     p
 end
-# sets members to suitable default values (broken out of the constructor so that it can be used elsewhere)
+
+"""
+Set members to suitable default values (broken out of the constructor so that it can be used elsewhere).
+"""
 function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.solver, mdp::Union{POMDP,MDP}=p.mdp)
     p.solver = solver
     p.mdp = mdp
@@ -119,7 +122,6 @@ function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, 
     return policy
 end
 
-# retuns an approximately optimal action
 function POMDPs.action(policy::AbstractMCTSPolicy, state)
     n_iterations = policy.solver.n_iterations
     depth = policy.solver.depth
@@ -132,12 +134,12 @@ function POMDPs.action(policy::AbstractMCTSPolicy, state)
     # use map to conver index to mdp action
     return best.action
 end
-# new-definition of action for use with RolloutSimulator in POMDPToolbox
+
 function POMDPs.action(policy::AbstractMCTSPolicy, state, action)
   POMDPs.action(policy, state)
 end
 
-# runs a simulation from the passed in state to the specified depth
+
 function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     # model parameters
     mdp = policy.mdp
@@ -188,7 +190,9 @@ end
 getnode(policy::AbstractMCTSPolicy, s) = policy.tree[s]
 record_visit(policy::AbstractMCTSPolicy, sanode::StateActionNode, s) = push!(get(sanode._vis_stats), s)
 
-# returns the best action based on the Q score
+"""
+Return the best action based on the Q score
+"""
 function best_sanode_Q(snode)
     best_Q = -Inf
     local best_sanode::StateActionNode
@@ -201,7 +205,9 @@ function best_sanode_Q(snode)
     return best_sanode
 end
 
-# returns the best action based on the UCB score with exploration constant c
+"""
+Return the best action node based on the UCB score with exploration constant c
+"""
 function best_sanode_UCB(snode, c::Float64)
     best_UCB = -Inf
     best_sanode = snode.sanodes[1]

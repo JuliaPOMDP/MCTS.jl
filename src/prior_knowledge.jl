@@ -6,13 +6,13 @@ Return an estimate of the value.
 Implement this for you custom prior knowledge type to provide a value estimate based on prior knowledge.
 By default, this runs a rollout simulation with the rollout policy.
 """
-function estimate_value{S,A,PriorKnowledgeType}(policy::AbstractMCTSPolicy{S, A, PriorKnowledgeType}, state::S, depth)
+function estimate_value{S,A,PriorKnowledgeType}(policy::AbstractMCTSPolicy{S,A,PriorKnowledgeType}, state::S, depth)
     rollout(policy, state, depth)
 end
 
-function rollout(dpw::AbstractMCTSPolicy, s, d::Int)
+function rollout(p::AbstractMCTSPolicy, s, d::Int)
     sim = RolloutSimulator(rng=dpw.solver.rng, max_steps=d)
-    POMDPs.simulate(sim, dpw.mdp, dpw.rollout_policy, s)
+    POMDPs.simulate(sim, p.mdp, p.rollout_policy, s)
 end
 
 """
