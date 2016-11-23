@@ -77,10 +77,10 @@ Pages = [
 Depth = 2
 ```
 
-Visualization of the search tree in jupyter notebooks (see [example](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) is covered in the following section:
-```@contents
-Pages = [
-    "visualization.md"
-]
-Depth = 2
-```
+## Visualization
+
+An example of visualization of the search tree in a jupyter notebook is [here](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb).
+
+## Incorporating Additional Prior Knowledge
+
+An example of incorporating additional prior knowledge (to initialize Q and N) and to get an estimate of the value is [here](https://github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Prior_Knowledge_Example.ipynb).

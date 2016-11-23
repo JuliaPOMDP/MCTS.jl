@@ -11,7 +11,7 @@ function estimate_value{S,A,PriorKnowledgeType}(policy::AbstractMCTSPolicy{S,A,P
 end
 
 function rollout(p::AbstractMCTSPolicy, s, d::Int)
-    sim = RolloutSimulator(rng=dpw.solver.rng, max_steps=d)
+    sim = RolloutSimulator(rng=p.solver.rng, max_steps=d)
     POMDPs.simulate(sim, mdp(p), rollout_policy(p), s)
 end
 

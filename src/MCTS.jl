@@ -11,6 +11,8 @@ export
     MCTSPolicy,
     DPWSolver,
     DPWPolicy,
+    AbstractMCTSPolicy,
+    AbstractMCTSSolver,
     solve,
     action,
     rollout,
@@ -22,7 +24,11 @@ export
     clear_tree!,
     estimate_value,
     init_N,
-    init_Q
+    init_Q,
+    estimate_value,
+    mdp,
+    rollout_policy,
+    prior_knowledge
 
 abstract AbstractMCTSPolicy{S,A,PriorKnowledgeType} <: Policy{S}
 abstract AbstractMCTSSolver <: Solver
@@ -31,12 +37,12 @@ abstract AbstractMCTSSolver <: Solver
 """
 Return the mdp that the MCTS planner is using to plan.
 """
-mdp(p::AbstractMCTSPolicy)
+mdp(p::AbstractMCTSPolicy) = p.mdp
 
 """
 Return the rollout policy that the MCTS planner is using.
 """
-rollout_policy(p::AbstractMCTSPolicy) = p.solver.rollout_policy
+rollout_policy(p::AbstractMCTSPolicy) = p.rollout_policy
 
 """
 Return the additional prior knowledge object.
