@@ -84,3 +84,5 @@ An example of visualization of the search tree in a jupyter notebook is [here](h
 ## Incorporating Additional Prior Knowledge
 
 An example of incorporating additional prior knowledge (to initialize Q and N) and to get an estimate of the value is [here](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Prior_Knowledge_Example.ipynb).
+
+An example of how to choose special actions to try first in DPW is [here](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Action_Gen_Example.ipynb)

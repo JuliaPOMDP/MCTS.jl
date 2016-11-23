@@ -30,6 +30,11 @@ export
     rollout_policy,
     prior_knowledge
 
+export
+    StateActionStateNode,
+    DPWStateActionNode,
+    DPWStateNode
+
 abstract AbstractMCTSPolicy{S,A,PriorKnowledgeType} <: Policy{S}
 abstract AbstractMCTSSolver <: Solver
 
