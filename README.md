@@ -38,4 +38,4 @@ a = action(policy, s)
 
 See [this notebook](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) for an example of how to visualize the search tree.
 
-An example of incorporating additional prior knowledge (to initialize Q and N) and to get an estimate of the value is [here](https://github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Prior_Knowledge_Example.ipynb).
+Other examples can be found in the `notebooks` directory.
