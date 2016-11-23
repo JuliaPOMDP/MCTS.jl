@@ -3,40 +3,24 @@
 
     
     <url>
-     <loc>None/</loc>
-     <lastmod>2016-10-05</lastmod>
+     <loc>/</loc>
+     <lastmod>2016-11-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
 
     
     <url>
-     <loc>None/vanilla/</loc>
-     <lastmod>2016-10-05</lastmod>
+     <loc>/vanilla/</loc>
+     <lastmod>2016-11-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
 
     
     <url>
-     <loc>None/dpw/</loc>
-     <lastmod>2016-10-05</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    
-
-    
-    <url>
-     <loc>None/aggregation/</loc>
-     <lastmod>2016-10-05</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    
-
-    
-    <url>
-     <loc>None/visualization/</loc>
-     <lastmod>2016-10-05</lastmod>
+     <loc>/dpw/</loc>
+     <lastmod>2016-11-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
     

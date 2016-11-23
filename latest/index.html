@@ -5,37 +5,27 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Description...">
-  <meta name="author" content="USER_NAME">
-  
-  <title>MCTS.jl</title>
-  
-
+  <meta name="description" content="Monte Carlo Tree Search implemented in Julia">
+  <meta name="author" content="Zachary Sunberg">
   <link rel="shortcut icon" href="./img/favicon.ico">
-
-  
+  <title>Home - MCTS.jl</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="./css/theme.css" type="text/css" />
   <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
   <link rel="stylesheet" href="./css/highlight.css">
   <link href="./assets/Documenter.css" rel="stylesheet">
-
   
   <script>
     // Current page data
-    var mkdocs_page_name = "None";
+    var mkdocs_page_name = "Home";
     var mkdocs_page_input_path = "index.md";
     var mkdocs_page_url = "/";
   </script>
   
   <script src="./js/jquery-2.1.1.min.js"></script>
   <script src="./js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="./js/highlight.pack.js"></script>
-  <script src="./js/theme.js"></script> 
-  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-  <script src="./assets/mathjaxhelper.js"></script>
-
+  <script type="text/javascript" src="./js/highlight.pack.js"></script> 
   
 </head>
 
@@ -55,7 +45,7 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        <ul class="current">
+	<ul class="current">
           
             <li>
     <li class="toctree-l1 current">
@@ -70,6 +60,10 @@
                     <li><a class="toctree-l4" href="#usage">Usage</a></li>
                 
                     <li><a class="toctree-l4" href="#solver-variants">Solver Variants</a></li>
+                
+                    <li><a class="toctree-l4" href="#visualization">Visualization</a></li>
+                
+                    <li><a class="toctree-l4" href="#incorporating-additional-prior-knowledge">Incorporating Additional Prior Knowledge</a></li>
                 
             
             </ul>
@@ -87,20 +81,6 @@
             <li>
     <li class="toctree-l1 ">
         <a class="" href="dpw/">DPW</a>
-        
-    </li>
-<li>
-          
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="aggregation/">Aggregation</a>
-        
-    </li>
-<li>
-          
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="visualization/">Visualization</a>
         
     </li>
 <li>
@@ -130,9 +110,8 @@
     <li>Home</li>
     <li class="wy-breadcrumbs-aside">
       
-        
-          <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="icon icon-github"> Edit on GitHub</a>
-        
+        <a href="https://github.com/JuliaPOMDP/MCTS.jl/edit/master/docs/index.md"
+          class="icon icon-github"> Edit on GitHub</a>
       
     </li>
   </ul>
@@ -196,16 +175,17 @@ a = action(polciy, s) # returns the action for state s
 
 <p><a id='Solver-Variants-1'></a></p>
 <h2 id="solver-variants">Solver Variants</h2>
-<p>There are currently three variants of the MCTS solver. They are documented in detail in the following sections:</p>
+<p>There are currently two variants of the MCTS solver. They are documented in detail in the following sections:</p>
 <ul>
 <li><a href="vanilla/#Vanilla-1">Vanilla</a></li>
 <li><a href="dpw/#Double-Progressive-Widening-1">Double Progressive Widening</a></li>
-<li><a href="aggregation/#Aggregating-Solver-1">Aggregating Solver</a></li>
 </ul>
-<p>Visualization of the search tree in jupyter notebooks (see <a href="https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb">example</a> is covered in the following section:</p>
-<ul>
-<li><a href="visualization/#Visualization-1">Visualization</a></li>
-</ul>
+<p><a id='Visualization-1'></a></p>
+<h2 id="visualization">Visualization</h2>
+<p>An example of visualization of the search tree in a jupyter notebook is <a href="https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb">here</a>.</p>
+<p><a id='Incorporating-Additional-Prior-Knowledge-1'></a></p>
+<h2 id="incorporating-additional-prior-knowledge">Incorporating Additional Prior Knowledge</h2>
+<p>An example of incorporating additional prior knowledge (to initialize Q and N) and to get an estimate of the value is <a href="https://github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Prior_Knowledge_Example.ipynb">here</a>.</p>
               
             </div>
           </div>
@@ -233,10 +213,10 @@ a = action(polciy, s) # returns the action for state s
       </div>
 
     </section>
-
+    
   </div>
 
-<div class="rst-versions" role="note" style="cursor: pointer">
+  <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
           <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
@@ -247,11 +227,14 @@ a = action(polciy, s) # returns the action for state s
       
     </span>
 </div>
+    <script src="./js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="./assets/mathjaxhelper.js"></script>
 
 </body>
 </html>
 
 <!--
-MkDocs version : 0.15.3
-Build Date UTC : 2016-10-05 21:01:58.125032
+MkDocs version : 0.16.0
+Build Date UTC : 2016-11-23 09:23:43
 -->

@@ -6,21 +6,15 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="author" content="USER_NAME">
-  
-  <title>Vanilla - MCTS.jl</title>
-  
-
+  <meta name="author" content="Zachary Sunberg">
   <link rel="shortcut icon" href="../img/favicon.ico">
-
-  
+  <title>Vanilla - MCTS.jl</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
   <link rel="stylesheet" href="../css/highlight.css">
   <link href="../assets/Documenter.css" rel="stylesheet">
-
   
   <script>
     // Current page data
@@ -31,11 +25,7 @@
   
   <script src="../js/jquery-2.1.1.min.js"></script>
   <script src="../js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="../js/highlight.pack.js"></script>
-  <script src="../js/theme.js"></script> 
-  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-  <script src="../assets/mathjaxhelper.js"></script>
-
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
   
 </head>
 
@@ -55,7 +45,7 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        <ul class="current">
+	<ul class="current">
           
             <li>
     <li class="toctree-l1 ">
@@ -85,20 +75,6 @@
     </li>
 <li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../aggregation/">Aggregation</a>
-        
-    </li>
-<li>
-          
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../visualization/">Visualization</a>
-        
-    </li>
-<li>
-          
         </ul>
       </div>
       &nbsp;
@@ -124,9 +100,8 @@
     <li>Vanilla</li>
     <li class="wy-breadcrumbs-aside">
       
-        
-          <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="icon icon-github"> Edit on GitHub</a>
-        
+        <a href="https://github.com/JuliaPOMDP/MCTS.jl/edit/master/docs/vanilla.md"
+          class="icon icon-github"> Edit on GitHub</a>
       
     </li>
   </ul>
@@ -162,13 +137,22 @@ rng::AbstractRNG:
 rollout_solver::Union{Solver,Policy}:
     Rollout policy or solver.
     If this is a Policy, it will be used directly in rollouts;
-    If it is a Solver, solve() will be called when solve() is called on the MCTSSolver
+    If it is a Solver, solve() will be called when solve() is called on 
+    the MCTSSolver
     default: RandomSolver(rng)
 
+prior_knowledge::Any:
+    An object containing any prior knowledge. Implement estimate_value,
+    init_N, and init_Q to use this.
+    default: nothing
+
 enable_tree_vis::Bool:
-    If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.
+    If this is true, extra information needed for tree visualization will
+    be recorded. If it is false, the tree cannot be visualized.
     default: false
 </code></pre>
+
+<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/tree/f3e56f38db3c91b88af97e5bf302e103c679b4d3/src/vanilla.jl#L20-L57' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
@@ -198,10 +182,10 @@ enable_tree_vis::Bool:
       </div>
 
     </section>
-
+    
   </div>
 
-<div class="rst-versions" role="note" style="cursor: pointer">
+  <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
           <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
@@ -214,6 +198,9 @@ enable_tree_vis::Bool:
       
     </span>
 </div>
+    <script src="../js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="../assets/mathjaxhelper.js"></script>
 
 </body>
 </html>
