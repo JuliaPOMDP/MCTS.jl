@@ -12,8 +12,8 @@ type StateNode{A}
     sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
 
-function StateNode{S,A}(mdp::Union{POMDP{S,A},MDP{S,A}}, s::S)
-    ns = StateActionNode{A}[StateActionNode{A}(a, 0, 0.0) for a in iterator(actions(mdp, s))] # TODO: mechanism for assigning N0, Q0
+function StateNode{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
+    ns = StateActionNode{A}[StateActionNode{A}(a, init_N(policy, s, a), init_Q(policy, s, a)) for a in iterator(actions(policy.mdp, s))]
     return StateNode{A}(0, ns)
 end
 
@@ -41,11 +41,18 @@ Fields:
     rollout_solver::Union{Solver,Policy}:
         Rollout policy or solver.
         If this is a Policy, it will be used directly in rollouts;
-        If it is a Solver, solve() will be called when solve() is called on the MCTSSolver
+        If it is a Solver, solve() will be called when solve() is called on 
+        the MCTSSolver
         default: RandomSolver(rng)
 
+    prior_knowledge::Any:
+        An object containing any prior knowledge. Implement estimate_value,
+        init_N, and init_Q to use this.
+        default: nothing
+
     enable_tree_vis::Bool:
-        If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.
+        If this is true, extra information needed for tree visualization will
+        be recorded. If it is false, the tree cannot be visualized.
         default: false
 """
 type MCTSSolver <: AbstractMCTSSolver
@@ -56,11 +63,12 @@ type MCTSSolver <: AbstractMCTSSolver
     rollout_solver::Union{Solver,Policy} # rollout policy
                                          # if this is a Solver, solve() will be called when solve() is called on the MCTSSolver;
                                          # if this is a Policy, it will be used directly
+    prior_knowledge::Any # a custom object that encodes any prior knowledge about the problem - to be used in init_N, init_Q, and estimate_value
     enable_tree_vis::Bool # if true, will record data needed for visualization
 end
 
 """
-MCTS solver constructor.
+    MCTSSolver()
 
 Use keyword arguments to specify values for the fields.
 """
@@ -69,39 +77,40 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(),
                      rollout_solver = RandomSolver(rng), # random policy is default
+                     prior_knowledge = nothing,
                      enable_tree_vis::Bool=false)
-    return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver, enable_tree_vis)
+    return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver, prior_knowledge, enable_tree_vis)
 end
 
-# MCTS policy type
-type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S}
-	mcts::MCTSSolver # containts the solver parameters
+type MCTSPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledgeType}
+	solver::MCTSSolver # containts the solver parameters
 	mdp::Union{POMDP,MDP} # model
     rollout_policy::Policy # rollout policy
     tree::Dict{S, StateNode{A}} # the search tree
-    sim::RolloutSimulator # for doing rollouts
 
     MCTSPolicy()=new() # is it too dangerous to have this?
 end
-# policy constructor
-function MCTSPolicy{S,A}(mcts::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
-    p = MCTSPolicy{S,A}()
-    fill_defaults!(p, mcts, mdp)
+
+function MCTSPolicy{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
+    p = MCTSPolicy{S,A,typeof(solver.prior_knowledge)}()
+    fill_defaults!(p, solver, mdp)
     p
 end
-# sets members to suitable default values (broken out of the constructor so that it can be used elsewhere)
-function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.mcts, mdp::Union{POMDP,MDP}=p.mdp)
-    p.mcts = solver
+
+"""
+Set members to suitable default values (broken out of the constructor so that it can be used elsewhere).
+"""
+function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.solver, mdp::Union{POMDP,MDP}=p.mdp)
+    p.solver = solver
     p.mdp = mdp
-    if isa(p.mcts.rollout_solver, Solver)
-        p.rollout_policy = solve(p.mcts.rollout_solver, mdp)
+    if isa(p.solver.rollout_solver, Solver)
+        p.rollout_policy = solve(p.solver.rollout_solver, mdp)
     else
-        p.rollout_policy = p.mcts.rollout_solver
+        p.rollout_policy = p.solver.rollout_solver
     end
 
     # pre-allocate
     p.tree = Dict{S, StateNode{A}}()
-    p.sim = RolloutSimulator(rng=solver.rng, max_steps=0)
     return p
 end
 
@@ -111,15 +120,14 @@ Delete existing decision tree.
 function clear_tree!{S,A}(p::MCTSPolicy{S,A}) p.tree = Dict{S, StateNode{A}}() end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy{S,A}=MCTSPolicy{S,A}())
+function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy=MCTSPolicy{S,A,typeof(solver.prior_knowledge)}())
     fill_defaults!(policy, solver, mdp)
     return policy
 end
 
-# retuns an approximately optimal action
 function POMDPs.action(policy::AbstractMCTSPolicy, state)
-    n_iterations = policy.mcts.n_iterations
-    depth = policy.mcts.depth
+    n_iterations = policy.solver.n_iterations
+    depth = policy.solver.depth
     # build the tree
     for n = 1:n_iterations
         simulate(policy, state, depth)
@@ -129,17 +137,17 @@ function POMDPs.action(policy::AbstractMCTSPolicy, state)
     # use map to conver index to mdp action
     return best.action
 end
-# new-definition of action for use with RolloutSimulator in POMDPToolbox
+
 function POMDPs.action(policy::AbstractMCTSPolicy, state, action)
   POMDPs.action(policy, state)
 end
 
-# runs a simulation from the passed in state to the specified depth
+
 function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     # model parameters
     mdp = policy.mdp
     discount_factor = discount(mdp) 
-    rng = policy.mcts.rng
+    rng = policy.solver.rng
 
     # once depth is zero return
     if depth == 0 || isterminal(policy.mdp, state)
@@ -149,19 +157,19 @@ function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     # if unexplored state add to the tree and run rollout
     if !hasnode(policy, state)
         newnode = insert_node!(policy, state)
-        return rollout(policy, state, depth) # TODO(?) upgrade this to some more flexible value estimate
+        return estimate_value(policy, state, depth)
     end 
     # if previously visited node
     snode = getnode(policy, state)
 
     # pick action using UCT
     snode.N += 1 # increase number of node visits by one
-    sanode = best_sanode_UCB(snode, policy.mcts.exploration_constant)
+    sanode = best_sanode_UCB(snode, policy.solver.exploration_constant)
 
     # transition to a new state
     sp, r = generate_sr(mdp, state, sanode.action, rng)
     
-    if policy.mcts.enable_tree_vis
+    if policy.solver.enable_tree_vis
         record_visit(policy, sanode, sp)
     end
 
@@ -171,18 +179,11 @@ function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     return q
 end
 
-# recursive rollout to specified depth, returns the accumulated discounted reward
-function rollout(policy::AbstractMCTSPolicy, s, d::Int)
-    sim = policy.sim
-    sim.max_steps = d 
-    POMDPs.simulate(sim, policy.mdp, policy.rollout_policy, s)
-end
-
 # these functions are here so that they can be overridden by the aggregating solver
 hasnode(policy::AbstractMCTSPolicy, s) = haskey(policy.tree, s)
-function insert_node!(policy::AbstractMCTSPolicy, s)
-    newnode = policy.tree[deepcopy(s)] = StateNode(policy.mdp, s)
-    if policy.mcts.enable_tree_vis
+function insert_node!{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
+    newnode = policy.tree[deepcopy(s)] = StateNode(policy, s)
+    if policy.solver.enable_tree_vis
         for sanode in newnode.sanodes
             sanode._vis_stats = Set()
         end
@@ -192,7 +193,9 @@ end
 getnode(policy::AbstractMCTSPolicy, s) = policy.tree[s]
 record_visit(policy::AbstractMCTSPolicy, sanode::StateActionNode, s) = push!(get(sanode._vis_stats), s)
 
-# returns the best action based on the Q score
+"""
+Return the best action based on the Q score
+"""
 function best_sanode_Q(snode)
     best_Q = -Inf
     local best_sanode::StateActionNode
@@ -205,7 +208,9 @@ function best_sanode_Q(snode)
     return best_sanode
 end
 
-# returns the best action based on the UCB score with exploration constant c
+"""
+Return the best action node based on the UCB score with exploration constant c
+"""
 function best_sanode_UCB(snode, c::Float64)
     best_UCB = -Inf
     best_sanode = snode.sanodes[1]
