@@ -38,17 +38,7 @@ Fields:
     rng::AbstractRNG:
         Random number generator
 
-    rollout_solver::Union{Solver,Policy}:
-        Rollout policy or solver.
-        If this is a Policy, it will be used directly in rollouts;
-        If it is a Solver, solve() will be called when solve() is called on 
-        the MCTSSolver
-        default: RandomSolver(rng)
 
-    prior_knowledge::Any:
-        An object containing any prior knowledge. Implement estimate_value,
-        init_N, and init_Q to use this.
-        default: nothing
 
     enable_tree_vis::Bool:
         If this is true, extra information needed for tree visualization will
@@ -60,10 +50,9 @@ type MCTSSolver <: AbstractMCTSSolver
 	depth::Int64 # the max depth of the tree
 	exploration_constant::Float64 # constant balancing exploration and exploitation
     rng::AbstractRNG # random number generator
-    rollout_solver::Union{Solver,Policy} # rollout policy
-                                         # if this is a Solver, solve() will be called when solve() is called on the MCTSSolver;
-                                         # if this is a Policy, it will be used directly
-    prior_knowledge::Any # a custom object that encodes any prior knowledge about the problem - to be used in init_N, init_Q, and estimate_value
+    estimate_value::Any
+    init_Q::Any
+    init_N::Any
     enable_tree_vis::Bool # if true, will record data needed for visualization
 end
 
@@ -76,7 +65,6 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(),
-                     rollout_solver = RandomSolver(rng), # random policy is default
                      prior_knowledge = nothing,
                      enable_tree_vis::Bool=false)
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver, prior_knowledge, enable_tree_vis)
@@ -85,7 +73,7 @@ end
 type MCTSPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledgeType}
 	solver::MCTSSolver # containts the solver parameters
 	mdp::Union{POMDP,MDP} # model
-    rollout_policy::Policy # rollout policy
+    solved_estimate::Any
     tree::Dict{S, StateNode{A}} # the search tree
 
     MCTSPolicy()=new() # is it too dangerous to have this?
