@@ -5,7 +5,7 @@ using DiscreteValueIteration
 using POMDPs
 
 mdp = GridWorld()
-N = 100
+N = 50
 rng = MersenneTwister(1)
 init_states = [GridWorldState(rand(rng, 1:mdp.size_x), rand(rng, 1:mdp.size_y)) for i in 1:N]
 
@@ -31,8 +31,8 @@ index = Dict([(k, i) for (i, k) in enumerate(keys(solvers))])
 
 for (k,p) in policies
     println("simulating $k")
-    @time @sync @parallel for i in 1:N
-    # @time for i in 1:N
+    # @time @sync @parallel for i in 1:N
+    @time for i in 1:N
         sim = MCTS.RolloutSimulator(rng=MersenneTwister(i))
         rewards[index[k],i] = simulate(sim, mdp, deepcopy(p), init_states[i])
     end

@@ -1,12 +1,11 @@
 # this class should implement next_action 
-abstract ActionGenerator
+abstract ActionGenerator # XXX Deprecated - only here for compatibility with POMCP
 
 type RandomActionGenerator <: ActionGenerator
     rng::AbstractRNG
     action_space::Nullable{Any} # should be Nullable{AbstractSpace}, but https://github.com/JuliaIO/JLD.jl/issues/106
     RandomActionGenerator(rng::AbstractRNG=MersenneTwister(), action_space=nothing) = new(rng, action_space==nothing ? Nullable{Any}(): Nullable{Any}(action_space))
 end
-
 
 """
 MCTS solver with DPW
@@ -26,9 +25,6 @@ Fields:
         Number of iterations during each action() call.
         default: 100
 
-    rng::AbstractRNG:
-        Random number generator
-
     k_action::Float64
     alpha_action::Float64
     k_state::Float64
@@ -40,33 +36,47 @@ Fields:
     rng::AbstractRNG:
         Random number generator
 
-    rollout_solver::Union{Solver,Policy}:
-        Rollout policy or solver.
-        If this is a Policy, it will be used directly in rollouts;
-        If it is a Solver, solve() will be called when solve() is called on the MCTSSolver.
-        default: RandomSolver(rng)
+    estimate_value::Any (rollout policy)
+        Function, object, or number used to estimate the value at the leaf nodes.
+        If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
+        If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
+        If this is a number, the value will be set to that number.
+        default: RolloutEstimator(RandomSolver(rng))
 
-    prior_knowledge::Any:
-        An object containing any prior knowledge. Implement estimate_value, init_N, and init_Q to use this.
-        default: nothing
+    init_Q::Any
+        Function, object, or number used to set the initial Q(s,a) value at a new node.
+        If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+        If this is an object `o`, `init_Q(o, mdp, s, a)` will be called.
+        If this is a number, Q will always be set to that number.
+        default: 0.0
 
-    action_generator::ActionGenerator:
-        Determines which new action should be added in progressive widening.
-        default:RandomActionGenerator(rng)
+    init_N::Any
+        Function, object, or number used to set the initial N(s,a) value at a new node.
+        If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+        If this is an object `o`, `init_N(o, mdp, s, a)` will be called.
+        If this is a number, N will always be set to that number.
+        default: 0
+
+    next_action::Any
+        Function or object used to choose the next action to be considered for progressive widening.
+        The next action is determined based on the MDP, the state, `s`, and the current `DPWStateNode`, `snode`.
+        If this is a function `f`, `f(mdp, s, snode)` will be called to set the value.
+        If this is an object `o`, `next_action(o, mdp, s, snode)` will be called.
+        default: RandomActionGenerator(rng)
 """
 type DPWSolver <: AbstractMCTSSolver
-    depth::Int                       # search depth
-    exploration_constant::Float64    # exploration constant- governs trade-off between exploration and exploitation in MCTS
-    n_iterations::Int                # number of iterations
-    k_action::Float64                # first constant controlling action generation
-    alpha_action::Float64            # second constant controlling action generation
-    k_state::Float64                 # first constant controlling transition state generation
-    alpha_state::Float64             # second constant controlling transition state generation
+    depth::Int
+    exploration_constant::Float64
+    n_iterations::Int
+    k_action::Float64
+    alpha_action::Float64
+    k_state::Float64
+    alpha_state::Float64
     rng::AbstractRNG
-    rollout_solver::Union{Policy,Solver} # if this is a Solver, solve() will be called to get the rollout policy
-                                         # if this is a Policy, it will be used for rollouts directly
-    prior_knowledge::Any             # a custom object that encodes any prior knowledge about the problem - to be used in init_N, init_Q, and estimate_value
-    action_generator::ActionGenerator
+    estimate_value::Any
+    init_Q::Any
+    init_N::Any
+    next_action::Any
 end
 
 """
@@ -82,10 +92,11 @@ function DPWSolver(;depth::Int=10,
                     k_state::Float64=10.0,
                     alpha_state::Float64=0.5,
                     rng::AbstractRNG=MersenneTwister(),
-                    rollout_solver::Union{Policy,Solver}=RandomSolver(rng),
-                    prior_knowledge=nothing,
-                    action_generator::ActionGenerator=RandomActionGenerator(rng))
-    DPWSolver(depth, exploration_constant, n_iterations, k_action, alpha_action, k_state, alpha_state, rng, rollout_solver, prior_knowledge, action_generator)
+                    estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
+                    init_Q::Any = 0.0,
+                    init_N::Any = 0,
+                    next_action::Any = RandomActionGenerator(rng))
+    DPWSolver(depth, exploration_constant, n_iterations, k_action, alpha_action, k_state, alpha_state, rng, estimate_value, init_Q, init_N, next_action)
 end
 
 type StateActionStateNode
@@ -107,16 +118,16 @@ type DPWStateNode{S,A}
     DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 
-type DPWPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledgeType}
+type DPWPolicy{S,A} <: AbstractMCTSPolicy{S,A}
     solver::DPWSolver
     mdp::Union{POMDP{S,A},MDP{S,A}}
     tree::Dict{S,DPWStateNode{S,A}} 
-    rollout_policy::Policy
+    solved_estimate::Any
 end
 
 function DPWPolicy{S,A}(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
-    return DPWPolicy{S,A,typeof(solver.prior_knowledge)}(solver,
-                                   mdp,
-                                   Dict{S,DPWStateNode{S,A}}(),
-                                   RandomPolicy(mdp, rng=solver.rng))
+    return DPWPolicy{S,A}(solver,
+                          mdp,
+                          Dict{S,DPWStateNode{S,A}}(),
+                          SolvedRolloutEstimator(RandomPolicy(mdp, rng=solver.rng), solver.rng))
 end

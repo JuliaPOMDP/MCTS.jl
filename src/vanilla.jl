@@ -13,7 +13,10 @@ type StateNode{A}
 end
 
 function StateNode{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
-    ns = StateActionNode{A}[StateActionNode{A}(a, init_N(policy, s, a), init_Q(policy, s, a)) for a in iterator(actions(policy.mdp, s))]
+    ns = StateActionNode{A}[StateActionNode{A}(a,
+                                               init_N(policy.solver.init_N, policy.mdp, s, a),
+                                               init_Q(policy.solver.init_Q, policy.mdp, s, a)) 
+                            for a in iterator(actions(policy.mdp, s))]
     return StateNode{A}(0, ns)
 end
 
@@ -31,24 +34,33 @@ Fields:
         default: 10
 
     exploration_constant::Float64: 
-        Specified how much the solver should explore.
+        Specifies how much the solver should explore.
         In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
         default: 1.0
 
     rng::AbstractRNG:
         Random number generator
 
-    rollout_solver::Union{Solver,Policy}:
-        Rollout policy or solver.
-        If this is a Policy, it will be used directly in rollouts;
-        If it is a Solver, solve() will be called when solve() is called on 
-        the MCTSSolver
-        default: RandomSolver(rng)
+    estimate_value::Any (rollout policy)
+        Function, object, or number used to estimate the value at the leaf nodes.
+        If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
+        If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
+        If this is a number, the value will be set to that number
+        default: RolloutEstimator(RandomSolver(rng))
 
-    prior_knowledge::Any:
-        An object containing any prior knowledge. Implement estimate_value,
-        init_N, and init_Q to use this.
-        default: nothing
+    init_Q::Any
+        Function, object, or number used to set the initial Q(s,a) value at a new node.
+        If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+        If this is an object `o`, `init_Q(o, mdp, s, a)` will be called.
+        If this is a number, Q will be set to that number
+        default: 0.0
+
+    init_N::Any
+        Function, object, or number used to set the initial N(s,a) value at a new node.
+        If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+        If this is an object `o`, `init_N(o, mdp, s, a)` will be called.
+        If this is a number, N will be set to that number
+        default: 0
 
     enable_tree_vis::Bool:
         If this is true, extra information needed for tree visualization will
@@ -57,14 +69,13 @@ Fields:
 """
 type MCTSSolver <: AbstractMCTSSolver
 	n_iterations::Int64
-	depth::Int64 # the max depth of the tree
-	exploration_constant::Float64 # constant balancing exploration and exploitation
-    rng::AbstractRNG # random number generator
-    rollout_solver::Union{Solver,Policy} # rollout policy
-                                         # if this is a Solver, solve() will be called when solve() is called on the MCTSSolver;
-                                         # if this is a Policy, it will be used directly
-    prior_knowledge::Any # a custom object that encodes any prior knowledge about the problem - to be used in init_N, init_Q, and estimate_value
-    enable_tree_vis::Bool # if true, will record data needed for visualization
+	depth::Int64
+	exploration_constant::Float64
+    rng::AbstractRNG
+    estimate_value::Any
+    init_Q::Any
+    init_N::Any
+    enable_tree_vis::Bool
 end
 
 """
@@ -76,23 +87,24 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(),
-                     rollout_solver = RandomSolver(rng), # random policy is default
-                     prior_knowledge = nothing,
+                     estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
+                     init_Q = 0.0,
+                     init_N = 0,
                      enable_tree_vis::Bool=false)
-    return MCTSSolver(n_iterations, depth, exploration_constant, rng, rollout_solver, prior_knowledge, enable_tree_vis)
+    return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, enable_tree_vis)
 end
 
-type MCTSPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledgeType}
+type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S,A}
 	solver::MCTSSolver # containts the solver parameters
 	mdp::Union{POMDP,MDP} # model
-    rollout_policy::Policy # rollout policy
+    solved_estimate::Any
     tree::Dict{S, StateNode{A}} # the search tree
 
     MCTSPolicy()=new() # is it too dangerous to have this?
 end
 
 function MCTSPolicy{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
-    p = MCTSPolicy{S,A,typeof(solver.prior_knowledge)}()
+    p = MCTSPolicy{S,A}()
     fill_defaults!(p, solver, mdp)
     p
 end
@@ -103,16 +115,21 @@ Set members to suitable default values (broken out of the constructor so that it
 function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.solver, mdp::Union{POMDP,MDP}=p.mdp)
     p.solver = solver
     p.mdp = mdp
-    if isa(p.solver.rollout_solver, Solver)
-        p.rollout_policy = solve(p.solver.rollout_solver, mdp)
-    else
-        p.rollout_policy = p.solver.rollout_solver
-    end
+    p.solved_estimate = convert_estimator(p.solver.estimate_value, solver, mdp)
 
     # pre-allocate
     p.tree = Dict{S, StateNode{A}}()
     return p
 end
+
+convert_estimator(ev::Any, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP}) = ev
+function convert_estimator(ev::RolloutEstimator, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP})
+    return SolvedRolloutEstimator(convert_to_policy(ev.solver, mdp), solver.rng)
+end
+convert_to_policy(p::Policy, mdp::Union{POMDP,MDP}) = p
+convert_to_policy(s::Solver, mdp::Union{POMDP,MDP}) = solve(s, mdp)
+convert_to_policy(f::Function, mdp::Union{POMDP,MDP}) = FunctionPolicy(f)
+
 
 """
 Delete existing decision tree.
@@ -120,7 +137,7 @@ Delete existing decision tree.
 function clear_tree!{S,A}(p::MCTSPolicy{S,A}) p.tree = Dict{S, StateNode{A}}() end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy=MCTSPolicy{S,A,typeof(solver.prior_knowledge)}())
+function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy=MCTSPolicy{S,A}())
     fill_defaults!(policy, solver, mdp)
     return policy
 end
@@ -157,7 +174,7 @@ function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     # if unexplored state add to the tree and run rollout
     if !hasnode(policy, state)
         newnode = insert_node!(policy, state)
-        return estimate_value(policy, state, depth)
+        return estimate_value(policy.solved_estimate, policy.mdp, state, depth)
     end 
     # if previously visited node
     snode = getnode(policy, state)
