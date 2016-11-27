@@ -19,6 +19,7 @@ export
     StateNode,
     ActionGenerator,
     RandomActionGenerator,
+    RolloutEstimate,
     next_action,
     TreeVisualizer,
     clear_tree!,

@@ -1,9 +1,5 @@
 function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP}, p::DPWPolicy=DPWPolicy(solver, mdp))
-    if isa(p.solver.rollout_solver, Solver) 
-        p.rollout_policy = solve(p.solver.rollout_solver, mdp)
-    else
-        p.rollout_policy = p.solver.rollout_solver
-    end
+    p.solved_estimate = convert_estimator(p.solver.estimate_value, solver, mdp)
     return p
 end
 

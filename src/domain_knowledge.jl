@@ -22,7 +22,7 @@ Fields:
         If this is a Function, a POMDPToolbox.FunctionPolicy with this function will be used for rollouts
 """
 type RolloutEstimate
-    solver::Union{Solver,Policy,Function} # rollout policy
+    solver::Union{Solver,Policy,Function} # rollout policy or solver
 end
 
 """
@@ -39,7 +39,7 @@ estimate_value(estimator::SolvedRolloutEstimate, mdp::MDP, state, depth::Int) = 
 
 function rollout(estimator::SolvedRolloutEstimate, mdp::MDP, s, d::Int)
     sim = RolloutSimulator(rng=estimator.rng, max_steps=d)
-    POMDPs.simulate(sim, mdp, rollout_policy(p), s)
+    POMDPs.simulate(sim, mdp, p, s)
 end
 
 """
@@ -49,17 +49,17 @@ Return a value to initialize Q(s,a) to based on domain knowledge.
 
 By default, returns 0.0.
 """
-init_Q(::Any, ::Union{MDP,POMDP}, s, a) = 0.0
+POMDPs.@pomdp_func init_Q(initializer::Any, mdp::Union{MDP,POMDP}, s, a)
 init_Q(f::Function, mdp::Union{MDP,POMDP}, s, a) = f(mdp, s, a)
 init_Q(n::Number, mdp::Union{MDP,POMDP}, s, a) = convert(Float64, n)
 
 """
     init_N(initializer, mdp, s, a)
 
-Return a value to initialize N(s,a) to based on prior knowledge.
+Return a value to initialize N(s,a) to based on domain knowledge.
 
 By default, returns 0.
 """
-init_N(::Any, Union{MDP,POMDP}, s, a) = 0
+POMDPs.@pomdp_func init_N(initializer::Any, mdp::Union{MDP,POMDP}, s, a)
 init_N(f::Function, mdp::Union{MDP,POMDP}, s, a) = f(mdp, s, a)
 init_N(n::Number, mdp::Union{MDP,POMDP}, s, a) = convert(Int, n)
