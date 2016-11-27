@@ -127,24 +127,33 @@ depth::Int64:
     default: 10
 
 exploration_constant::Float64: 
-    Specified how much the solver should explore.
+    Specifies how much the solver should explore.
     In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
     default: 1.0
 
 rng::AbstractRNG:
     Random number generator
 
-rollout_solver::Union{Solver,Policy}:
-    Rollout policy or solver.
-    If this is a Policy, it will be used directly in rollouts;
-    If it is a Solver, solve() will be called when solve() is called on 
-    the MCTSSolver
-    default: RandomSolver(rng)
+estimate_value::Any (rollout policy)
+    Function, object, or number used to estimate the value at the leaf nodes.
+    If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
+    If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
+    If this is a number, the value will be set to that number
+    default: RolloutEstimator(RandomSolver(rng))
 
-prior_knowledge::Any:
-    An object containing any prior knowledge. Implement estimate_value,
-    init_N, and init_Q to use this.
-    default: nothing
+init_Q::Any
+    Function, object, or number used to set the initial Q(s,a) value at a new node.
+    If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+    If this is an object `o`, `init_Q(o, mdp, s, a)` will be called.
+    If this is a number, Q will be set to that number
+    default: 0.0
+
+init_N::Any
+    Function, object, or number used to set the initial N(s,a) value at a new node.
+    If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+    If this is an object `o`, `init_N(o, mdp, s, a)` will be called.
+    If this is a number, N will be set to that number
+    default: 0
 
 enable_tree_vis::Bool:
     If this is true, extra information needed for tree visualization will
@@ -152,7 +161,7 @@ enable_tree_vis::Bool:
     default: false
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/tree/43a1aa7f62c5462d6144555c09fff7dcc22d5c2c/src/vanilla.jl#L20-L57' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/tree/2d091596a0bc961715a7ac140063923cb68d944a/src/vanilla.jl#L23-L69' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
