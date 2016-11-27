@@ -1,12 +1,11 @@
 # this class should implement next_action 
-abstract ActionGenerator
+abstract ActionGenerator # XXX Deprecated - only here for compatibility with POMCP
 
-type RandomActionGenerator <: ActionGenerator
+type RandomActionGenerator
     rng::AbstractRNG
     action_space::Nullable{Any} # should be Nullable{AbstractSpace}, but https://github.com/JuliaIO/JLD.jl/issues/106
     RandomActionGenerator(rng::AbstractRNG=MersenneTwister(), action_space=nothing) = new(rng, action_space==nothing ? Nullable{Any}(): Nullable{Any}(action_space))
 end
-
 
 """
 MCTS solver with DPW
@@ -44,35 +43,29 @@ Fields:
         Function, object, or number used to estimate the value at the leaf nodes.
         If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
         If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
-        If this is a number, the value will be set to that number
+        If this is a number, the value will be set to that number.
         default: RolloutEstimate(RandomSolver(rng))
 
     init_Q::Any
         Function, object, or number used to set the initial Q(s,a) value at a new node.
         If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
         If this is an object `o`, `init_Q(o, mdp, s, a)` will be called.
-        If this is a number, Q will always be set to that number
+        If this is a number, Q will always be set to that number.
         default: 0.0
 
     init_N::Any
         Function, object, or number used to set the initial N(s,a) value at a new node.
         If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
         If this is an object `o`, `init_N(o, mdp, s, a)` will be called.
-        If this is a number, N will always be set to that number
+        If this is a number, N will always be set to that number.
         default: 0
 
     next_action::Any
         Function or object used to choose the next action to be considered for progressive widening.
-        The next action is determined based on the mdp, the state, s, and the current `DPWStateNode`, snode.
+        The next action is determined based on the MDP, the state, `s`, and the current `DPWStateNode`, `snode`.
         If this is a function `f`, `f(mdp, s, snode)` will be called to set the value.
         If this is an object `o`, `next_action(o, mdp, s, snode)` will be called.
         default: RandomActionGenerator(rng)
-
-    rollout_solver::Union{Solver,Policy}:
-        Rollout policy or solver.
-        If this is a Policy, it will be used directly in rollouts;
-        If it is a Solver, solve() will be called when solve() is called on the MCTSSolver.
-        default: RandomSolver(rng)
 """
 type DPWSolver <: AbstractMCTSSolver
     depth::Int
@@ -128,7 +121,7 @@ type DPWStateNode{S,A}
     DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 
-type DPWPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledgeType}
+type DPWPolicy{S,A} <: AbstractMCTSPolicy{S,A}
     solver::DPWSolver
     mdp::Union{POMDP{S,A},MDP{S,A}}
     tree::Dict{S,DPWStateNode{S,A}} 
@@ -136,8 +129,8 @@ type DPWPolicy{S,A,PriorKnowledgeType} <: AbstractMCTSPolicy{S,A,PriorKnowledgeT
 end
 
 function DPWPolicy{S,A}(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
-    return DPWPolicy{S,A,typeof(solver.prior_knowledge)}(solver,
-                                   mdp,
-                                   Dict{S,DPWStateNode{S,A}}(),
-                                   SolvedRolloutEstimate(RandomPolicy(mdp, rng=solver.rng), solver.rng))
+    return DPWPolicy{S,A}(solver,
+                          mdp,
+                          Dict{S,DPWStateNode{S,A}}(),
+                          SolvedRolloutEstimate(RandomPolicy(mdp, rng=solver.rng), solver.rng))
 end

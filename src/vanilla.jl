@@ -87,9 +87,9 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(),
-                     estimate_value::Any = RolloutEstimate(RandomSolver(rng))
-                     init_Q = 0.0
-                     init_N = 0
+                     estimate_value::Any = RolloutEstimate(RandomSolver(rng)),
+                     init_Q = 0.0,
+                     init_N = 0,
                      enable_tree_vis::Bool=false)
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, enable_tree_vis)
 end
@@ -104,7 +104,7 @@ type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S,A}
 end
 
 function MCTSPolicy{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
-    p = MCTSPolicy{S,A,typeof(solver.prior_knowledge)}()
+    p = MCTSPolicy{S,A}()
     fill_defaults!(p, solver, mdp)
     p
 end
@@ -124,7 +124,7 @@ end
 
 convert_estimator(ev::Any, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP}) = ev
 function convert_estimator(ev::RolloutEstimate, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP})
-    return SolvedRolloutEstimate(convert_to_policy(ev.solver, solver, mdp), solver.rng)
+    return SolvedRolloutEstimate(convert_to_policy(ev.solver, mdp), solver.rng)
 end
 convert_to_policy(p::Policy, mdp::Union{POMDP,MDP}) = p
 convert_to_policy(s::Solver, mdp::Union{POMDP,MDP}) = solve(s, mdp)
@@ -137,7 +137,7 @@ Delete existing decision tree.
 function clear_tree!{S,A}(p::MCTSPolicy{S,A}) p.tree = Dict{S, StateNode{A}}() end
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy=MCTSPolicy{S,A,typeof(solver.prior_knowledge)}())
+function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy=MCTSPolicy{S,A}())
     fill_defaults!(policy, solver, mdp)
     return policy
 end

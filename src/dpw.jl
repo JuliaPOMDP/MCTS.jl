@@ -38,7 +38,7 @@ function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
     if !haskey(dpw.tree,s) # if state is not yet explored, add it to the set of states, perform a rollout 
         dpw.tree[s] = DPWStateNode{S,A}()
         dpw.tree[s].N += 1
-        return estimate_value(dpw,s,d)
+        return estimate_value(dpw.solved_estimate, dpw.mdp, s, d)
     end
 
     snode = dpw.tree[s] # save current state node so we do not have to iterate through map many times
@@ -46,9 +46,10 @@ function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
 
     # action progressive widening
     if length(snode.A) <= dpw.solver.k_action*snode.N^dpw.solver.alpha_action # criterion for new action generation
-        a = next_action(dpw.solver.action_generator, dpw.mdp, s, snode) # action generation step
+        a = next_action(dpw.solver.next_action, dpw.mdp, s, snode) # action generation step
         if !haskey(snode.A,a) # make sure we haven't already tried this action
-            snode.A[a] = DPWStateActionNode{S}(init_N(dpw, s, a), init_Q(dpw, s, a))
+            snode.A[a] = DPWStateActionNode{S}(init_N(dpw.solver.init_N, dpw.mdp, s, a),
+                                               init_Q(dpw.solver.init_Q, dpw.mdp, s, a))
         end
     end
 

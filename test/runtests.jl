@@ -23,6 +23,8 @@ a = action(policy, state)
 clear_tree!(policy)
 @test isempty(policy.tree)
 
+include("options.jl")
+
 println("Testing DPW solver.")
 include("dpw_test.jl")
 
@@ -33,5 +35,5 @@ nbinclude("../notebooks/Test_Visualization.ipynb")
 println("Testing other functions.")
 include("other.jl")
 
-nbinclude("../notebooks/Prior_Knowledge_Example.ipynb")
-nbinclude("../notebooks/Action_Gen_Example.ipynb")
+# nbinclude("../notebooks/Prior_Knowledge_Example.ipynb")
+# nbinclude("../notebooks/Action_Gen_Example.ipynb")
