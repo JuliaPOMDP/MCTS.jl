@@ -78,7 +78,7 @@ Depth = 2
 
 ## Visualization
 
-An example of visualization of the search tree in a jupyter notebook is [here](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb).
+An example of visualization of the search tree in a jupyter notebook is [here](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) (or [here](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) is the version on github that will not display quite right but will still show you how it's done).
 
 ## Incorporating Additional Prior Knowledge
 
