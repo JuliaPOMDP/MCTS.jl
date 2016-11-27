@@ -25,9 +25,6 @@ Fields:
         Number of iterations during each action() call.
         default: 100
 
-    rng::AbstractRNG:
-        Random number generator
-
     k_action::Float64
     alpha_action::Float64
     k_state::Float64
