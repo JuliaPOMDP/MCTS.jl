@@ -36,5 +36,4 @@ nbinclude("../notebooks/Test_Visualization.ipynb")
 println("Testing other functions.")
 include("other.jl")
 
-# nbinclude("../notebooks/Prior_Knowledge_Example.ipynb")
-# nbinclude("../notebooks/Action_Gen_Example.ipynb")
+nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")

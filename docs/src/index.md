@@ -53,8 +53,7 @@ By default, the solver will use a random policy for rollouts. If you want to pas
 
 ```julia
 rollout_policy = MyCustomPolicy() # of type Policy, and has method action(rollout_policy::MyCustomPolicy, s::State)
-solver = MCTSSolver(rollout_solver=rollout_policy) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0
-# note that the rollout_solver optional argument can be a solver or a policy
+solver = MCTSSolver(estimate_value=RolloutEstimator(rollout_policy)) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0
 policy = solve(solver, mdp)
 ```
 
@@ -83,6 +82,4 @@ An example of visualization of the search tree in a jupyter notebook is [here](h
 
 ## Incorporating Additional Prior Knowledge
 
-An example of incorporating additional prior knowledge (to initialize Q and N) and to get an estimate of the value is [here](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Prior_Knowledge_Example.ipynb).
-
-An example of how to choose special actions to try first in DPW is [here](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Action_Gen_Example.ipynb)
+An example of incorporating additional prior domain knowledge (to initialize Q and N) and to get an estimate of the value is [here](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Domain_Knowledge_Example.ipynb).
