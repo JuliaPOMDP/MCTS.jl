@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Zachary Sunberg">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>DPW - MCTS.jl</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  <link href="../assets/Documenter.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "DPW";
+    var mkdocs_page_input_path = "dpw.md";
+    var mkdocs_page_url = "/dpw/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> MCTS.jl</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="..">Home</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../vanilla/">Vanilla</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 current">
+        <a class="current" href="./">DPW</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#double-progressive-widening">Double Progressive Widening</a></li>
+                
+            
+            </ul>
+        
+    </li>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">MCTS.jl</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>DPW</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/JuliaPOMDP/MCTS.jl/edit/master/docs/dpw.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <p><a id='Double-Progressive-Widening-1'></a></p>
+<h1 id="double-progressive-widening">Double Progressive Widening</h1>
+<p>The double progressive widening DPW solver is useful for problems with large (e.g. continuous) state and action spaces. It gradually expands the tree's branching factor so that the algorithm explores deeply even with large spaces.</p>
+<p>See the papers at <a href="https://hal.archives-ouvertes.fr/file/index/docid/542673/filename/c0mcts.pdf">https://hal.archives-ouvertes.fr/file/index/docid/542673/filename/c0mcts.pdf</a> and <a href="http://arxiv.org/abs/1405.5498">http://arxiv.org/abs/1405.5498</a> for a description.</p>
+<p>The solver fields are used to specify solver parameters. All of them can be specified as keyword arguments to the solver constructor.</p>
+<p><a id='MCTS.DPWSolver' href='#MCTS.DPWSolver'>#</a>
+<strong><code>MCTS.DPWSolver</code></strong> &mdash; <em>Type</em>.</p>
+<p>MCTS solver with DPW</p>
+<p>Fields:</p>
+<pre><code>depth::Int64:
+    Maximum rollout horizon and tree depth.
+    default: 10
+
+exploration_constant::Float64: 
+    Specified how much the solver should explore.
+    In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
+    default: 1.0
+
+n_iterations::Int64
+    Number of iterations during each action() call.
+    default: 100
+
+rng::AbstractRNG:
+    Random number generator
+
+k_action::Float64
+alpha_action::Float64
+k_state::Float64
+alpha_state::Float64
+    These constants control the double progressive widening. A new state
+    or action will be added if the number of children is less than or equal to kN^alpha.
+    defaults: k:10, alpha:0.5
+
+rng::AbstractRNG:
+    Random number generator
+
+rollout_solver::Union{Solver,Policy}:
+    Rollout policy or solver.
+    If this is a Policy, it will be used directly in rollouts;
+    If it is a Solver, solve() will be called when solve() is called on the MCTSSolver.
+    default: RandomSolver(rng)
+
+prior_knowledge::Any:
+    An object containing any prior knowledge. Implement estimate_value, init_N, and init_Q to use this.
+    default: nothing
+
+action_generator::ActionGenerator:
+    Determines which new action should be added in progressive widening.
+    default:RandomActionGenerator(rng)
+</code></pre>
+
+<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/tree/43a1aa7f62c5462d6144555c09fff7dcc22d5c2c/src/dpw_types.jl#L11-L56' class='documenter-source'>source</a><br></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../vanilla/" class="btn btn-neutral" title="Vanilla"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../vanilla/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script src="../js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="../assets/mathjaxhelper.js"></script>
+
+</body>
+</html>
