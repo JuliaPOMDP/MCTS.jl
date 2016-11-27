@@ -25,6 +25,8 @@ test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_con
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=3.0))
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=(mdp, s, d)->9))
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=DomanKnowledgeTestTp()))
+test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(RandomPolicy(GridWorld(), rng=Base.GLOBAL_RNG))))
+test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(x->GridWorldAction(:up))))
 @test_throws MethodError test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value="bad"))
 
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, init_Q=1.0))
@@ -40,6 +42,8 @@ test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_cons
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=3.0))
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=(mdp, s, d)->9))
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=DomanKnowledgeTestTp()))
+test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(RandomPolicy(GridWorld(), rng=Base.GLOBAL_RNG))))
+test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(x->GridWorldAction(:up))))
 @test_throws MethodError test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value="bad"))
 
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, next_action=(mdp, s, snode)->GridWorldAction(:up)))

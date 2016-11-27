@@ -2,6 +2,7 @@ using MCTS
 using POMDPModels
 using Base.Test
 using NBInclude
+using POMDPToolbox
 
 @show MCTS.required_methods()
 

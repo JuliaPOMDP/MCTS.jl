@@ -46,7 +46,7 @@ Fields:
         If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
         If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
         If this is a number, the value will be set to that number
-        default: RolloutEstimate(RandomSolver(rng))
+        default: RolloutEstimator(RandomSolver(rng))
 
     init_Q::Any
         Function, object, or number used to set the initial Q(s,a) value at a new node.
@@ -87,7 +87,7 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
                      rng = MersenneTwister(),
-                     estimate_value::Any = RolloutEstimate(RandomSolver(rng)),
+                     estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
                      init_Q = 0.0,
                      init_N = 0,
                      enable_tree_vis::Bool=false)
@@ -123,8 +123,8 @@ function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.solver, md
 end
 
 convert_estimator(ev::Any, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP}) = ev
-function convert_estimator(ev::RolloutEstimate, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP})
-    return SolvedRolloutEstimate(convert_to_policy(ev.solver, mdp), solver.rng)
+function convert_estimator(ev::RolloutEstimator, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP})
+    return SolvedRolloutEstimator(convert_to_policy(ev.solver, mdp), solver.rng)
 end
 convert_to_policy(p::Policy, mdp::Union{POMDP,MDP}) = p
 convert_to_policy(s::Solver, mdp::Union{POMDP,MDP}) = solve(s, mdp)

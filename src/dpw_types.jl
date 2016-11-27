@@ -1,7 +1,7 @@
 # this class should implement next_action 
 abstract ActionGenerator # XXX Deprecated - only here for compatibility with POMCP
 
-type RandomActionGenerator
+type RandomActionGenerator <: ActionGenerator
     rng::AbstractRNG
     action_space::Nullable{Any} # should be Nullable{AbstractSpace}, but https://github.com/JuliaIO/JLD.jl/issues/106
     RandomActionGenerator(rng::AbstractRNG=MersenneTwister(), action_space=nothing) = new(rng, action_space==nothing ? Nullable{Any}(): Nullable{Any}(action_space))
@@ -44,7 +44,7 @@ Fields:
         If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
         If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
         If this is a number, the value will be set to that number.
-        default: RolloutEstimate(RandomSolver(rng))
+        default: RolloutEstimator(RandomSolver(rng))
 
     init_Q::Any
         Function, object, or number used to set the initial Q(s,a) value at a new node.
@@ -95,7 +95,7 @@ function DPWSolver(;depth::Int=10,
                     k_state::Float64=10.0,
                     alpha_state::Float64=0.5,
                     rng::AbstractRNG=MersenneTwister(),
-                    estimate_value::Any = RolloutEstimate(RandomSolver(rng)),
+                    estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
                     init_Q::Any = 0.0,
                     init_N::Any = 0,
                     next_action::Any = RandomActionGenerator(rng))
@@ -132,5 +132,5 @@ function DPWPolicy{S,A}(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
     return DPWPolicy{S,A}(solver,
                           mdp,
                           Dict{S,DPWStateNode{S,A}}(),
-                          SolvedRolloutEstimate(RandomPolicy(mdp, rng=solver.rng), solver.rng))
+                          SolvedRolloutEstimator(RandomPolicy(mdp, rng=solver.rng), solver.rng))
 end
