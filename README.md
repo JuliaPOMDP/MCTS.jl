@@ -38,4 +38,4 @@ a = action(policy, s)
 
 See [this notebook](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) for an example of how to visualize the search tree.
 
-See [this notebook](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Domain_Knowledge_Example.ipynb) for examples of customizing solver behavior, specifically [this section](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Domain_Knowledge_Example.ipynb#Rollouts) for using heuristic rollout policies.
+See [this notebook](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Domain_Knowledge_Example.ipynb) for examples of customizing solver behavior, specifically [the Rollouts section](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Domain_Knowledge_Example.ipynb#Rollouts) for using heuristic rollout policies.
