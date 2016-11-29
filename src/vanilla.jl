@@ -199,7 +199,8 @@ end
 # these functions are here so that they can be overridden by the aggregating solver
 hasnode(policy::AbstractMCTSPolicy, s) = haskey(policy.tree, s)
 function insert_node!{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
-    newnode = policy.tree[deepcopy(s)] = StateNode(policy, s)
+    newnode = StateNode(policy, s)
+    policy.tree[deepcopy(s)] = newnode
     if policy.solver.enable_tree_vis
         for sanode in newnode.sanodes
             sanode._vis_stats = Set()

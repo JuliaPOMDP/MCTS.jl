@@ -49,6 +49,8 @@ function required_methods()
     return [
         generate_sr,
         discount,
+        create_action,
+        create_state,
         actions,
         isterminal,
         rand
