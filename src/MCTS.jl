@@ -46,6 +46,7 @@ include("visualization.jl")
 
 function required_methods()
     println("Note: the required_methods() list of functions for MCTS contains generate_sr() from the GenerativeModels package. Alternatively, it is sufficient to define transition() and reward() from POMDPs instead.")
+    println("Note: iterator(action_space) is also required for the vanilla version of MCTS.")
     return [
         generate_sr,
         discount,
