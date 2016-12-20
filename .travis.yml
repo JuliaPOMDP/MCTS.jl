@@ -11,7 +11,7 @@ notifications:
     on_success: change
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'Pkg.add("POMDPs.jl"); using POMDPs; POMDPs.add("POMDPModels"); POMDPs.add("POMDPToolbox"); Pkg.add("NBInclude"); Pkg.clone(pwd()); Pkg.test("MCTS"; coverage=true)'
+  - julia --check-bounds=yes -e 'Pkg.add("POMDPs"); using POMDPs; POMDPs.add("POMDPModels"); POMDPs.add("POMDPToolbox"); Pkg.add("NBInclude"); Pkg.clone(pwd()); Pkg.test("MCTS"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("MCTS")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   - julia -e 'Pkg.clone("https://github.com/JuliaDocs/Documenter.jl")'
