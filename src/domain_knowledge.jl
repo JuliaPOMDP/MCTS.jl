@@ -4,7 +4,7 @@
 Return an estimate of the value.
 
 """
-POMDPs.@pomdp_func estimate_value(estimator::Any, mdp::Union{POMDP,MDP}, state, depth::Int)
+function estimate_value end
 estimate_value(f::Function, mdp::Union{POMDP,MDP}, state, depth::Int) = f(mdp, state, depth)
 estimate_value(estimator::Number, mdp::Union{POMDP,MDP}, state, depth::Int) = convert(Float64, estimator)
 
@@ -48,7 +48,7 @@ Return a value to initialize Q(s,a) to based on domain knowledge.
 
 By default, returns 0.0.
 """
-POMDPs.@pomdp_func init_Q(initializer::Any, mdp::Union{MDP,POMDP}, s, a)
+function init_Q end
 init_Q(f::Function, mdp::Union{MDP,POMDP}, s, a) = f(mdp, s, a)
 init_Q(n::Number, mdp::Union{MDP,POMDP}, s, a) = convert(Float64, n)
 
@@ -59,6 +59,6 @@ Return a value to initialize N(s,a) to based on domain knowledge.
 
 By default, returns 0.
 """
-POMDPs.@pomdp_func init_N(initializer::Any, mdp::Union{MDP,POMDP}, s, a)
+function init_N end
 init_N(f::Function, mdp::Union{MDP,POMDP}, s, a) = f(mdp, s, a)
 init_N(n::Number, mdp::Union{MDP,POMDP}, s, a) = convert(Int, n)

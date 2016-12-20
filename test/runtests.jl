@@ -4,8 +4,6 @@ using Base.Test
 using NBInclude
 using POMDPToolbox
 
-@show MCTS.required_methods()
-
 n_iter = 50
 depth = 15
 ec = 1.0

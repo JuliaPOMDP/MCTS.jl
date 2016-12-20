@@ -11,7 +11,7 @@ function clear_tree!{S,A}(p::DPWPolicy{S,A}) p.tree = Dict{S, DPWStateNode{S,A}}
 """
 Call simulate and chooses the approximate best action from the reward approximations
 """
-function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S, a::A=create_action(p.mdp))
+function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S)
     for i = 1:p.solver.n_iterations
         simulate(p, deepcopy(s), p.solver.depth) # (not 100% sure we need to make a copy of the state here)
     end
