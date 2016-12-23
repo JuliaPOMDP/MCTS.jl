@@ -1,4 +1,5 @@
 using MCTS
+using POMDPs
 using POMDPModels
 using Base.Test
 using NBInclude
@@ -12,6 +13,10 @@ println("Testing vanilla MCTS solver.")
 
 solver = MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, enable_tree_vis=true)
 mdp = GridWorld()
+
+@requirements_info solver
+@requirements_info solver mdp
+@requirements_info solver mdp GridWorldState(1,1)
 
 policy = solve(solver, mdp)
 

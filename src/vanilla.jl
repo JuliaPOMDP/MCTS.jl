@@ -94,6 +94,7 @@ function MCTSSolver(;n_iterations::Int64 = 100,
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, enable_tree_vis)
 end
 
+
 type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S,A}
 	solver::MCTSSolver # containts the solver parameters
 	mdp::Union{POMDP,MDP} # model
@@ -108,6 +109,7 @@ function MCTSPolicy{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
     fill_defaults!(p, solver, mdp)
     p
 end
+
 
 """
 Set members to suitable default values (broken out of the constructor so that it can be used elsewhere).
@@ -136,10 +138,15 @@ Delete existing decision tree.
 """
 function clear_tree!{S,A}(p::MCTSPolicy{S,A}) p.tree = Dict{S, StateNode{A}}() end
 
+
 # no computation is done in solve - the solver is just given the mdp model that it will work with
 function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy=MCTSPolicy{S,A}())
     fill_defaults!(policy, solver, mdp)
     return policy
+end
+
+@POMDP_require POMDPs.action(policy::AbstractMCTSPolicy, state) begin
+    @subreq simulate(policy, state, policy.solver.depth)
 end
 
 function POMDPs.action(policy::AbstractMCTSPolicy, state)
@@ -158,7 +165,6 @@ end
 function POMDPs.action(policy::AbstractMCTSPolicy, state, action)
   POMDPs.action(policy, state)
 end
-
 
 function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     # model parameters
@@ -196,8 +202,22 @@ function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     return q
 end
 
+@POMDP_require simulate(policy::AbstractMCTSPolicy, state, depth::Int64) begin
+    mdp = policy.mdp
+    P = typeof(mdp)
+    S = state_type(P)
+    A = action_type(P)
+    @req discount(::P)
+    @req isterminal(::P, ::S)
+    @subreq insert_node!(policy, state)
+    @subreq estimate_value(policy.solved_estimate, mdp, state, depth)
+    @req generate_sr(::P, ::S, ::A, ::typeof(policy.solver.rng))
+end
+
+
 # these functions are here so that they can be overridden by the aggregating solver
 hasnode(policy::AbstractMCTSPolicy, s) = haskey(policy.tree, s)
+
 function insert_node!{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
     newnode = StateNode(policy, s)
     policy.tree[deepcopy(s)] = newnode
@@ -208,6 +228,25 @@ function insert_node!{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
     end
     return newnode
 end
+
+@POMDP_require insert_node!(policy::AbstractMCTSPolicy, s) begin
+    # from the StateNode constructor
+    P = typeof(policy.mdp)
+    A = action_type(P)
+    S = typeof(s)
+    IQ = typeof(policy.solver.init_Q)
+    if !(IQ <: Number) && !(IQ <: Function)
+        @req init_Q(::IQ, ::P, ::S, ::A)
+    end
+    IN = typeof(policy.solver.init_N)
+    if !(IN <: Number) && !(IN <: Function)
+        @req init_N(::IN, ::P, ::S, ::A)
+    end
+    @req actions(::P, ::S)
+    as = actions(policy.mdp, s)
+    @req iterator(::typeof(as))
+end
+
 getnode(policy::AbstractMCTSPolicy, s) = policy.tree[s]
 record_visit(policy::AbstractMCTSPolicy, sanode::StateActionNode, s) = push!(get(sanode._vis_stats), s)
 

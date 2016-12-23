@@ -35,6 +35,7 @@ export
 abstract AbstractMCTSPolicy{S,A} <: Policy{S}
 abstract AbstractMCTSSolver <: Solver
 
+include("requirements_info.jl")
 include("domain_knowledge.jl")
 include("vanilla.jl")
 include("dpw_types.jl")
