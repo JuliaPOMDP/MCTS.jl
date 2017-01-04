@@ -39,15 +39,15 @@ end
 
 estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, depth::Int) = rollout(estimator, mdp, state, depth)
 
-# @POMDP_require rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s, d::Int) begin
-#     sim = RolloutSimulator(rng=estimator.rng, max_steps=d)
-#     @subreq POMDPs.simulate(sim, mdp, estimator.policy, s)
-# end
-
 # this rollout function is really just here in case people search for rollout
 function rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s, d::Int)
     sim = RolloutSimulator(rng=estimator.rng, max_steps=d)
     POMDPs.simulate(sim, mdp, estimator.policy, s)
+end
+
+@POMDP_require rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s, d::Int) begin
+    sim = RolloutSimulator(rng=estimator.rng, max_steps=d)
+    @subreq POMDPs.simulate(sim, mdp, estimator.policy, s)
 end
 
 """

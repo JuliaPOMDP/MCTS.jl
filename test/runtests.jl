@@ -14,8 +14,11 @@ println("Testing vanilla MCTS solver.")
 solver = MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, enable_tree_vis=true)
 mdp = GridWorld()
 
+println("============== @requirements_info with only solver:")
 @requirements_info solver
+println("============== @requirements_info with solver and mdp:")
 @requirements_info solver mdp
+println("============== @requirements_info with solver, mdp, and state:")
 @requirements_info solver mdp GridWorldState(1,1)
 
 policy = solve(solver, mdp)
