@@ -17,7 +17,6 @@ export
     action,
     rollout,
     StateNode,
-    ActionGenerator,
     RandomActionGenerator,
     RolloutEstimator,
     next_action,

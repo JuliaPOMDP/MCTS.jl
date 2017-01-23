@@ -94,7 +94,6 @@ function MCTSSolver(;n_iterations::Int64 = 100,
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, enable_tree_vis)
 end
 
-
 type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S,A}
 	solver::MCTSSolver # containts the solver parameters
 	mdp::Union{POMDP,MDP} # model
