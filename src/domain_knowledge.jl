@@ -1,5 +1,5 @@
 """
-    estimate_value(policy, state, depth)
+    estimate_value(estimator, mdp, state, depth)
 
 Return an estimate of the value.
 
@@ -33,6 +33,15 @@ type SolvedRolloutEstimator
     rng::AbstractRNG
 end
 
+convert_estimator(ev::Any, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP}) = ev
+function convert_estimator(ev::RolloutEstimator, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP})
+    return SolvedRolloutEstimator(convert_to_policy(ev.solver, mdp), solver.rng)
+end
+convert_to_policy(p::Policy, mdp::Union{POMDP,MDP}) = p
+convert_to_policy(s::Solver, mdp::Union{POMDP,MDP}) = solve(s, mdp)
+convert_to_policy(f::Function, mdp::Union{POMDP,MDP}) = FunctionPolicy(f)
+
+
 @POMDP_require estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, depth::Int) begin
     @subreq rollout(estimator, mdp, state, depth)
 end
@@ -54,8 +63,6 @@ end
     init_Q(initializer, mdp, s, a)
 
 Return a value to initialize Q(s,a) to based on domain knowledge.
-
-By default, returns 0.0.
 """
 function init_Q end
 init_Q(f::Function, mdp::Union{MDP,POMDP}, s, a) = f(mdp, s, a)
@@ -65,8 +72,6 @@ init_Q(n::Number, mdp::Union{MDP,POMDP}, s, a) = convert(Float64, n)
     init_N(initializer, mdp, s, a)
 
 Return a value to initialize N(s,a) to based on domain knowledge.
-
-By default, returns 0.
 """
 function init_N end
 init_N(f::Function, mdp::Union{MDP,POMDP}, s, a) = f(mdp, s, a)
