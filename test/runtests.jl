@@ -27,6 +27,8 @@ state = GridWorldState(1,1)
 
 a = action(policy, state)
 
+MCTS.blink(TreeVisualizer(policy, state))
+
 clear_tree!(policy)
 @test isempty(policy.tree)
 

@@ -1,18 +1,16 @@
-// ************** Generate the tree diagram	 *****************
-// var margin = {top: 20, right: 120, bottom: 20, left: 120},
-var margin = {top: 20, right: 120, bottom: 80, left: 120},
-	width = $("#"+div).width() - margin.right - margin.left,
-    height = 600 - margin.top - margin.bottom;
-    // TODO make height a parameter of TreeVisualizer
-	
-var i = 0,
-	duration = 750,
-	root;
 
-if (typeof d3 === 'undefined') {
-    loadScript("https://d3js.org/d3.v3.js", showTree)
+if (typeof $ === 'undefined') {
+    loadScript("https://code.jquery.com/jquery-3.1.1.min.js", run)
 } else {
-    showTree()
+    run()
+}
+
+function run() {
+    if (typeof d3 === 'undefined') {
+        loadScript("https://d3js.org/d3.v3.js", showTree)
+    } else {
+        showTree()
+    }
 }
 
 function loadScript(url, callback)
@@ -35,6 +33,18 @@ function loadScript(url, callback)
 
 
 function showTree() {
+        
+    // var margin = {top: 20, right: 120, bottom: 20, left: 120},
+    var margin = {top: 20, right: 120, bottom: 80, left: 120},
+        width = $("#"+div).width() - margin.right - margin.left,
+        height = 600 - margin.top - margin.bottom;
+        // height = 600 - margin.top - margin.bottom;
+        // TODO make height a parameter of TreeVisualizer
+
+    var i = 0,
+        duration = 750,
+        root;
+
     var tree = d3.layout.tree()
         .size([width, height]);
 
@@ -42,11 +52,21 @@ function showTree() {
         //.projection(function(d) { return [d.y, d.x]; });
         // uncomment above to make the tree go horizontally
 
+    // see http://stackoverflow.com/questions/16265123/resize-svg-when-window-is-resized-in-d3-js
     if (d3.select("#"+div+"_svg").empty()) {
         d3.select("#"+div).append("svg")
             .attr("id", div+"_svg")
             .attr("width", width + margin.right + margin.left)
-            .attr("height", height + margin.top + margin.bottom)
+            .attr("height", height + margin.top + margin.bottom);
+            /*
+            .append("div")
+            .classed("svg-container", true)
+            .append("svg")
+                .attr("id", div+"_svg")
+                .attr("preserveAspectRatio", "xMinYMin meet")
+                .attr("viewBox", "0 0 "+width+" "+height)
+                .classed("svg-content-responsive", true);
+                */
     }
 
     d3.select("#"+div+"_svg").selectAll("*").remove();
@@ -130,6 +150,16 @@ function showTree() {
     */
 
     function update(source) {
+
+      width = $("#"+div).width() - margin.right - margin.left,
+      height = $("#"+div).height() - margin.top - margin.bottom;
+
+      tree.size([width,height]);
+      d3.select("#"+div).attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom);
+      d3.select("#"+div+"_svg").attr("width", width + margin.right + margin.left)
+             .attr("height", height + margin.top + margin.bottom);
+
 
       // Compute the new tree layout.
       var nodes = tree.nodes(root).reverse(),

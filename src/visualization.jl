@@ -1,7 +1,9 @@
 import JSON
 
+abstract AbstractTreeVisualizer
+
 # put your policy in one of these to automatically visualize it in a python notebook
-type TreeVisualizer{PolicyType}
+type TreeVisualizer{PolicyType} <: AbstractTreeVisualizer
     policy::PolicyType
     init_state
 end
@@ -165,7 +167,7 @@ function create_json{P<:DPWPolicy}(visualizer::TreeVisualizer{P})
 end
 
 # function stringmime(m::MIME"text/html", visualizer::TreeVisualizer)
-function Base.show(f::IO, m::MIME"text/html", visualizer::TreeVisualizer)
+function Base.show(f::IO, m::MIME"text/html", visualizer::AbstractTreeVisualizer)
     json, root_id = create_json(visualizer)
     # write("/tmp/tree_dump.json", json)
     css = @compat readstring(joinpath(dirname(@__FILE__()), "tree_vis.css"))
@@ -173,6 +175,10 @@ function Base.show(f::IO, m::MIME"text/html", visualizer::TreeVisualizer)
     div = "treevis$(randstring())"
 
     html_string = """
+        <html>
+        <head>
+        </head>
+        <body>
         <div id="$div">
         <style>
             $css
@@ -186,6 +192,8 @@ function Base.show(f::IO, m::MIME"text/html", visualizer::TreeVisualizer)
             })();
         </script>
         </div>
+        </body>
+        </html>
     """
     # html_string = "visualization doesn't work yet :("
 
@@ -197,4 +205,20 @@ function Base.show(f::IO, m::MIME"text/html", visualizer::TreeVisualizer)
     # close(outfile)
 
     println(f,html_string)
+end
+
+function blink(vis::AbstractTreeVisualizer)
+    w = Window()
+    str = stringmime(MIME"text/html"(), vis)
+    println(str)
+    body!(w, str)
+    return w
+end
+
+function inchrome(vis::AbstractTreeVisualizer)
+    fname = joinpath(mktempdir(), "tree.html")
+    open(fname, "w") do f
+        show(f, MIME"text/html"(), vis)
+    end
+    run(`google-chrome $fname`)
 end

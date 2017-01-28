@@ -80,6 +80,8 @@ Depth = 2
 
 An example of visualization of the search tree in a jupyter notebook is [here](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) (or [here](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) is the version on github that will not display quite right but will still show you how it's done).
 
+To display the tree in an Electron window using Blink.jl, run `blink(TreeVisualizer(policy, state))`.
+
 ## Incorporating Additional Prior Knowledge
 
 An example of incorporating additional prior domain knowledge (to initialize Q and N) and to get an estimate of the value is [here](https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Domain_Knowledge_Example.ipynb).

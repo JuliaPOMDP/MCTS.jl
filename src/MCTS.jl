@@ -5,6 +5,7 @@ using GenerativeModels
 using POMDPToolbox
 
 using Compat
+using Blink
 
 export 
     MCTSSolver, 
@@ -20,7 +21,10 @@ export
     RandomActionGenerator,
     RolloutEstimator,
     next_action,
+    AbstractTreeVisualizer,
     TreeVisualizer,
+    blink,
+    inchrome,
     clear_tree!,
     estimate_value,
     init_N,
