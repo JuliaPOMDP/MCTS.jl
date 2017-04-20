@@ -210,7 +210,7 @@ end
 function blink(vis::AbstractTreeVisualizer)
     w = Window()
     str = stringmime(MIME"text/html"(), vis)
-    println(str)
+    # println(str)
     body!(w, str)
     return w
 end
