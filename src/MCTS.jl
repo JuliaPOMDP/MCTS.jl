@@ -1,7 +1,6 @@
 module MCTS
 
 using POMDPs
-using GenerativeModels
 using POMDPToolbox
 
 using Compat
