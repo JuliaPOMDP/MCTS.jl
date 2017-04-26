@@ -17,51 +17,63 @@ POMDPs.add("MCTS")
 
 ## Usage
 
-Problems should be defined using the [POMDPs.jl interface](https://github.com/JuliaPOMDP/POMDPs.jl). Use of the [GenerativeModels.jl](https://github.com/JuliaPOMDP/GenerativeModels.jl) package to define state transition and reward sampling. The following functions should be implemented for the problem:
-```julia
-generate_sr(mdp::MDP, s, a, rng::AbstractRNG)
-discount(mdp::MDP)
-actions(mdp::MDP)
-actions(mdp::MDP, s::State, as::ActionSpace)
-isterminal(mdp::MDP, s::State)
-```
+Problems should be defined using the [POMDPs.jl generative interface](http://juliapomdp.github.io/POMDPs.jl/latest/generative/). 
 
-To use the default random rollout policy, an action space sampling function
+To see the methods that you need to implement to use MCTS with your MDP (assume you're defining an MDP of type `MyMDP` with states represented by integers and 3 possible integer actions), run
 ```julia
-rand(rng::AbstractRNG, action_space::AbstractSpace)
-```
-must also be implemented.
+using POMDPs
+using MCTS
 
-Problems that do *not* use [GenerativeModels.jl](https://github.com/JuliaPOMDP/GenerativeModels.jl) can be used with MCTS.jl, but must have the following three functions defined *instead of* `generate_sr`.
-```julia
-transition(mdp::MDP, s, a, d::AbstractDistribution)
-rand(rng::AbstractRNG, d::AbstractDistribution)
-reward(mdp::MDP, s, a)
+immutable MyMDP <: MDP{Int,Int} end
+POMDPs.actions(::MyMDP) = [1,2,3]
+
+@requirements_info MCTSSolver() MyMDP() 1
 ```
+(the `1` is any valid state). This should output something like
+```
+INFO: POMDPs.jl requirements for action(::AbstractMCTSPolicy, ::Any) and dependencies. ([✔] = implemented correctly; [X] = missing)
+
+For action(::AbstractMCTSPolicy, ::Any):
+  [No additional requirements]
+For simulate(::AbstractMCTSPolicy, ::Any, ::Int64) (in action(::AbstractMCTSPolicy, ::Any)):
+  [✔] discount(::MyMDP)
+  [✔] isterminal(::MyMDP, ::Int64)
+  [X] generate_sr(::MyMDP, ::Int64, ::Int64, ::MersenneTwister)
+For insert_node!(::AbstractMCTSPolicy, ::Any) (in simulate(::AbstractMCTSPolicy, ::Any, ::Int64)):
+  [✔] actions(::MyMDP, ::Int64)
+  [✔] iterator(::Tuple)
+For estimate_value(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64) (in simulate(::AbstractMCTSPolicy, ::Any, ::Int64)):
+  [No additional requirements]
+For rollout(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64) (in estimate_value(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64)):
+  [No additional requirements]
+For simulate(::RolloutSimulator, ::MDP, ::Policy, ::Any) (in rollout(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64)):
+  [✔] action(::RandomPolicy, ::Int64)
+```
+indicating that [`generate_sr`](http://juliapomdp.github.io/POMDPs.jl/latest/api/#POMDPs.generate_sr) still needs to be implemented for `MyMDP` to be used with MCTS. Indeed [`generate_sr`](http://juliapomdp.github.io/POMDPs.jl/latest/api/#POMDPs.generate_sr) is the most important function needed to use MCTS.
+
+Note: MDPs that implement the [POMDPs.jl explicit interface](http://juliapomdp.github.io/POMDPs.jl/latest/explicit/) can also be used with MCTS since the implementation of the explicit interface automatically defines the functions in the generative interface.
 
 Once the above functions are defined, the solver can be called with the following syntax:
 
 ```julia
-using MyMDP # module containing your MDP type and the associated functions
 using MCTS
 
 mdp = MyMDP() # initializes the MDP
 solver = MCTSSolver(n_iterations=50, depth=20, exploration_constant=5.0) # initializes the Solver type
-policy = solve(solver, mdp) # initializes the policy
+planner = solve(solver, mdp) # initializes the planner
 ```
 By default, the solver will use a random policy for rollouts. If you want to pass in a custom rollout policy you can run:
 
 ```julia
 rollout_policy = MyCustomPolicy() # of type Policy, and has method action(rollout_policy::MyCustomPolicy, s::State)
-solver = MCTSSolver(estimate_value=RolloutEstimator(rollout_policy)) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0
-policy = solve(solver, mdp)
+solver = MCTSSolver(estimate_value=RolloutEstimator(rollout_policy)) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0 = solve(solver, mdp)
 ```
 
 Since Monte-Carlo Tree Search is an online method, the solve function simply specifies the mdp model to the solver (which is embedded in the policy object). (Note that an MCTSPolicy can also be constructed directly without calling `solve()`.) The computation is done during calls to the action function. To extract the policy for a given state, simply call the action function:
 
 ```julia
 s = create_state(mdp) # this can be any valid state
-a = action(polciy, s) # returns the action for state s
+a = action(planner, s) # returns the action for state s
 ```
 
 ## Solver Variants
