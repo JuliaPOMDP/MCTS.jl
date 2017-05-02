@@ -1,3 +1,4 @@
+__precompile__()
 module MCTS
 
 using POMDPs
@@ -40,11 +41,11 @@ abstract AbstractMCTSSolver <: Solver
 include("requirements_info.jl")
 include("domain_knowledge.jl")
 include("vanilla.jl")
-# include("dpw_types.jl")
-# include("dpw.jl")
-# include("action_gen.jl")
-# include("util.jl")
+include("dpw_types.jl")
+include("dpw.jl")
+include("action_gen.jl")
+include("util.jl")
 
-# include("visualization.jl")
+include("visualization.jl")
 
 end # module

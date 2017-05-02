@@ -1,17 +1,23 @@
 function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP})
-    solved_estimate = convert_estimator(p.solver.estimate_value, solver, mdp)
-    return DPWPlanner(solver, mdp, Dict{S,DPWStateNode{S,A}}()
+    S = state_type(mdp)
+    A = action_type(mdp)
+    se = convert_estimator(solver.estimate_value, solver, mdp)
+    return DPWPlanner(solver, mdp, Dict{S,DPWStateNode{S,A}}(), se, solver.next_action, solver.rng)
 end
 
 """
 Delete existing decision tree.
 """
-function clear_tree!{S,A}(p::DPWPlanner{S,A}) p.tree = Dict{S, DPWStateNode{S,A}}() end
+function clear_tree!(p::DPWPlanner)
+    S = state_type(p.mdp)
+    A = action_type(p.mdp)
+    p.tree = Dict{S, DPWStateNode{S,A}}()
+end
 
 """
 Call simulate and chooses the approximate best action from the reward approximations
 """
-function POMDPs.action{S,A}(p::DPWPlanner{S,A}, s::S)
+function POMDPs.action(p::DPWPlanner, s)
     for i = 1:p.solver.n_iterations
         simulate(p, deepcopy(s), p.solver.depth) # (not 100% sure we need to make a copy of the state here)
     end
@@ -31,7 +37,9 @@ end
 """
 Return the reward for one iteration of MCTSDPW.
 """
-function simulate{S,A}(dpw::DPWPlanner{S,A}, s::S, d::Int)
+function simulate(dpw::DPWPlanner, s, d::Int)
+    S = state_type(dpw.mdp)
+    A = action_type(dpw.mdp)
     if d == 0 || isterminal(dpw.mdp, s)
         return 0.0
     end
@@ -46,7 +54,7 @@ function simulate{S,A}(dpw::DPWPlanner{S,A}, s::S, d::Int)
 
     # action progressive widening
     if length(snode.A) <= dpw.solver.k_action*snode.N^dpw.solver.alpha_action # criterion for new action generation
-        a = next_action(dpw.solver.next_action, dpw.mdp, s, snode) # action generation step
+        a = next_action(dpw.next_action, dpw.mdp, s, snode) # action generation step
         if !haskey(snode.A,a) # make sure we haven't already tried this action
             snode.A[a] = DPWStateActionNode{S}(init_N(dpw.solver.init_N, dpw.mdp, s, a),
                                                init_Q(dpw.solver.init_Q, dpw.mdp, s, a))
@@ -75,7 +83,7 @@ function simulate{S,A}(dpw::DPWPlanner{S,A}, s::S, d::Int)
 
     # state progressive widening
     if length(sanode.V) <= dpw.solver.k_state*sanode.N^dpw.solver.alpha_state # criterion for new transition state consideration
-        sp, r = generate_sr(dpw.mdp, s, a, dpw.solver.rng) # choose a new state and get reward
+        sp, r = generate_sr(dpw.mdp, s, a, dpw.rng) # choose a new state and get reward
 
         if !haskey(sanode.V,sp) # if transition state not yet explored, add to set and update reward
             sanode.V[sp] = StateActionStateNode()
@@ -86,7 +94,7 @@ function simulate{S,A}(dpw::DPWPlanner{S,A}, s::S, d::Int)
     else # sample from transition states proportional to their occurence in the past
         # warn("sampling states: |V|=$(length(sanode.V)), N=$(sanode.N)")
         total_N = reduce(add_N, 0, values(sanode.V))
-        rn = rand(dpw.solver.rng, 1:total_N)
+        rn = rand(dpw.rng, 1:total_N)
         cnt = 0
         local sp, sasnode
         for (sp,sasnode) in sanode.V

@@ -109,12 +109,13 @@ type DPWStateNode{S,A}
     DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 
-type DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE} <: AbstractMCTSPlanner{P}
+type DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
     solver::DPWSolver
     mdp::P
     tree::Dict{S,DPWStateNode{S,A}} 
     solved_estimate::SE
-    rng::AbstractRNG
+    next_action::NA
+    rng::RNG
 end
 
 function DPWPlanner{S,A}(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
@@ -122,6 +123,7 @@ function DPWPlanner{S,A}(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
                       mdp,
                       Dict{S,DPWStateNode{S,A}}(),
                       SolvedRolloutEstimator(RandomPolicy(mdp, rng=solver.rng), solver.rng),
+                      solver.next_action,
                       solver.rng
                      )
 end
