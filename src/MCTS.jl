@@ -8,10 +8,10 @@ using Blink
 
 export 
     MCTSSolver, 
-    MCTSPolicy,
+    MCTSPlanner,
     DPWSolver,
-    DPWPolicy,
-    AbstractMCTSPolicy,
+    DPWPlanner,
+    AbstractMCTSPlanner,
     AbstractMCTSSolver,
     solve,
     action,
@@ -34,17 +34,17 @@ export
     DPWStateActionNode,
     DPWStateNode
 
-abstract AbstractMCTSPolicy{S,A} <: Policy{S}
+abstract AbstractMCTSPlanner{P<:Union{MDP,POMDP}} <: Policy
 abstract AbstractMCTSSolver <: Solver
 
 include("requirements_info.jl")
 include("domain_knowledge.jl")
 include("vanilla.jl")
-include("dpw_types.jl")
-include("dpw.jl")
-include("action_gen.jl")
-include("util.jl")
+# include("dpw_types.jl")
+# include("dpw.jl")
+# include("action_gen.jl")
+# include("util.jl")
 
-include("visualization.jl")
+# include("visualization.jl")
 
 end # module

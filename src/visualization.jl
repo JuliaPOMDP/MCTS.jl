@@ -18,7 +18,7 @@ Return text to display in the tooltip for the node corresponding to state or act
 """
 tooltip_tag(s) = node_tag(s)
 
-function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
+function create_json{P<:AbstractMCTSPlanner}(visualizer::TreeVisualizer{P})
     # check to see if visualization was enabled
     if !visualizer.policy.solver.enable_tree_vis
         error("""
@@ -97,7 +97,7 @@ function create_json{P<:AbstractMCTSPolicy}(visualizer::TreeVisualizer{P})
     return (json, root_id)
 end
 
-function create_json{P<:DPWPolicy}(visualizer::TreeVisualizer{P})
+function create_json{P<:DPWPlanner}(visualizer::TreeVisualizer{P})
     root_id = -1
     next_id = 1
     node_dict = Dict{Int, Dict{String, Any}}()

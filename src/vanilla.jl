@@ -12,7 +12,9 @@ type StateNode{A}
     sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
 
-function StateNode{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
+function StateNode{P}(policy::AbstractMCTSPlanner{P}, s)
+    S = state_type(P)
+    A = action_type(P)
     ns = StateActionNode{A}[StateActionNode{A}(a,
                                                init_N(policy.solver.init_N, policy.mdp, s, a),
                                                init_Q(policy.solver.init_Q, policy.mdp, s, a)) 
@@ -94,53 +96,35 @@ function MCTSSolver(;n_iterations::Int64 = 100,
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, enable_tree_vis)
 end
 
-type MCTSPolicy{S,A} <: AbstractMCTSPolicy{S,A}
+type MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
 	solver::MCTSSolver # containts the solver parameters
-	mdp::Union{POMDP,MDP} # model
-    solved_estimate::Any
+	mdp::P # model
     tree::Dict{S, StateNode{A}} # the search tree
-
-    MCTSPolicy()=new() # is it too dangerous to have this?
+    solved_estimate::SE
+    rng::RNG
 end
 
-function MCTSPolicy{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
-    p = MCTSPolicy{S,A}()
-    fill_defaults!(p, solver, mdp)
-    p
-end
-
-
-"""
-Set members to suitable default values (broken out of the constructor so that it can be used elsewhere).
-"""
-function fill_defaults!{S,A}(p::MCTSPolicy{S,A}, solver::MCTSSolver=p.solver, mdp::Union{POMDP,MDP}=p.mdp)
-    p.solver = solver
-    p.mdp = mdp
-    p.solved_estimate = convert_estimator(p.solver.estimate_value, solver, mdp)
-
-    # pre-allocate
-    p.tree = Dict{S, StateNode{A}}()
-    return p
+function MCTSPlanner(solver::MCTSSolver, mdp::Union{POMDP,MDP})
+    tree = Dict{state_type(mdp), StateNode{action_type(mdp)}}()
+    se = convert_estimator(solver.estimate_value, solver, mdp)
+    return MCTSPlanner(solver, mdp, tree, se, solver.rng)
 end
 
 
 """
 Delete existing decision tree.
 """
-function clear_tree!{S,A}(p::MCTSPolicy{S,A}) p.tree = Dict{S, StateNode{A}}() end
+function clear_tree!{S,A}(p::MCTSPlanner{S,A}) p.tree = Dict{S, StateNode{A}}() end
 
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
-function POMDPs.solve{S,A}(solver::MCTSSolver, mdp::Union{POMDP{S,A},MDP{S,A}}, policy::MCTSPolicy=MCTSPolicy{S,A}())
-    fill_defaults!(policy, solver, mdp)
-    return policy
-end
+POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, mdp)
 
-@POMDP_require POMDPs.action(policy::AbstractMCTSPolicy, state) begin
+@POMDP_require POMDPs.action(policy::AbstractMCTSPlanner, state) begin
     @subreq simulate(policy, state, policy.solver.depth)
 end
 
-function POMDPs.action(policy::AbstractMCTSPolicy, state)
+function POMDPs.action(policy::AbstractMCTSPlanner, state)
     n_iterations = policy.solver.n_iterations
     depth = policy.solver.depth
     # build the tree
@@ -153,15 +137,15 @@ function POMDPs.action(policy::AbstractMCTSPolicy, state)
     return best.action
 end
 
-function POMDPs.action(policy::AbstractMCTSPolicy, state, action)
+function POMDPs.action(policy::AbstractMCTSPlanner, state, action)
   POMDPs.action(policy, state)
 end
 
-function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
+function simulate(policy::AbstractMCTSPlanner, state, depth::Int64)
     # model parameters
     mdp = policy.mdp
     discount_factor = discount(mdp) 
-    rng = policy.solver.rng
+    rng = policy.rng
 
     # once depth is zero return
     if depth == 0 || isterminal(policy.mdp, state)
@@ -193,7 +177,7 @@ function simulate(policy::AbstractMCTSPolicy, state, depth::Int64)
     return q
 end
 
-@POMDP_require simulate(policy::AbstractMCTSPolicy, state, depth::Int64) begin
+@POMDP_require simulate(policy::AbstractMCTSPlanner, state, depth::Int64) begin
     mdp = policy.mdp
     P = typeof(mdp)
     S = state_type(P)
@@ -202,14 +186,14 @@ end
     @req isterminal(::P, ::S)
     @subreq insert_node!(policy, state)
     @subreq estimate_value(policy.solved_estimate, mdp, state, depth)
-    @req generate_sr(::P, ::S, ::A, ::typeof(policy.solver.rng))
+    @req generate_sr(::P, ::S, ::A, ::typeof(policy.rng))
 end
 
 
 # these functions are here so that they can be overridden by the aggregating solver
-hasnode(policy::AbstractMCTSPolicy, s) = haskey(policy.tree, s)
+hasnode(policy::AbstractMCTSPlanner, s) = haskey(policy.tree, s)
 
-function insert_node!{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
+function insert_node!(policy::AbstractMCTSPlanner, s)
     newnode = StateNode(policy, s)
     policy.tree[deepcopy(s)] = newnode
     if policy.solver.enable_tree_vis
@@ -220,7 +204,7 @@ function insert_node!{S,A}(policy::AbstractMCTSPolicy{S,A}, s::S)
     return newnode
 end
 
-@POMDP_require insert_node!(policy::AbstractMCTSPolicy, s) begin
+@POMDP_require insert_node!(policy::AbstractMCTSPlanner, s) begin
     # from the StateNode constructor
     P = typeof(policy.mdp)
     A = action_type(P)
@@ -238,8 +222,8 @@ end
     @req iterator(::typeof(as))
 end
 
-getnode(policy::AbstractMCTSPolicy, s) = policy.tree[s]
-record_visit(policy::AbstractMCTSPolicy, sanode::StateActionNode, s) = push!(get(sanode._vis_stats), s)
+getnode(policy::AbstractMCTSPlanner, s) = policy.tree[s]
+record_visit(policy::AbstractMCTSPlanner, sanode::StateActionNode, s) = push!(get(sanode._vis_stats), s)
 
 """
 Return the best action based on the Q score

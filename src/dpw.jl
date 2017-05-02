@@ -1,17 +1,17 @@
-function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP}, p::DPWPolicy=DPWPolicy(solver, mdp))
-    p.solved_estimate = convert_estimator(p.solver.estimate_value, solver, mdp)
-    return p
+function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP})
+    solved_estimate = convert_estimator(p.solver.estimate_value, solver, mdp)
+    return DPWPlanner(solver, mdp, Dict{S,DPWStateNode{S,A}}()
 end
 
 """
 Delete existing decision tree.
 """
-function clear_tree!{S,A}(p::DPWPolicy{S,A}) p.tree = Dict{S, DPWStateNode{S,A}}() end
+function clear_tree!{S,A}(p::DPWPlanner{S,A}) p.tree = Dict{S, DPWStateNode{S,A}}() end
 
 """
 Call simulate and chooses the approximate best action from the reward approximations
 """
-function POMDPs.action{S,A}(p::DPWPolicy{S,A}, s::S)
+function POMDPs.action{S,A}(p::DPWPlanner{S,A}, s::S)
     for i = 1:p.solver.n_iterations
         simulate(p, deepcopy(s), p.solver.depth) # (not 100% sure we need to make a copy of the state here)
     end
@@ -31,7 +31,7 @@ end
 """
 Return the reward for one iteration of MCTSDPW.
 """
-function simulate{S,A}(dpw::DPWPolicy{S,A}, s::S, d::Int)
+function simulate{S,A}(dpw::DPWPlanner{S,A}, s::S, d::Int)
     if d == 0 || isterminal(dpw.mdp, s)
         return 0.0
     end

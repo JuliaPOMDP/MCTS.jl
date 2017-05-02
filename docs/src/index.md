@@ -31,18 +31,18 @@ POMDPs.actions(::MyMDP) = [1,2,3]
 ```
 (the `1` is any valid state). This should output something like
 ```
-INFO: POMDPs.jl requirements for action(::AbstractMCTSPolicy, ::Any) and dependencies. ([✔] = implemented correctly; [X] = missing)
+INFO: POMDPs.jl requirements for action(::AbstractMCTSPlanner, ::Any) and dependencies. ([✔] = implemented correctly; [X] = missing)
 
-For action(::AbstractMCTSPolicy, ::Any):
+For action(::AbstractMCTSPlanner, ::Any):
   [No additional requirements]
-For simulate(::AbstractMCTSPolicy, ::Any, ::Int64) (in action(::AbstractMCTSPolicy, ::Any)):
+For simulate(::AbstractMCTSPlanner, ::Any, ::Int64) (in action(::AbstractMCTSPlanner, ::Any)):
   [✔] discount(::MyMDP)
   [✔] isterminal(::MyMDP, ::Int64)
   [X] generate_sr(::MyMDP, ::Int64, ::Int64, ::MersenneTwister)
-For insert_node!(::AbstractMCTSPolicy, ::Any) (in simulate(::AbstractMCTSPolicy, ::Any, ::Int64)):
+For insert_node!(::AbstractMCTSPlanner, ::Any) (in simulate(::AbstractMCTSPlanner, ::Any, ::Int64)):
   [✔] actions(::MyMDP, ::Int64)
   [✔] iterator(::Tuple)
-For estimate_value(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64) (in simulate(::AbstractMCTSPolicy, ::Any, ::Int64)):
+For estimate_value(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64) (in simulate(::AbstractMCTSPlanner, ::Any, ::Int64)):
   [No additional requirements]
 For rollout(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64) (in estimate_value(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64)):
   [No additional requirements]
@@ -69,7 +69,7 @@ rollout_policy = MyCustomPolicy() # of type Policy, and has method action(rollou
 solver = MCTSSolver(estimate_value=RolloutEstimator(rollout_policy)) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0 = solve(solver, mdp)
 ```
 
-Since Monte-Carlo Tree Search is an online method, the solve function simply specifies the mdp model to the solver (which is embedded in the policy object). (Note that an MCTSPolicy can also be constructed directly without calling `solve()`.) The computation is done during calls to the action function. To extract the policy for a given state, simply call the action function:
+Since Monte-Carlo Tree Search is an online method, the solve function simply specifies the mdp model to the solver (which is embedded in the policy object). (Note that an MCTSPlanner can also be constructed directly without calling `solve()`.) The computation is done during calls to the action function. To extract the policy for a given state, simply call the action function:
 
 ```julia
 s = create_state(mdp) # this can be any valid state

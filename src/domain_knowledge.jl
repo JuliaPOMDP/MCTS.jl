@@ -28,9 +28,9 @@ SolvedRolloutEstimator
 
 This is within the policy when a RolloutEstimator is passed to an AbstractMCTSSolver
 """
-type SolvedRolloutEstimator
+type SolvedRolloutEstimator{RNG<:AbstractRNG}
     policy::Policy
-    rng::AbstractRNG
+    rng::RNG
 end
 
 convert_estimator(ev::Any, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP}) = ev
@@ -50,7 +50,7 @@ estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, depth::Int) =
 
 # this rollout function is really just here in case people search for rollout
 function rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s, d::Int)
-    sim = RolloutSimulator(rng=estimator.rng, max_steps=d)
+    sim = RolloutSimulator(estimator.rng, Nullable{Any}(), Nullable{Float64}(), Nullable(d))
     POMDPs.simulate(sim, mdp, estimator.policy, s)
 end
 

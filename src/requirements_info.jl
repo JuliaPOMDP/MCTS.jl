@@ -17,6 +17,6 @@ function POMDPs.requirements_info(solver::AbstractMCTSSolver, problem::Union{POM
     requirements_info(policy, s)
 end
 
-function POMDPs.requirements_info(policy::AbstractMCTSPolicy, s)
+function POMDPs.requirements_info(policy::AbstractMCTSPlanner, s)
     @show_requirements action(policy, s)    
 end
