@@ -19,7 +19,7 @@ Call simulate and chooses the approximate best action from the reward approximat
 """
 function POMDPs.action(p::DPWPlanner, s)
     for i = 1:p.solver.n_iterations
-        simulate(p, deepcopy(s), p.solver.depth) # (not 100% sure we need to make a copy of the state here)
+        simulate(p, s, p.solver.depth) # (not 100% sure we need to make a copy of the state here)
     end
     snode = p.tree[s]
     best_Q = -Inf

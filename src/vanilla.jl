@@ -187,6 +187,8 @@ end
     @subreq insert_node!(policy, state)
     @subreq estimate_value(policy.solved_estimate, mdp, state, depth)
     @req generate_sr(::P, ::S, ::A, ::typeof(policy.rng))
+    @req isequal(::S, ::S) # for hasnode
+    @req hash(::S) # for hasnode
 end
 
 
@@ -195,7 +197,7 @@ hasnode(policy::AbstractMCTSPlanner, s) = haskey(policy.tree, s)
 
 function insert_node!(policy::AbstractMCTSPlanner, s)
     newnode = StateNode(policy, s)
-    policy.tree[deepcopy(s)] = newnode
+    policy.tree[s] = newnode
     if policy.solver.enable_tree_vis
         for sanode in newnode.sanodes
             sanode._vis_stats = Set()
@@ -220,6 +222,8 @@ end
     @req actions(::P, ::S)
     as = actions(policy.mdp, s)
     @req iterator(::typeof(as))
+    @req isequal(::S, ::S) # for tree[s]
+    @req hash(::S) # for tree[s]
 end
 
 getnode(policy::AbstractMCTSPlanner, s) = policy.tree[s]
