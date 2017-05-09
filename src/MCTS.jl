@@ -28,7 +28,8 @@ export
     clear_tree!,
     estimate_value,
     init_N,
-    init_Q
+    init_Q,
+    children
 
 export
     StateActionStateNode,
