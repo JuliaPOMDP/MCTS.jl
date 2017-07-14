@@ -7,8 +7,8 @@ using POMDPToolbox
 using Compat
 using Blink
 
-export 
-    MCTSSolver, 
+export
+    MCTSSolver,
     MCTSPlanner,
     DPWSolver,
     DPWPlanner,
@@ -35,8 +35,8 @@ export
     DPWStateActionNode,
     DPWStateNode
 
-abstract AbstractMCTSPlanner{P<:Union{MDP,POMDP}} <: Policy
-abstract AbstractMCTSSolver <: Solver
+abstract type AbstractMCTSPlanner{P<:Union{MDP,POMDP}} <: Policy end
+abstract type AbstractMCTSSolver <: Solver end
 
 include("requirements_info.jl")
 include("domain_knowledge.jl")

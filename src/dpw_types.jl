@@ -7,7 +7,7 @@ Fields:
         Maximum rollout horizon and tree depth.
         default: 10
 
-    exploration_constant::Float64: 
+    exploration_constant::Float64:
         Specified how much the solver should explore.
         In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
         default: 1.0
@@ -55,7 +55,7 @@ Fields:
         If this is an object `o`, `next_action(o, mdp, s, snode)` will be called.
         default: RandomActionGenerator(rng)
 """
-type DPWSolver <: AbstractMCTSSolver
+mutable struct DPWSolver <: AbstractMCTSSolver
     depth::Int
     exploration_constant::Float64
     n_iterations::Int
@@ -82,7 +82,7 @@ function DPWSolver(;depth::Int=10,
                     alpha_action::Float64=0.5,
                     k_state::Float64=10.0,
                     alpha_state::Float64=0.5,
-                    rng::AbstractRNG=MersenneTwister(),
+                    rng::AbstractRNG=MersenneTwister(0),
                     estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
                     init_Q::Any = 0.0,
                     init_N::Any = 0,
@@ -90,29 +90,29 @@ function DPWSolver(;depth::Int=10,
     DPWSolver(depth, exploration_constant, n_iterations, k_action, alpha_action, k_state, alpha_state, rng, estimate_value, init_Q, init_N, next_action)
 end
 
-type StateActionStateNode
+mutable struct StateActionStateNode
     N::Int
     R::Float64
     StateActionStateNode() = new(0,0)
 end
 
-type DPWStateActionNode{S}
+mutable struct DPWStateActionNode{S}
     V::Dict{S,StateActionStateNode}
     N::Int
     Q::Float64
     DPWStateActionNode(N,Q) = new(Dict{S,StateActionStateNode}(), N, Q)
 end
 
-type DPWStateNode{S,A}
+mutable struct DPWStateNode{S,A}
     A::Dict{A,DPWStateActionNode{S}}
     N::Int
     DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 
-type DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
+mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
     solver::DPWSolver
     mdp::P
-    tree::Dict{S,DPWStateNode{S,A}} 
+    tree::Dict{S,DPWStateNode{S,A}}
     solved_estimate::SE
     next_action::NA
     rng::RNG

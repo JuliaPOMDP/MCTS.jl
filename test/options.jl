@@ -5,7 +5,7 @@ function test_solver_options(solver::AbstractMCTSSolver)
     a = action(policy, state)
 end
 
-type DomanKnowledgeTestTp end
+mutable struct DomanKnowledgeTestTp end
 
 MCTS.init_Q(d::DomanKnowledgeTestTp, mdp::GridWorld, s, a) = -1.0
 MCTS.init_N(d::DomanKnowledgeTestTp, mdp::GridWorld, s, a) = 2
@@ -49,4 +49,3 @@ test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_cons
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, next_action=(mdp, s, snode)->GridWorldAction(:up)))
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, next_action=DomanKnowledgeTestTp()))
 @test_throws MethodError test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, next_action="bad"))
-
