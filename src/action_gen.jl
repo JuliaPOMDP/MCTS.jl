@@ -3,7 +3,7 @@ Generate a new action when the set of actions is widened.
 """
 function next_action end
 
-type RandomActionGenerator{RNG<:AbstractRNG}
+mutable struct RandomActionGenerator{RNG<:AbstractRNG}
     rng::RNG
 end
 RandomActionGenerator() = RandomActionGenerator(Base.GLOBAL_RNG)

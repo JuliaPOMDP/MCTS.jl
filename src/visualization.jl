@@ -1,9 +1,9 @@
 import JSON
 
-abstract AbstractTreeVisualizer
+abstract type AbstractTreeVisualizer end
 
 # put your policy in one of these to automatically visualize it in a python notebook
-type TreeVisualizer{PolicyType} <: AbstractTreeVisualizer
+mutable struct TreeVisualizer{PolicyType} <: AbstractTreeVisualizer
     policy::PolicyType
     init_state
 end
@@ -23,7 +23,7 @@ function create_json{P<:AbstractMCTSPlanner}(visualizer::TreeVisualizer{P})
     if !visualizer.policy.solver.enable_tree_vis
         error("""
                 Tree visualization was not enabled for this policy.
-                    
+
                 Construct the solver with $(typeof(visualizer.policy.solver))(enable_tree_vis=true, ...) to enable.
             """)
     end
@@ -43,7 +43,7 @@ function create_json{P<:AbstractMCTSPlanner}(visualizer::TreeVisualizer{P})
                                        "N"=>sn.N
                                        )
         if s == visualizer.init_state
-            root_id = next_id 
+            root_id = next_id
         end
         s_dict[s] = next_id
         next_id += 1
@@ -113,7 +113,7 @@ function create_json{P<:DPWPlanner}(visualizer::TreeVisualizer{P})
                                        "N"=>sn.N
                                        )
         if s == visualizer.init_state
-            root_id = next_id 
+            root_id = next_id
         end
         s_dict[s] = next_id
         next_id += 1

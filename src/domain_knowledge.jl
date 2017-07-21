@@ -19,7 +19,7 @@ Fields:
         If this is a Policy, the policy will be used for rollouts
         If this is a Function, a POMDPToolbox.FunctionPolicy with this function will be used for rollouts
 """
-type RolloutEstimator
+mutable struct RolloutEstimator
     solver::Union{Solver,Policy,Function} # rollout policy or solver
 end
 
@@ -28,7 +28,7 @@ SolvedRolloutEstimator
 
 This is within the policy when a RolloutEstimator is passed to an AbstractMCTSSolver
 """
-type SolvedRolloutEstimator{RNG<:AbstractRNG}
+mutable struct SolvedRolloutEstimator{RNG<:AbstractRNG}
     policy::Policy
     rng::RNG
 end
