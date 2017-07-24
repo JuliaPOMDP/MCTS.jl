@@ -100,13 +100,13 @@ mutable struct DPWStateActionNode{S}
     V::Dict{S,StateActionStateNode}
     N::Int
     Q::Float64
-    DPWStateActionNode(N,Q) = new(Dict{S,StateActionStateNode}(), N, Q)
+    DPWStateActionNode{S}(N,Q) where S = new(Dict{S,StateActionStateNode}(), N, Q)
 end
 
 mutable struct DPWStateNode{S,A}
     A::Dict{A,DPWStateActionNode{S}}
     N::Int
-    DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
+    DPWStateNode{S,A}() where {S,A} = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 
 mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}

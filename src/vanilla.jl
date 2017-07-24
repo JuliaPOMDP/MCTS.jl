@@ -3,7 +3,7 @@ mutable struct StateActionNode{A}
     N::Int
     Q::Float64
     _vis_stats::Nullable{Any} # for visualization, will be gibberish if data is not recorded
-    StateActionNode(a, N0, Q0) = new(a, N0, Q0, Nullable{Any}())
+    StateActionNode{A}(a, N0, Q0) where A = new(a, N0, Q0, Nullable{Any}())
 end
 
 # State node in the search tree
