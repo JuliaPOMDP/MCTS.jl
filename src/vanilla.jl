@@ -7,7 +7,7 @@ mutable struct StateActionNode{A}
 end
 
 # State node in the search tree
-mutable struct StateNode{A}
+mutable struct StateNode{A} <: AbstractStateNode
     N::Int # number of visits to the node
     sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end

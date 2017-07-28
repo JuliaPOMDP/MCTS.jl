@@ -103,7 +103,7 @@ mutable struct DPWStateActionNode{S}
     DPWStateActionNode{S}(N,Q) where S = new(Dict{S,StateActionStateNode}(), N, Q)
 end
 
-mutable struct DPWStateNode{S,A}
+mutable struct DPWStateNode{S,A} <: AbstractStateNode
     A::Dict{A,DPWStateActionNode{S}}
     N::Int
     DPWStateNode{S,A}() where {S,A} = new(Dict{A,DPWStateActionNode{S}}(),0)

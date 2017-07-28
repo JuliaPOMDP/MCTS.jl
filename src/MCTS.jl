@@ -31,12 +31,14 @@ export
     init_Q
 
 export
+    AbstractStateNode,
     StateActionStateNode,
     DPWStateActionNode,
     DPWStateNode
 
 abstract type AbstractMCTSPlanner{P<:Union{MDP,POMDP}} <: Policy end
 abstract type AbstractMCTSSolver <: Solver end
+abstract type AbstractStateNode end
 
 include("requirements_info.jl")
 include("domain_knowledge.jl")
