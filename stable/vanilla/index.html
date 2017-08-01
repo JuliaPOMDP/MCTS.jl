@@ -46,34 +46,28 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
 	<ul class="current">
+	  
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="..">Home</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 current">
-        <a class="current" href="./">Vanilla</a>
-        
-            <ul>
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Vanilla</a>
+    <ul class="subnav">
             
-                <li class="toctree-l3"><a href="#vanilla">Vanilla</a></li>
-                
-            
-            </ul>
-        
-    </li>
-<li>
+    <li class="toctree-l2"><a href="#vanilla">Vanilla</a></li>
+    
+
+    </ul>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../dpw/">DPW</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../dpw/">DPW</a>
+	    </li>
           
         </ul>
       </div>
@@ -127,24 +121,33 @@ depth::Int64:
     default: 10
 
 exploration_constant::Float64: 
-    Specified how much the solver should explore.
+    Specifies how much the solver should explore.
     In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
     default: 1.0
 
 rng::AbstractRNG:
     Random number generator
 
-rollout_solver::Union{Solver,Policy}:
-    Rollout policy or solver.
-    If this is a Policy, it will be used directly in rollouts;
-    If it is a Solver, solve() will be called when solve() is called on 
-    the MCTSSolver
-    default: RandomSolver(rng)
+estimate_value::Any (rollout policy)
+    Function, object, or number used to estimate the value at the leaf nodes.
+    If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
+    If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
+    If this is a number, the value will be set to that number
+    default: RolloutEstimator(RandomSolver(rng))
 
-prior_knowledge::Any:
-    An object containing any prior knowledge. Implement estimate_value,
-    init_N, and init_Q to use this.
-    default: nothing
+init_Q::Any
+    Function, object, or number used to set the initial Q(s,a) value at a new node.
+    If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+    If this is an object `o`, `init_Q(o, mdp, s, a)` will be called.
+    If this is a number, Q will be set to that number
+    default: 0.0
+
+init_N::Any
+    Function, object, or number used to set the initial N(s,a) value at a new node.
+    If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+    If this is an object `o`, `init_N(o, mdp, s, a)` will be called.
+    If this is a number, N will be set to that number
+    default: 0
 
 enable_tree_vis::Bool:
     If this is true, extra information needed for tree visualization will
@@ -152,7 +155,7 @@ enable_tree_vis::Bool:
     default: false
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/tree/43a1aa7f62c5462d6144555c09fff7dcc22d5c2c/src/vanilla.jl#L20-L57' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/tree/c40b60e6a02c3317c71bbb7ddef0bff7435a5dee/src/vanilla.jl#L25-L71' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
@@ -188,7 +191,7 @@ enable_tree_vis::Bool:
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
         <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>

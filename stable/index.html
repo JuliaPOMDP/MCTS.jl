@@ -46,44 +46,42 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
 	<ul class="current">
+	  
           
-            <li>
-    <li class="toctree-l1 current">
-        <a class="current" href=".">Home</a>
-        
-            <ul>
+            <li class="toctree-l1 current">
+		
+    <a class="current" href=".">Home</a>
+    <ul class="subnav">
             
-                <li class="toctree-l3"><a href="#mcts">MCTS</a></li>
-                
-                    <li><a class="toctree-l4" href="#installation">Installation</a></li>
-                
-                    <li><a class="toctree-l4" href="#usage">Usage</a></li>
-                
-                    <li><a class="toctree-l4" href="#solver-variants">Solver Variants</a></li>
-                
-                    <li><a class="toctree-l4" href="#visualization">Visualization</a></li>
-                
-                    <li><a class="toctree-l4" href="#incorporating-additional-prior-knowledge">Incorporating Additional Prior Knowledge</a></li>
-                
-            
-            </ul>
+    <li class="toctree-l2"><a href="#mcts">MCTS</a></li>
+    
+        <ul>
         
-    </li>
-<li>
+            <li><a class="toctree-l3" href="#installation">Installation</a></li>
+        
+            <li><a class="toctree-l3" href="#usage">Usage</a></li>
+        
+            <li><a class="toctree-l3" href="#solver-variants">Solver Variants</a></li>
+        
+            <li><a class="toctree-l3" href="#visualization">Visualization</a></li>
+        
+            <li><a class="toctree-l3" href="#incorporating-additional-prior-knowledge">Incorporating Additional Prior Knowledge</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="vanilla/">Vanilla</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="vanilla/">Vanilla</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="dpw/">DPW</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="dpw/">DPW</a>
+	    </li>
           
         </ul>
       </div>
@@ -133,44 +131,55 @@ POMDPs.add(&quot;MCTS&quot;)
 
 <p><a id='Usage-1'></a></p>
 <h2 id="usage">Usage</h2>
-<p>Problems should be defined using the <a href="https://github.com/JuliaPOMDP/POMDPs.jl">POMDPs.jl interface</a>. Use of the <a href="https://github.com/JuliaPOMDP/GenerativeModels.jl">GenerativeModels.jl</a> package to define state transition and reward sampling. The following functions should be implemented for the problem:</p>
-<pre><code class="julia">generate_sr(mdp::MDP, s, a, rng::AbstractRNG)
-discount(mdp::MDP)
-actions(mdp::MDP)
-actions(mdp::MDP, s::State, as::ActionSpace)
-isterminal(mdp::MDP, s::State)
-</code></pre>
-
-<p>To use the default random rollout policy, an action space sampling function</p>
-<pre><code class="julia">rand(rng::AbstractRNG, action_space::AbstractSpace)
-</code></pre>
-
-<p>must also be implemented.</p>
-<p>Problems that do <em>not</em> use <a href="https://github.com/JuliaPOMDP/GenerativeModels.jl">GenerativeModels.jl</a> can be used with MCTS.jl, but must have the following three functions defined <em>instead of</em> <code>generate_sr</code>.</p>
-<pre><code class="julia">transition(mdp::MDP, s, a, d::AbstractDistribution)
-rand(rng::AbstractRNG, d::AbstractDistribution)
-reward(mdp::MDP, s, a)
-</code></pre>
-
-<p>Once the above functions are defined, the solver can be called with the following syntax:</p>
-<pre><code class="julia">using MyMDP # module containing your MDP type and the associated functions
+<p>Problems should be defined using the <a href="http://juliapomdp.github.io/POMDPs.jl/latest/generative/">POMDPs.jl generative interface</a>. </p>
+<p>To see the methods that you need to implement to use MCTS with your MDP (assume you're defining an MDP of type <code>MyMDP</code> with states represented by integers and 3 possible integer actions), run</p>
+<pre><code class="julia">using POMDPs
 using MCTS
+
+immutable MyMDP &lt;: MDP{Int,Int} end
+POMDPs.actions(::MyMDP) = [1,2,3]
+
+@requirements_info MCTSSolver() MyMDP() 1
+</code></pre>
+
+<p>(the <code>1</code> is any valid state). This should output something like</p>
+<pre><code>INFO: POMDPs.jl requirements for action(::AbstractMCTSPlanner, ::Any) and dependencies. ([✔] = implemented correctly; [X] = missing)
+
+For action(::AbstractMCTSPlanner, ::Any):
+  [No additional requirements]
+For simulate(::AbstractMCTSPlanner, ::Any, ::Int64) (in action(::AbstractMCTSPlanner, ::Any)):
+  [✔] discount(::MyMDP)
+  [✔] isterminal(::MyMDP, ::Int64)
+  [X] generate_sr(::MyMDP, ::Int64, ::Int64, ::MersenneTwister)
+For insert_node!(::AbstractMCTSPlanner, ::Any) (in simulate(::AbstractMCTSPlanner, ::Any, ::Int64)):
+  [✔] actions(::MyMDP, ::Int64)
+  [✔] iterator(::Tuple)
+For estimate_value(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64) (in simulate(::AbstractMCTSPlanner, ::Any, ::Int64)):
+  [No additional requirements]
+For rollout(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64) (in estimate_value(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64)):
+  [No additional requirements]
+For simulate(::RolloutSimulator, ::MDP, ::Policy, ::Any) (in rollout(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64)):
+  [✔] action(::RandomPolicy, ::Int64)
+</code></pre>
+
+<p>indicating that <a href="http://juliapomdp.github.io/POMDPs.jl/latest/api/#POMDPs.generate_sr"><code>generate_sr</code></a> still needs to be implemented for <code>MyMDP</code> to be used with MCTS. Indeed <a href="http://juliapomdp.github.io/POMDPs.jl/latest/api/#POMDPs.generate_sr"><code>generate_sr</code></a> is the most important function needed to use MCTS.</p>
+<p>Note: MDPs that implement the <a href="http://juliapomdp.github.io/POMDPs.jl/latest/explicit/">POMDPs.jl explicit interface</a> can also be used with MCTS since the implementation of the explicit interface automatically defines the functions in the generative interface.</p>
+<p>Once the above functions are defined, the solver can be called with the following syntax:</p>
+<pre><code class="julia">using MCTS
 
 mdp = MyMDP() # initializes the MDP
 solver = MCTSSolver(n_iterations=50, depth=20, exploration_constant=5.0) # initializes the Solver type
-policy = solve(solver, mdp) # initializes the policy
+planner = solve(solver, mdp) # initializes the planner
 </code></pre>
 
 <p>By default, the solver will use a random policy for rollouts. If you want to pass in a custom rollout policy you can run:</p>
 <pre><code class="julia">rollout_policy = MyCustomPolicy() # of type Policy, and has method action(rollout_policy::MyCustomPolicy, s::State)
-solver = MCTSSolver(rollout_solver=rollout_policy) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0
-# note that the rollout_solver optional argument can be a solver or a policy
-policy = solve(solver, mdp)
+solver = MCTSSolver(estimate_value=RolloutEstimator(rollout_policy)) # default solver parameters will be used n_iterations=100, depth=10, exploration_constant=1.0 = solve(solver, mdp)
 </code></pre>
 
-<p>Since Monte-Carlo Tree Search is an online method, the solve function simply specifies the mdp model to the solver (which is embedded in the policy object). (Note that an MCTSPolicy can also be constructed directly without calling <code>solve()</code>.) The computation is done during calls to the action function. To extract the policy for a given state, simply call the action function:</p>
+<p>Since Monte-Carlo Tree Search is an online method, the solve function simply specifies the mdp model to the solver (which is embedded in the policy object). (Note that an MCTSPlanner can also be constructed directly without calling <code>solve()</code>.) The computation is done during calls to the action function. To extract the policy for a given state, simply call the action function:</p>
 <pre><code class="julia">s = create_state(mdp) # this can be any valid state
-a = action(polciy, s) # returns the action for state s
+a = action(planner, s) # returns the action for state s
 </code></pre>
 
 <p><a id='Solver-Variants-1'></a></p>
@@ -182,11 +191,11 @@ a = action(polciy, s) # returns the action for state s
 </ul>
 <p><a id='Visualization-1'></a></p>
 <h2 id="visualization">Visualization</h2>
-<p>An example of visualization of the search tree in a jupyter notebook is <a href="https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb">here</a>.</p>
+<p>An example of visualization of the search tree in a jupyter notebook is <a href="https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb">here</a> (or <a href="https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb">here</a> is the version on github that will not display quite right but will still show you how it's done).</p>
+<p>To display the tree in an Electron window using Blink.jl, run <code>blink(TreeVisualizer(policy, state))</code>.</p>
 <p><a id='Incorporating-Additional-Prior-Knowledge-1'></a></p>
 <h2 id="incorporating-additional-prior-knowledge">Incorporating Additional Prior Knowledge</h2>
-<p>An example of incorporating additional prior knowledge (to initialize Q and N) and to get an estimate of the value is <a href="https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Prior_Knowledge_Example.ipynb">here</a>.</p>
-<p>An example of how to choose special actions to try first in DPW is <a href="https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Action_Gen_Example.ipynb">here</a></p>
+<p>An example of incorporating additional prior domain knowledge (to initialize Q and N) and to get an estimate of the value is <a href="https://github.com/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Domain_Knowledge_Example.ipynb">here</a>.</p>
               
             </div>
           </div>
@@ -220,7 +229,7 @@ a = action(polciy, s) # returns the action for state s
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/JuliaPOMDP/MCTS.jl" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
       
@@ -236,6 +245,6 @@ a = action(polciy, s) # returns the action for state s
 </html>
 
 <!--
-MkDocs version : 0.16.0
-Build Date UTC : 2016-11-27 08:03:44
+MkDocs version : 0.16.3
+Build Date UTC : 2017-08-01 06:01:15
 -->
