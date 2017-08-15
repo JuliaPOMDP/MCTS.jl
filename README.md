@@ -7,8 +7,9 @@
 [![MCTS Tree for Grid World, visualized](https://github.com/JuliaPOMDP/MCTS.jl/raw/master/img/tree.png)](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb)
 
 This package implements the Monte-Carlo Tree Search algorithm in Julia for solving Markov decision processes (MDPs).
-The user should define the problem according to the API in [POMDPs.jl](https://github.com/JuliaPOMDP/POMDPs.jl) and [GenerativeModels.jl](https://github.com/JuliaPOMDP/GenerativeModels.jl). Examples of
-problem definitions can be found in [POMDPModels.jl](https://github.com/JuliaPOMDP/POMDPModels.jl). For an extensive tutorial, see [this](http://nbviewer.ipython.org/JuliaPOMDP/POMDPs.jl/blob/master/examples/GridWorld.ipynb) notebook.
+The user should define the problem according to the [generative interface](http://juliapomdp.github.io/POMDPs.jl/latest/generative) in [POMDPs.jl](https://github.com/JuliaPOMDP/POMDPs.jl). Examples of problem definitions can be found in [POMDPModels.jl](https://github.com/JuliaPOMDP/POMDPModels.jl). For an extensive tutorial, see [this](http://nbviewer.ipython.org/JuliaPOMDP/POMDPs.jl/blob/master/examples/GridWorld.ipynb) notebook.
+
+There is also a BeliefMCTSSolver that solves a POMDP by converting it to an MDP in the belief space.
 
 Special thanks to Jon Cox for writing the original version of this code.
 

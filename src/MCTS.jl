@@ -12,6 +12,7 @@ export
     MCTSPlanner,
     DPWSolver,
     DPWPlanner,
+    BeliefMCTSSolver,
     AbstractMCTSPlanner,
     AbstractMCTSSolver,
     solve,
@@ -47,6 +48,7 @@ include("dpw_types.jl")
 include("dpw.jl")
 include("action_gen.jl")
 include("util.jl")
+include("belief_mcts.jl")
 
 include("visualization.jl")
 

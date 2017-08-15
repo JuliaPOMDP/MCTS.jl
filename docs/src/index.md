@@ -78,12 +78,13 @@ a = action(planner, s) # returns the action for state s
 
 ## Solver Variants
 
-There are currently two variants of the MCTS solver. They are documented in detail in the following sections:
+There are currently two variants of the MCTS solver along with a Belief MCTS solver that can be used with POMDPs. They are documented in detail in the following sections:
 
 ```@contents
 Pages = [
     "vanilla.md",
     "dpw.md",
+    "belief_mcts.md"
 ]
 Depth = 2
 ```
