@@ -1,13 +1,13 @@
-type StateActionNode{A}
+mutable struct StateActionNode{A}
     action::A
     N::Int
     Q::Float64
     _vis_stats::Nullable{Any} # for visualization, will be gibberish if data is not recorded
-    StateActionNode(a, N0, Q0) = new(a, N0, Q0, Nullable{Any}())
+    StateActionNode{A}(a, N0, Q0) where A = new(a, N0, Q0, Nullable{Any}())
 end
 
 # State node in the search tree
-type StateNode{A}
+mutable struct StateNode{A} <: AbstractStateNode
     N::Int # number of visits to the node
     sanodes::Vector{StateActionNode{A}} # all of the actions and their statistics
 end
@@ -17,7 +17,7 @@ function StateNode{P}(policy::AbstractMCTSPlanner{P}, s)
     A = action_type(P)
     ns = StateActionNode{A}[StateActionNode{A}(a,
                                                init_N(policy.solver.init_N, policy.mdp, s, a),
-                                               init_Q(policy.solver.init_Q, policy.mdp, s, a)) 
+                                               init_Q(policy.solver.init_Q, policy.mdp, s, a))
                             for a in iterator(actions(policy.mdp, s))]
     return StateNode{A}(0, ns)
 end
@@ -35,7 +35,7 @@ Fields:
         Maximum rollout horizon and tree depth.
         default: 10
 
-    exploration_constant::Float64: 
+    exploration_constant::Float64:
         Specifies how much the solver should explore.
         In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
         default: 1.0
@@ -69,7 +69,7 @@ Fields:
         be recorded. If it is false, the tree cannot be visualized.
         default: false
 """
-type MCTSSolver <: AbstractMCTSSolver
+mutable struct MCTSSolver <: AbstractMCTSSolver
 	n_iterations::Int64
 	depth::Int64
 	exploration_constant::Float64
@@ -85,7 +85,7 @@ end
 
 Use keyword arguments to specify values for the fields.
 """
-function MCTSSolver(;n_iterations::Int64 = 100, 
+function MCTSSolver(;n_iterations::Int64 = 100,
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
                      rng = Base.GLOBAL_RNG,
@@ -96,7 +96,7 @@ function MCTSSolver(;n_iterations::Int64 = 100,
     return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, enable_tree_vis)
 end
 
-type MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
+mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
 	solver::MCTSSolver # containts the solver parameters
 	mdp::P # model
     tree::Dict{S, StateNode{A}} # the search tree
@@ -144,7 +144,7 @@ end
 function simulate(policy::AbstractMCTSPlanner, state, depth::Int64)
     # model parameters
     mdp = policy.mdp
-    discount_factor = discount(mdp) 
+    discount_factor = discount(mdp)
     rng = policy.rng
 
     # once depth is zero return
@@ -156,7 +156,7 @@ function simulate(policy::AbstractMCTSPlanner, state, depth::Int64)
     if !hasnode(policy, state)
         newnode = insert_node!(policy, state)
         return estimate_value(policy.solved_estimate, policy.mdp, state, depth)
-    end 
+    end
     # if previously visited node
     snode = getnode(policy, state)
 

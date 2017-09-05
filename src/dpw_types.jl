@@ -7,7 +7,7 @@ Fields:
         Maximum rollout horizon and tree depth.
         default: 10
 
-    exploration_constant::Float64: 
+    exploration_constant::Float64:
         Specified how much the solver should explore.
         In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
         default: 1.0
@@ -64,7 +64,7 @@ Fields:
         If this is an object `o`, `next_action(o, mdp, s, snode)` will be called.
         default: RandomActionGenerator(rng)
 """
-type DPWSolver <: AbstractMCTSSolver
+mutable struct DPWSolver <: AbstractMCTSSolver
     depth::Int
     exploration_constant::Float64
     n_iterations::Int
@@ -106,23 +106,23 @@ function DPWSolver(;depth::Int=10,
 end
 
 #=
-type StateActionStateNode
+mutable struct StateActionStateNode
     N::Int
     R::Float64
     StateActionStateNode() = new(0,0)
 end
 
-type DPWStateActionNode{S}
+mutable struct DPWStateActionNode{S}
     V::Dict{S,StateActionStateNode}
     N::Int
     Q::Float64
     DPWStateActionNode(N,Q) = new(Dict{S,StateActionStateNode}(), N, Q)
 end
 
-type DPWStateNode{S,A}
+mutable struct DPWStateNode{S,A} <: AbstractStateNode
     A::Dict{A,DPWStateActionNode{S}}
     N::Int
-    DPWStateNode() = new(Dict{A,DPWStateActionNode{S}}(),0)
+    DPWStateNode{S,A}() where {S,A} = new(Dict{A,DPWStateActionNode{S}}(),0)
 end
 =#
 
@@ -140,17 +140,17 @@ type DPWTree{S,A}
     a_labels::Vector{A}
     a_lookup::Dict{Tuple{Int,A}, Int}
 
-    DPWTree(sz::Int=1000) = new(sizehint!(Int[], sz),
-                                sizehint!(Vector{Int}[], sz),
-                                sizehint!(S[], sz),
-                                Dict{S, Int}(),
-                                
-                                sizehint!(Int[], sz),
-                                sizehint!(Float64[], sz),
-                                sizehint!(Vector{Tuple{Int,Float64}}[], sz),
-                                sizehint!(A[], sz),
-                                Dict{Tuple{Int,A}, Int}()
-                               )
+    DPWTree{S,A}(sz::Int=1000) where {S,A} = new(sizehint!(Int[], sz),
+                                                 sizehint!(Vector{Int}[], sz),
+                                                 sizehint!(S[], sz),
+                                                 Dict{S, Int}(),
+                                                 
+                                                 sizehint!(Int[], sz),
+                                                 sizehint!(Float64[], sz),
+                                                 sizehint!(Vector{Tuple{Int,Float64}}[], sz),
+                                                 sizehint!(A[], sz),
+                                                 Dict{Tuple{Int,A}, Int}()
+                                                )
 end
 
 function insert_state_node!{S,A}(tree::DPWTree{S,A}, s::S, maintain_s_lookup=true)
@@ -179,14 +179,14 @@ end
 
 Base.isempty(tree::DPWTree) = isempty(tree.n) && isempty(tree.q)
 
-immutable DPWStateNode{S,A}
+immutable DPWStateNode{S,A} <: AbstractStateNode
     tree::DPWTree{S,A}
     index::Int
 end
 
 children(n::DPWStateNode) = n.tree.children[n.index]
 
-type DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
+mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
     solver::DPWSolver
     mdp::P
     tree::Nullable{DPWTree{S,A}}

@@ -44,4 +44,20 @@ include("dpw_test.jl")
 println("Testing other functions.")
 include("other.jl")
 
+# test the BeliefMCTSSolver docstring
+let
+    using ParticleFilters
+    using POMDPModels
+    using MCTS
+    using POMDPToolbox
+
+    pomdp = BabyPOMDP()
+    updater = SIRParticleFilter(pomdp, 1000)
+
+    solver = BeliefMCTSSolver(DPWSolver(), updater)
+    planner = solve(solver, pomdp)
+
+    simulate(HistoryRecorder(max_steps=10), pomdp, planner, updater)
+end
+
 # nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
