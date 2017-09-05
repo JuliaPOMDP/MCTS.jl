@@ -88,7 +88,7 @@ Use keyword arguments to specify values for the fields.
 function MCTSSolver(;n_iterations::Int64 = 100, 
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
-                     rng = MersenneTwister(),
+                     rng = Base.GLOBAL_RNG,
                      estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
                      init_Q = 0.0,
                      init_N = 0,
