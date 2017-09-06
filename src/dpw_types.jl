@@ -68,6 +68,7 @@ mutable struct DPWSolver <: AbstractMCTSSolver
     depth::Int
     exploration_constant::Float64
     n_iterations::Int
+    max_time::Float64
     k_action::Float64
     alpha_action::Float64
     k_state::Float64
@@ -90,6 +91,7 @@ Use keyword arguments to specify values for the fields
 function DPWSolver(;depth::Int=10,
                     exploration_constant::Float64=1.0,
                     n_iterations::Int=100,
+                    max_time::Float64=Inf,
                     k_action::Float64=10.0,
                     alpha_action::Float64=0.5,
                     k_state::Float64=10.0,
@@ -102,7 +104,7 @@ function DPWSolver(;depth::Int=10,
                     init_Q::Any = 0.0,
                     init_N::Any = 0,
                     next_action::Any = RandomActionGenerator(rng))
-    DPWSolver(depth, exploration_constant, n_iterations, k_action, alpha_action, k_state, alpha_state, keep_tree, check_repeat_state, check_repeat_action, rng, estimate_value, init_Q, init_N, next_action)
+    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, check_repeat_state, check_repeat_action, rng, estimate_value, init_Q, init_N, next_action)
 end
 
 #=
@@ -126,7 +128,7 @@ mutable struct DPWStateNode{S,A} <: AbstractStateNode
 end
 =#
 
-type DPWTree{S,A}
+mutable struct DPWTree{S,A}
     # for each state node
     total_n::Vector{Int}
     children::Vector{Vector{Int}}
@@ -140,17 +142,20 @@ type DPWTree{S,A}
     a_labels::Vector{A}
     a_lookup::Dict{Tuple{Int,A}, Int}
 
-    DPWTree{S,A}(sz::Int=1000) where {S,A} = new(sizehint!(Int[], sz),
-                                                 sizehint!(Vector{Int}[], sz),
-                                                 sizehint!(S[], sz),
-                                                 Dict{S, Int}(),
-                                                 
-                                                 sizehint!(Int[], sz),
-                                                 sizehint!(Float64[], sz),
-                                                 sizehint!(Vector{Tuple{Int,Float64}}[], sz),
-                                                 sizehint!(A[], sz),
-                                                 Dict{Tuple{Int,A}, Int}()
-                                                )
+    function DPWTree{S,A}(sz::Int=1000) where {S,A} 
+        sz = min(sz, 10_000_000)
+        return new(sizehint!(Int[], sz),
+                   sizehint!(Vector{Int}[], sz),
+                   sizehint!(S[], sz),
+                   Dict{S, Int}(),
+                   
+                   sizehint!(Int[], sz),
+                   sizehint!(Float64[], sz),
+                   sizehint!(Vector{Tuple{Int,Float64}}[], sz),
+                   sizehint!(A[], sz),
+                   Dict{Tuple{Int,A}, Int}()
+                  )
+    end
 end
 
 function insert_state_node!{S,A}(tree::DPWTree{S,A}, s::S, maintain_s_lookup=true)

@@ -60,4 +60,23 @@ let
     simulate(HistoryRecorder(max_steps=10), pomdp, planner, updater)
 end
 
+# test timing
+let
+    solver = DPWSolver(n_iterations=typemax(Int),
+                       depth=depth,
+                       max_time=1.0,
+                       exploration_constant=ec)
+    mdp = GridWorld()
+
+    policy = solve(solver, mdp)
+    state = GridWorldState(1,1)
+    a = action(policy, state)
+    t = begin
+        tic()
+        action(policy, state)
+        toc()
+    end
+    @test abs(t-1.0) < 0.5
+end
+
 # nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")

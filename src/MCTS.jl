@@ -6,6 +6,7 @@ using POMDPToolbox
 
 using Compat
 using Blink
+using CPUTime
 
 export
     MCTSSolver,

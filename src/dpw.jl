@@ -16,6 +16,7 @@ end
 Call simulate and chooses the approximate best action from the reward approximations
 """
 function POMDPs.action(p::DPWPlanner, s)
+    start_us = CPUtime_us()
     S = state_type(p.mdp)
     A = action_type(p.mdp)
     if p.solver.keep_tree
@@ -32,6 +33,9 @@ function POMDPs.action(p::DPWPlanner, s)
     end
     for i = 1:p.solver.n_iterations
         simulate(p, snode, p.solver.depth) # (not 100% sure we need to make a copy of the state here)
+        if CPUtime_us() - start_us >= p.solver.max_time * 1e6
+            break
+        end
     end
     best_Q = -Inf
     sanode = 0
