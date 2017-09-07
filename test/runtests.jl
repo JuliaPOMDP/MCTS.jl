@@ -57,6 +57,8 @@ let
     solver = BeliefMCTSSolver(DPWSolver(), updater)
     planner = solve(solver, pomdp)
 
+    @inferred action(planner, initialize_belief(updater, initial_state_distribution(pomdp)))
+
     simulate(HistoryRecorder(max_steps=10), pomdp, planner, updater)
 end
 
