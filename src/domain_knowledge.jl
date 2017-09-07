@@ -33,7 +33,7 @@ mutable struct SolvedRolloutEstimator{RNG<:AbstractRNG}
     rng::RNG
 end
 
-convert_estimator(ev::Any, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP}) = ev
+convert_estimator(ev, solver, mdp) = ev
 function convert_estimator(ev::RolloutEstimator, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP})
     return SolvedRolloutEstimator(convert_to_policy(ev.solver, mdp), solver.rng)
 end

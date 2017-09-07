@@ -16,6 +16,10 @@ Fields:
         Number of iterations during each action() call.
         default: 100
 
+    max_time::Float64
+        Maximum amount of CPU time spent iterating through simulations.
+        default: Inf
+
     k_action::Float64
     alpha_action::Float64
     k_state::Float64
@@ -210,3 +214,5 @@ function DPWPlanner{S,A}(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
                       solver.rng
                      )
 end
+
+Base.srand(p::DPWPlanner, seed) = srand(p.rng, seed)
