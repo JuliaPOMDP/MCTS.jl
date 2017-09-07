@@ -147,7 +147,7 @@ mutable struct DPWTree{S,A}
     a_lookup::Dict{Tuple{Int,A}, Int}
 
     function DPWTree{S,A}(sz::Int=1000) where {S,A} 
-        sz = min(sz, 10_000_000)
+        sz = min(sz, 100_000)
         return new(sizehint!(Int[], sz),
                    sizehint!(Vector{Int}[], sz),
                    sizehint!(S[], sz),
