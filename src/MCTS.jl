@@ -31,7 +31,8 @@ export
     estimate_value,
     init_N,
     init_Q,
-    children
+    children,
+    n_children
 
 export
     AbstractStateNode,
