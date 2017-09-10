@@ -32,7 +32,8 @@ export
     init_N,
     init_Q,
     children,
-    n_children
+    n_children,
+    isroot
 
 export
     AbstractStateNode,

@@ -195,6 +195,7 @@ end
 
 children(n::DPWStateNode) = n.tree.children[n.index]
 n_children(n::DPWStateNode) = length(children(n))
+isroot(n::DPWStateNode) = n.index == 1
 
 mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
     solver::DPWSolver
