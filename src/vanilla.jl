@@ -22,6 +22,7 @@ function StateNode{P}(policy::AbstractMCTSPlanner{P}, s)
     return StateNode{A}(0, ns)
 end
 
+
 """
 MCTS solver type
 
@@ -125,20 +126,26 @@ POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, md
 end
 
 function POMDPs.action(policy::AbstractMCTSPlanner, state)
+    tree = build_tree(policy, state)
+    # find the index of action with highest q val
+    best = best_sanode_Q(tree[state])
+    # use map to conver index to mdp action
+    return best.action
+end
+
+function build_tree(policy::AbstractMCTSPlanner, state)
     n_iterations = policy.solver.n_iterations
     depth = policy.solver.depth
     # build the tree
     for n = 1:n_iterations
         simulate(policy, state, depth)
     end
-    # find the index of action with highest q val
-    best = best_sanode_Q(getnode(policy, state))
-    # use map to conver index to mdp action
-    return best.action
+    return policy.tree
 end
 
+
 function POMDPs.action(policy::AbstractMCTSPlanner, state, action)
-  POMDPs.action(policy, state)
+    POMDPs.action(policy, state)
 end
 
 function simulate(policy::AbstractMCTSPlanner, state, depth::Int64)

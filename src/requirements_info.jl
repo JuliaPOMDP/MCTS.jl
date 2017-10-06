@@ -18,5 +18,19 @@ function POMDPs.requirements_info(solver::AbstractMCTSSolver, problem::Union{POM
 end
 
 function POMDPs.requirements_info(policy::AbstractMCTSPlanner, s)
+    if !isequal(deepcopy(s), s)
+        warn("""
+             isequal(deepcopy(s), s) returned false. Is isequal() defined correctly?
+
+             For MCTS to work correctly, you must define isequal(::$(typeof(s)), ::$(typeof(s))) (see https://docs.julialang.org/en/stable/stdlib/collections/#Associative-Collections-1, https://github.com/andrewcooke/AutoHashEquals.jl#background, also consider using StaticArrays). This warning was thrown because isequal($(deepcopy(s)), $s) returned false.
+             """)
+    end
+    if hash(deepcopy(s)) != hash(s)
+        warn("""
+             hash(deepcopy(s)) was not equal to hash(s). Is hash() defined correctly?
+
+             For MCTS to work correctly, you must define hash(::$(typeof(s)), ::UInt) (see https://docs.julialang.org/en/stable/stdlib/collections/#Associative-Collections-1, https://github.com/andrewcooke/AutoHashEquals.jl#background, also consider using StaticArrays). This warning was thrown because hash($(deepcopy(s))) != hash($s).
+             """)
+    end
     @show_requirements action(policy, s)    
 end
