@@ -6,6 +6,7 @@ using POMDPToolbox
 
 using Compat
 using Blink
+using CPUTime
 
 export
     MCTSSolver,
@@ -22,14 +23,13 @@ export
     RandomActionGenerator,
     RolloutEstimator,
     next_action,
-    AbstractTreeVisualizer,
-    TreeVisualizer,
-    blink,
-    inchrome,
     clear_tree!,
     estimate_value,
     init_N,
-    init_Q
+    init_Q,
+    children,
+    n_children,
+    isroot
 
 export
     AbstractStateNode,

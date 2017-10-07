@@ -13,7 +13,7 @@ a = action(policy, state)
 
 ranked = MCTS.ranked_actions(policy, state)
 
-@test ranked[1] == a
+@test first(ranked[1]) == a
 
 # test ranked_actions for dpw
 solver = DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec)
@@ -27,4 +27,4 @@ a = action(policy, state)
 
 ranked = MCTS.ranked_actions(policy, state)
 
-@test ranked[1] == a
+@test first(ranked[1]) == a

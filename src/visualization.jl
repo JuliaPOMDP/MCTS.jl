@@ -1,12 +1,5 @@
-import JSON
-
-abstract type AbstractTreeVisualizer end
-
-# put your policy in one of these to automatically visualize it in a python notebook
-mutable struct TreeVisualizer{PolicyType} <: AbstractTreeVisualizer
-    policy::PolicyType
-    init_state
-end
+using D3Trees
+using Colors
 
 """
 Return text to display below the node corresponding to state or action s
@@ -18,46 +11,58 @@ Return text to display in the tooltip for the node corresponding to state or act
 """
 tooltip_tag(s) = node_tag(s)
 
-function create_json{P<:AbstractMCTSPlanner}(visualizer::TreeVisualizer{P})
+function D3Trees.D3Tree(policy::MCTSPlanner, root_state; kwargs...)
     # check to see if visualization was enabled
-    if !visualizer.policy.solver.enable_tree_vis
+    if !policy.solver.enable_tree_vis
         error("""
-                Tree visualization was not enabled for this policy.
+              Tree visualization was not enabled for this policy.
 
-                Construct the solver with $(typeof(visualizer.policy.solver))(enable_tree_vis=true, ...) to enable.
-            """)
+              Construct the solver with $(typeof(policy.solver))(enable_tree_vis=true, ...) to enable.
+              """)
     end
+    return D3Tree(policy.tree, root_state; kwargs...)
+end
 
-    root_id = -1
-    next_id = 1
+D3Trees.D3Tree(policy::DPWPlanner; kwargs...) = D3Tree(get(policy.tree); kwargs...)
+
+
+# Note: creating all these dictionaries is a convoluted and inefficient way to do it
+function D3Trees.D3Tree(tree::Dict, root_state; title="MCTS tree")
+    next_id = 2
     node_dict = Dict{Int, Dict{String, Any}}()
     s_dict = Dict{Any, Int}()
     sa_dict = Dict{Any, Int}()
-    for (s, sn) in visualizer.policy.tree
+    for (s, sn) in tree
+        if s == root_state
+            this_id = 1
+        else
+            this_id = next_id
+        end
         # create state node
-        node_dict[next_id] = sd = Dict("id"=>next_id,
+        node_dict[this_id] = sd = Dict("id"=>this_id,
                                        "type"=>:state,
-                                       "children_ids"=>Array(Int,0),
+                                       "children_ids"=>Array{Int}(0),
                                        "tag"=>node_tag(s),
                                        "tt_tag"=>tooltip_tag(s),
                                        "N"=>sn.N
                                        )
-        if s == visualizer.init_state
-            root_id = next_id
+        s_dict[s] = this_id
+        if this_id == next_id
+            next_id += 1
         end
-        s_dict[s] = next_id
-        next_id += 1
 
+        max_N = maximum(san.N for san in sn.sanodes)
         # create action nodes
         for san in sn.sanodes
             a = san.action
             node_dict[next_id] = Dict("id"=>next_id,
                                       "type"=>:action,
-                                      "children_ids"=>Array(Int,0),
+                                      "children_ids"=>Array{Int}(0),
                                       "tag"=>node_tag(a),
                                       "tt_tag"=>tooltip_tag(a),
                                       "N"=>san.N,
-                                      "Q"=>san.Q
+                                      "Q"=>san.Q,
+                                      "max_N"=>max_N
                                       )
             push!(sd["children_ids"], next_id)
             sa_dict[(s,a)] = next_id
@@ -65,14 +70,14 @@ function create_json{P<:AbstractMCTSPlanner}(visualizer::TreeVisualizer{P})
         end
     end
 
-    if root_id < 0
+    if !haskey(node_dict, 1)
         error("""
-                MCTS tree visualization: Policy does not have a node for the specified state.
-            """)
+              MCTS tree visualization: tree does not have a node for state $root_state.
+              """)
     end
 
     # go back and refill action nodes
-    for (s, sn) in visualizer.policy.tree
+    for (s, sn) in tree
         for san in sn.sanodes
             a = san.action
             for sp in get(san._vis_stats)
@@ -82,7 +87,7 @@ function create_json{P<:AbstractMCTSPlanner}(visualizer::TreeVisualizer{P})
                 else
                     node_dict[next_id] = Dict("id"=>next_id,
                                        "type"=>:state,
-                                       "children_ids"=>Array(Int,0),
+                                       "children_ids"=>Array{Int}(0),
                                        "tag"=>node_tag(sp),
                                        "tt_tag"=>tooltip_tag(sp),
                                        "N"=>0
@@ -93,10 +98,125 @@ function create_json{P<:AbstractMCTSPlanner}(visualizer::TreeVisualizer{P})
             end
         end
     end
-    json = JSON.json(node_dict)
-    return (json, root_id)
+
+    return D3Tree(node_dict, title=title)
 end
 
+function D3Trees.D3Tree(node_dict::Dict{Int, Dict{String, Any}}; title="Julia D3Tree")
+    len = length(node_dict)
+    children = Vector{Vector{Int}}(len)
+    text = Vector{String}(len)
+    tooltip = Vector{String}(len)
+    style = fill("", len)
+    link_style = fill("", len)
+    max_Q = maximum(get(n, "Q", 0.0) for n in values(node_dict))
+    min_Q = minimum(get(n, "Q", 0.0) for n in values(node_dict))
+    for i in 1:len
+        n = node_dict[i]
+        children[i] = n["children_ids"]
+        if n["type"] == :state
+            text[i] = @sprintf("""
+                               %25s
+                               N: %6d
+                               """,
+                               n["tag"], n["N"])
+            tooltip[i] = """
+                         $(n["tt_tag"])
+                         N: $(n["N"])
+                         """
+        elseif n["type"] == :action
+            text[i] = @sprintf("""
+                               %25s
+                               Q: %6.2f
+                               N: %6d
+                               """,
+                               n["tag"], n["Q"], n["N"])
+            tooltip[i] = """
+                         $(n["tt_tag"])
+                         Q: $(n["Q"])
+                         N: $(n["N"])
+                         """
+
+            rel_Q = (n["Q"]-min_Q)/(max_Q-min_Q)
+            color = weighted_color_mean(rel_Q, colorant"green", colorant"red")
+            style[i] = "stroke:#$(hex(color))"
+            #TODO Max N
+            w = 20.0*sqrt(n["N"]/n["max_N"])
+            link_style[i] = "stroke-width:$(w)px"
+        else
+            warn("Unrecognized node type when constructing D3Tree.")
+        end
+    end
+    return D3Tree(children,
+                  text=text,
+                  tooltip=tooltip,
+                  style=style,
+                  link_style=link_style,
+                  title=title
+                 )
+end
+
+function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree")
+    lens = length(tree.total_n)
+    lensa = length(tree.n)
+    len = lens + lensa
+    children = Vector{Vector{Int}}(len)
+    text = Vector{String}(len)
+    tt = fill("", len)
+    style = fill("", len)
+    link_style = fill("", len)
+    max_q = maximum(tree.q)
+    min_q = minimum(tree.q)
+
+    for s in 1:lens
+        children[s] = tree.children[s] .+ lens
+        text[s] =  @sprintf("""
+                            %25s
+                            N: %6d
+                            """,
+                            node_tag(tree.s_labels[s]),
+                            tree.total_n[s]
+                           )
+        tt[s] = """
+                $(tooltip_tag(tree.s_labels[s]))
+                N: $(tree.total_n[s])
+                """
+        for sa in tree.children[s]
+            w = 20.0*sqrt(tree.n[sa]/tree.total_n[s])
+            link_style[sa+lens] = "stroke-width:$(w)px"
+        end
+    end
+    for sa in 1:lensa
+        children[sa+lens] = collect(first(t) for t in tree.transitions[sa])
+        text[sa+lens] = @sprintf("""
+                                 %25s
+                                 Q: %6.2f
+                                 N: %6d
+                                 """,
+                                 node_tag(tree.a_labels[sa]),
+                                 tree.n[sa],
+                                 tree.q[sa]
+                                )
+        tt[sa+lens] = """
+                      $(tooltip_tag(tree.a_labels[sa]))
+                      Q: $(tree.q[sa]) 
+                      N: $(tree.n[sa])
+                      """
+                      
+        rel_q = (tree.q[sa]-min_q)/(max_q-min_q)
+        color = weighted_color_mean(rel_q, colorant"green", colorant"red")
+        style[sa+lens] = "stroke:#$(hex(color))"
+    end
+    return D3Tree(children,
+                  text=text,
+                  tooltip=tt,
+                  style=style,
+                  link_style=link_style,
+                  title=title
+                 )
+end
+
+#=
 function create_json{P<:DPWPlanner}(visualizer::TreeVisualizer{P})
     root_id = -1
     next_id = 1
@@ -165,60 +285,4 @@ function create_json{P<:DPWPlanner}(visualizer::TreeVisualizer{P})
     json = JSON.json(node_dict)
     return (json, root_id)
 end
-
-# function stringmime(m::MIME"text/html", visualizer::TreeVisualizer)
-function Base.show(f::IO, m::MIME"text/html", visualizer::AbstractTreeVisualizer)
-    json, root_id = create_json(visualizer)
-    # write("/tmp/tree_dump.json", json)
-    css = @compat readstring(joinpath(dirname(@__FILE__()), "tree_vis.css"))
-    js = @compat readstring(joinpath(dirname(@__FILE__()), "tree_vis.js"))
-    div = "treevis$(randstring())"
-
-    html_string = """
-        <html>
-        <head>
-        </head>
-        <body>
-        <div id="$div">
-        <style>
-            $css
-        </style>
-        <script>
-           (function(){
-            var treeData = $json;
-            var rootID = $root_id;
-            var div = "$div";
-            $js
-            })();
-        </script>
-        </div>
-        </body>
-        </html>
-    """
-    # html_string = "visualization doesn't work yet :("
-
-    # <script src="http://d3js.org/d3.v3.js"></script>
-
-    # for debugging
-    # outfile  = open("/tmp/pomcp_debug.html","w")
-    # write(outfile,html_string)
-    # close(outfile)
-
-    println(f,html_string)
-end
-
-function blink(vis::AbstractTreeVisualizer)
-    w = Window()
-    str = stringmime(MIME"text/html"(), vis)
-    # println(str)
-    body!(w, str)
-    return w
-end
-
-function inchrome(vis::AbstractTreeVisualizer)
-    fname = joinpath(mktempdir(), "tree.html")
-    open(fname, "w") do f
-        show(f, MIME"text/html"(), vis)
-    end
-    run(`google-chrome $fname`)
-end
+=#

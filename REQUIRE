@@ -1,6 +1,8 @@
 julia 0.6
-JSON
 POMDPs 0.4
 Compat
 Blink
 POMDPToolbox
+CPUTime
+D3Trees
+Colors

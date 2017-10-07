@@ -22,6 +22,7 @@ function StateNode{P}(policy::AbstractMCTSPlanner{P}, s)
     return StateNode{A}(0, ns)
 end
 
+
 """
 MCTS solver type
 
@@ -88,7 +89,7 @@ Use keyword arguments to specify values for the fields.
 function MCTSSolver(;n_iterations::Int64 = 100,
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
-                     rng = MersenneTwister(0),
+                     rng = Base.GLOBAL_RNG,
                      estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
                      init_Q = 0.0,
                      init_N = 0,
@@ -125,20 +126,26 @@ POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, md
 end
 
 function POMDPs.action(policy::AbstractMCTSPlanner, state)
+    tree = build_tree(policy, state)
+    # find the index of action with highest q val
+    best = best_sanode_Q(tree[state])
+    # use map to conver index to mdp action
+    return best.action
+end
+
+function build_tree(policy::AbstractMCTSPlanner, state)
     n_iterations = policy.solver.n_iterations
     depth = policy.solver.depth
     # build the tree
     for n = 1:n_iterations
         simulate(policy, state, depth)
     end
-    # find the index of action with highest q val
-    best = best_sanode_Q(getnode(policy, state))
-    # use map to conver index to mdp action
-    return best.action
+    return policy.tree
 end
 
+
 function POMDPs.action(policy::AbstractMCTSPlanner, state, action)
-  POMDPs.action(policy, state)
+    POMDPs.action(policy, state)
 end
 
 function simulate(policy::AbstractMCTSPlanner, state, depth::Int64)
@@ -166,7 +173,7 @@ function simulate(policy::AbstractMCTSPlanner, state, depth::Int64)
 
     # transition to a new state
     sp, r = generate_sr(mdp, state, sanode.action, rng)
-
+    
     if policy.solver.enable_tree_vis
         record_visit(policy, sanode, sp)
     end
