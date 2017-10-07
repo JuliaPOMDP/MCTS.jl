@@ -23,10 +23,6 @@ export
     RandomActionGenerator,
     RolloutEstimator,
     next_action,
-    AbstractTreeVisualizer,
-    TreeVisualizer,
-    blink,
-    inchrome,
     clear_tree!,
     estimate_value,
     init_N,
@@ -54,6 +50,6 @@ include("action_gen.jl")
 include("util.jl")
 include("belief_mcts.jl")
 
-# include("visualization.jl")
+include("visualization.jl")
 
 end # module

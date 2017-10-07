@@ -4,6 +4,7 @@ using POMDPModels
 using Base.Test
 using NBInclude
 using POMDPToolbox
+using D3Trees
 
 n_iter = 50
 depth = 15
@@ -33,8 +34,6 @@ state = GridWorldState(1,1)
 
 a = action(policy, state)
 
-# MCTS.blink(TreeVisualizer(policy, state))
-
 clear_tree!(policy)
 @test isempty(policy.tree)
 
@@ -43,9 +42,9 @@ include("options.jl")
 println("Testing DPW solver.")
 include("dpw_test.jl")
 
-# println("Testing visualization.")
-# include("visualization.jl")
-# nbinclude("../notebooks/Test_Visualization.ipynb")
+println("Testing visualization.")
+include("visualization.jl")
+nbinclude("../notebooks/Test_Visualization.ipynb")
 
 println("Testing other functions.")
 include("other.jl")
@@ -87,4 +86,4 @@ let
     @test abs(t-1.0) < 0.5
 end
 
-# nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
+nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
