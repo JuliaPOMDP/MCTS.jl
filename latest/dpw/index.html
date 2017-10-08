@@ -117,7 +117,7 @@
     Maximum rollout horizon and tree depth.
     default: 10
 
-exploration_constant::Float64: 
+exploration_constant::Float64:
     Specified how much the solver should explore.
     In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
     default: 1.0
@@ -126,6 +126,10 @@ n_iterations::Int64
     Number of iterations during each action() call.
     default: 100
 
+max_time::Float64
+    Maximum amount of CPU time spent iterating through simulations.
+    default: Inf
+
 k_action::Float64
 alpha_action::Float64
 k_state::Float64
@@ -133,6 +137,15 @@ alpha_state::Float64
     These constants control the double progressive widening. A new state
     or action will be added if the number of children is less than or equal to kN^alpha.
     defaults: k:10, alpha:0.5
+
+keep_tree::Bool
+If true, store the tree in the planner for reuse at the next timestep (and every time it is used in the future). There is a computational cost for maintaining the state dictionary necessary for this.
+    default: false
+
+check_repeat_state::Bool
+check_repeat_action::Bool
+    When constructing the tree, check whether a state or action has been seen before (there is a computational cost to maintaining the dictionaries necessary for this)
+    default: true
 
 rng::AbstractRNG:
     Random number generator
@@ -166,7 +179,7 @@ next_action::Any
     default: RandomActionGenerator(rng)
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/tree/c40b60e6a02c3317c71bbb7ddef0bff7435a5dee/src/dpw_types.jl#L1-L57' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/tree/7a326c408da38b9ce922a3701c8a7ace3fcb089e/src/dpw_types.jl#L1-L70' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
