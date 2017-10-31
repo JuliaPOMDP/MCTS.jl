@@ -11,7 +11,7 @@ a = action(policy, state)
 tree = D3Tree(policy, state)
 
 # dpw
-solver = DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec)
+solver = DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, rng=MersenneTwister(13))
 mdp = GridWorld()
 
 policy = solve(solver, mdp)

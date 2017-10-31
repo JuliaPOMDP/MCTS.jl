@@ -86,4 +86,17 @@ let
     @test abs(t-1.0) < 0.5
 end
 
+# test terminal state error
+let
+    solver = DPWSolver(n_iterations=typemax(Int),
+                       depth=depth,
+                       max_time=1.0,
+                       exploration_constant=ec)
+    mdp = GridWorld()
+
+    policy = solve(solver, mdp)
+    state = GridWorldState(1,1,true)
+    @test_throws ErrorException action(policy, state)
+end
+
 nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
