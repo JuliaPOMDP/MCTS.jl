@@ -27,7 +27,7 @@ D3Trees.D3Tree(policy::DPWPlanner; kwargs...) = D3Tree(get(policy.tree); kwargs.
 
 
 # Note: creating all these dictionaries is a convoluted and inefficient way to do it
-function D3Trees.D3Tree(tree::Dict, root_state; title="MCTS tree")
+function D3Trees.D3Tree(tree::Dict, root_state; title="MCTS tree", kwargs...)
     next_id = 2
     node_dict = Dict{Int, Dict{String, Any}}()
     s_dict = Dict{Any, Int}()
@@ -99,10 +99,10 @@ function D3Trees.D3Tree(tree::Dict, root_state; title="MCTS tree")
         end
     end
 
-    return D3Tree(node_dict, title=title)
+    return D3Tree(node_dict; title=title, kwargs...)
 end
 
-function D3Trees.D3Tree(node_dict::Dict{Int, Dict{String, Any}}; title="Julia D3Tree")
+function D3Trees.D3Tree(node_dict::Dict{Int, Dict{String, Any}}; title="Julia D3Tree", kwargs...)
     len = length(node_dict)
     children = Vector{Vector{Int}}(len)
     text = Vector{String}(len)
@@ -147,16 +147,17 @@ function D3Trees.D3Tree(node_dict::Dict{Int, Dict{String, Any}}; title="Julia D3
             warn("Unrecognized node type when constructing D3Tree.")
         end
     end
-    return D3Tree(children,
+    return D3Tree(children;
                   text=text,
                   tooltip=tooltip,
                   style=style,
                   link_style=link_style,
-                  title=title
+                  title=title,
+                  kwargs...
                  )
 end
 
-function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree")
+function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree", kwargs...)
     lens = length(tree.total_n)
     lensa = length(tree.n)
     len = lens + lensa
@@ -207,82 +208,12 @@ function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree")
         color = weighted_color_mean(rel_q, colorant"green", colorant"red")
         style[sa+lens] = "stroke:#$(hex(color))"
     end
-    return D3Tree(children,
+    return D3Tree(children;
                   text=text,
                   tooltip=tt,
                   style=style,
                   link_style=link_style,
-                  title=title
+                  title=title,
+                  kwargs...
                  )
 end
-
-#=
-function create_json{P<:DPWPlanner}(visualizer::TreeVisualizer{P})
-    root_id = -1
-    next_id = 1
-    node_dict = Dict{Int, Dict{String, Any}}()
-    s_dict = Dict{Any, Int}()
-    sa_dict = Dict{Any, Int}()
-    for (s, sn) in visualizer.policy.tree
-        # create state node
-        node_dict[next_id] = sd = Dict("id"=>next_id,
-                                       "type"=>:state,
-                                       "children_ids"=>Array(Int,0),
-                                       "tag"=>node_tag(s),
-                                       "tt_tag"=>tooltip_tag(s),
-                                       "N"=>sn.N
-                                       )
-        if s == visualizer.init_state
-            root_id = next_id
-        end
-        s_dict[s] = next_id
-        next_id += 1
-
-        # create action nodes
-        for (a, san) in sn.A
-            node_dict[next_id] = Dict("id"=>next_id,
-                                      "type"=>:action,
-                                      "children_ids"=>Array(Int,0),
-                                      "tag"=>node_tag(a),
-                                      "tt_tag"=>tooltip_tag(a),
-                                      "N"=>san.N,
-                                      "Q"=>san.Q
-                                      )
-            push!(sd["children_ids"], next_id)
-            sa_dict[(s,a)] = next_id
-            next_id += 1
-        end
-    end
-
-    if root_id < 0
-        error("""
-                MCTS tree visualization: Policy does not have a node for the specified state.
-            """)
-    end
-
-
-    # go back and refill action nodes
-    for (s, sn) in visualizer.policy.tree
-        for (a, san) in sn.A
-            for (sp, sasn) in san.V
-                sad = node_dict[sa_dict[(s,a)]]
-                if haskey(s_dict, sp)
-                    push!(sad["children_ids"], s_dict[sp])
-                else
-                    node_dict[next_id] = Dict("id"=>next_id,
-                                       "type"=>:state,
-                                       "children_ids"=>Array(Int,0),
-                                       "tag"=>node_tag(sp),
-                                       "tt_tag"=>tooltip_tag(sp),
-                                       "N"=>0
-                                       )
-                    push!(sad["children_ids"], next_id)
-                    next_id += 1
-                end
-            end
-        end
-    end
-    json = JSON.json(node_dict)
-    return (json, root_id)
-end
-=#
