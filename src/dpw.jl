@@ -16,6 +16,12 @@ end
 Call simulate and chooses the approximate best action from the reward approximations
 """
 function POMDPs.action(p::DPWPlanner, s)
+    if isterminal(p.mdp, s)
+        error("""
+              MCTS cannot handle terminal states. action was called with
+              s = $s
+              """)
+    end
     S = state_type(p.mdp)
     A = action_type(p.mdp)
     if p.solver.keep_tree
@@ -46,7 +52,7 @@ function POMDPs.action(p::DPWPlanner, s)
         end
     end
     # XXX some publications say to choose action that has been visited the most
-    return tree.a_labels[sanode] # choose action with highest approximate value 
+    return tree.a_labels[sanode] # choose action with highest approximate value
 end
 
 
