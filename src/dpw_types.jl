@@ -29,8 +29,12 @@ Fields:
         defaults: k:10, alpha:0.5
 
     keep_tree::Bool
-    If true, store the tree in the planner for reuse at the next timestep (and every time it is used in the future). There is a computational cost for maintaining the state dictionary necessary for this.
+        If true, store the tree in the planner for reuse at the next timestep (and every time it is used in the future). There is a computational cost for maintaining the state dictionary necessary for this.
         default: false
+
+    enable_action_pw::Bool
+        If true, enable progressive widening on the action space; if false just use the whole action space.
+        default: true
 
     check_repeat_state::Bool
     check_repeat_action::Bool
@@ -78,6 +82,7 @@ mutable struct DPWSolver <: AbstractMCTSSolver
     k_state::Float64
     alpha_state::Float64
     keep_tree::Bool
+    enable_action_pw::Bool
     check_repeat_state::Bool
     check_repeat_action::Bool
     rng::AbstractRNG
@@ -101,6 +106,7 @@ function DPWSolver(;depth::Int=10,
                     k_state::Float64=10.0,
                     alpha_state::Float64=0.5,
                     keep_tree::Bool=false,
+                    enable_action_pw::Bool=true,
                     check_repeat_state::Bool=true,
                     check_repeat_action::Bool=true,
                     rng::AbstractRNG=Base.GLOBAL_RNG,
@@ -108,7 +114,7 @@ function DPWSolver(;depth::Int=10,
                     init_Q::Any = 0.0,
                     init_N::Any = 0,
                     next_action::Any = RandomActionGenerator(rng))
-    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, check_repeat_state, check_repeat_action, rng, estimate_value, init_Q, init_N, next_action)
+    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, check_repeat_state, check_repeat_action, rng, estimate_value, init_Q, init_N, next_action)
 end
 
 #=
