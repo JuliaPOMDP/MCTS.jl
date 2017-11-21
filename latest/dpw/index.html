@@ -139,8 +139,12 @@ alpha_state::Float64
     defaults: k:10, alpha:0.5
 
 keep_tree::Bool
-If true, store the tree in the planner for reuse at the next timestep (and every time it is used in the future). There is a computational cost for maintaining the state dictionary necessary for this.
+    If true, store the tree in the planner for reuse at the next timestep (and every time it is used in the future). There is a computational cost for maintaining the state dictionary necessary for this.
     default: false
+
+enable_action_pw::Bool
+    If true, enable progressive widening on the action space; if false just use the whole action space.
+    default: true
 
 check_repeat_state::Bool
 check_repeat_action::Bool
@@ -179,7 +183,7 @@ next_action::Any
     default: RandomActionGenerator(rng)
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/blob/dc930004fe9e2076a4443f52f393cc289b892d54/src/dpw_types.jl#L1-L70' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/blob/9b9af79d8117ef954e7915cd7376fbceae50e5a0/src/dpw_types.jl#L1-L74' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
