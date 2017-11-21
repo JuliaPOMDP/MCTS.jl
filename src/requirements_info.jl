@@ -1,5 +1,7 @@
 function POMDPs.requirements_info(solver::AbstractMCTSSolver, problem::Union{POMDP,MDP})
-    if state_type(typeof(problem)) <: Number
+    if @implemented initial_state(::typeof(problem), ::MersenneTwister)
+        requirements_info(solver, problem, initial_state(problem, MersenneTwister(1)))
+    elseif state_type(typeof(problem)) <: Number
         s = one(state_type(typeof(problem)))
         requirements_info(solver, problem, s)
     else
