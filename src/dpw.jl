@@ -70,14 +70,24 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     end
 
     # action progressive widening
-    if length(tree.children[snode]) <= sol.k_action*tree.total_n[snode]^sol.alpha_action # criterion for new action generation
-        a = next_action(dpw.next_action, dpw.mdp, s, DPWStateNode(tree, snode)) # action generation step
-        if !sol.check_repeat_action || !haskey(tree.a_lookup, (snode, a))
+    if dpw.solver.enable_action_pw
+        if length(tree.children[snode]) <= sol.k_action*tree.total_n[snode]^sol.alpha_action # criterion for new action generation
+            a = next_action(dpw.next_action, dpw.mdp, s, DPWStateNode(tree, snode)) # action generation step
+            if !sol.check_repeat_action || !haskey(tree.a_lookup, (snode, a))
+                n0 = init_N(sol.init_N, dpw.mdp, s, a)
+                insert_action_node!(tree, snode, a, n0,
+                                    init_Q(sol.init_Q, dpw.mdp, s, a),
+                                    sol.check_repeat_action
+                                   )
+                tree.total_n[snode] += n0
+            end
+        end
+    elseif isempty(tree.children[snode])
+        for a in iterator(actions(dpw.mdp, s))
             n0 = init_N(sol.init_N, dpw.mdp, s, a)
             insert_action_node!(tree, snode, a, n0,
                                 init_Q(sol.init_Q, dpw.mdp, s, a),
-                                sol.check_repeat_action
-                               )
+                                false)
             tree.total_n[snode] += n0
         end
     end
