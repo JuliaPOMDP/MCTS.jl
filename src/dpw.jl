@@ -25,11 +25,16 @@ function POMDPs.action(p::DPWPlanner, s)
     S = state_type(p.mdp)
     A = action_type(p.mdp)
     if p.solver.keep_tree
-        tree = get(p.tree, DPWTree{S,A}(p.solver.n_iterations))
-        if haskey(p.tree.s_lookup, s)
-            snode = p.tree.s_lookup[s]
+        if isnull(p.tree)
+            tree = DPWTree{S,A}(p.solver.n_iterations)
+            p.tree = Nullable(tree)
         else
-            snode = insert_state_node!(get(p.tree), s, sol.keep_tree || sol.check_repeat_state)
+            tree = get(p.tree)
+        end
+        if haskey(tree.s_lookup, s)
+            snode = tree.s_lookup[s]
+        else
+            snode = insert_state_node!(tree, s, p.solver.keep_tree || p.solver.check_repeat_state)
         end
     else
         tree = DPWTree{S,A}(p.solver.n_iterations)
