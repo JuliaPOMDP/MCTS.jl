@@ -12,7 +12,7 @@ clear_tree!(policy)
 
 
 # no action pw
-solver = DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, enable_action_pw=false)
+solver = DPWSolver(n_iterations=n_iter, depth=depth, keep_tree=true, exploration_constant=ec, enable_action_pw=false)
 mdp = GridWorld()
 
 policy = solve(solver, mdp)
