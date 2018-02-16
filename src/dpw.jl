@@ -131,13 +131,14 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
         push!(tree.transitions[sanode], (spnode, r))
 
         if tree.total_n[spnode] == 0
-            return r + estimate_value(dpw.solved_estimate, dpw.mdp, sp, d-1)
+            q = r + discount(dpw.mdp)*estimate_value(dpw.solved_estimate, dpw.mdp, sp, d-1)
+        else
+            q = r + discount(dpw.mdp)*simulate(dpw, spnode, d-1)
         end
     else
         (spnode, r) = rand(dpw.rng, tree.transitions[sanode])
+        q = r + discount(dpw.mdp)*simulate(dpw, spnode, d-1)
     end
-
-    q = r + discount(dpw.mdp)*simulate(dpw, spnode, d-1)
 
     tree.n[sanode] += 1
     tree.total_n[snode] += 1
