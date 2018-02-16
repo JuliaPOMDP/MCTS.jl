@@ -24,19 +24,21 @@ function POMDPs.action(p::DPWPlanner, s)
     end
     S = state_type(p.mdp)
     A = action_type(p.mdp)
-    if isnull(p.tree)
-        tree = DPWTree{S,A}(p.solver.n_iterations)
-        p.tree = Nullable(tree)
-    else
-        tree = get(p.tree)
-    end
     if p.solver.keep_tree
+        if isnull(p.tree)
+            tree = DPWTree{S,A}(p.solver.n_iterations)
+            p.tree = Nullable(tree)
+        else
+            tree = get(p.tree)
+        end
         if haskey(tree.s_lookup, s)
             snode = tree.s_lookup[s]
         else
             snode = insert_state_node!(tree, s, true)
         end
     else
+        tree = DPWTree{S,A}(p.solver.n_iterations)
+        p.tree = Nullable(tree)
         snode = insert_state_node!(tree, s, p.solver.check_repeat_state)
     end
     start_us = CPUtime_us()
