@@ -121,15 +121,10 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
 
     # state progressive widening
     new_node = false
-    if length(tree.transitions[sanode]) <= sol.k_state*tree.n[sanode]^sol.alpha_state
-
+    if tree.n_a_children[sanode] <= sol.k_state*tree.n[sanode]^sol.alpha_state
         sp, r = generate_sr(dpw.mdp, s, a, dpw.rng)
 
-        if sol.check_repeat_state
-            spnode = get(tree.s_lookup, sp, 0)
-        else
-            spnode = 0
-        end
+        spnode = sol.check_repeat_state ? get(tree.s_lookup, sp, 0) : 0
 
         if spnode == 0 # there was not a state node for sp already in the tree
             spnode = insert_state_node!(tree, sp, sol.keep_tree || sol.check_repeat_state)
@@ -137,6 +132,12 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
         end
         push!(tree.transitions[sanode], (spnode, r))
 
+        if !sol.check_repeat_state 
+            tree.n_a_children[sanode] += 1
+        elseif !((sanode,spnode) in tree.unique_transitions)
+            push!(tree.unique_transitions, (sanode,spnode))
+            tree.n_a_children[sanode] += 1
+        end
     else
         spnode, r = rand(dpw.rng, tree.transitions[sanode])
     end

@@ -152,6 +152,11 @@ mutable struct DPWTree{S,A}
     a_labels::Vector{A}
     a_lookup::Dict{Tuple{Int,A}, Int}
 
+    # for tracking transitions
+    n_a_children::Vector{Int}
+    unique_transitions::Set{Tuple{Int,Int}}
+
+
     function DPWTree{S,A}(sz::Int=1000) where {S,A} 
         sz = min(sz, 100_000)
         return new(sizehint!(Int[], sz),
@@ -163,7 +168,10 @@ mutable struct DPWTree{S,A}
                    sizehint!(Float64[], sz),
                    sizehint!(Vector{Tuple{Int,Float64}}[], sz),
                    sizehint!(A[], sz),
-                   Dict{Tuple{Int,A}, Int}()
+                   Dict{Tuple{Int,A}, Int}(),
+
+                   sizehint!(Int[], sz),
+                   Set{Tuple{Int,Int}}()
                   )
     end
 end
@@ -186,6 +194,7 @@ function insert_action_node!{S,A}(tree::DPWTree{S,A}, snode::Int, a::A, n0::Int,
     push!(tree.transitions, Vector{Tuple{Int,Float64}}[])
     sanode = length(tree.n)
     push!(tree.children[snode], sanode)
+    push!(tree.n_a_children, 0)
     if maintain_a_lookup
         tree.a_lookup[(snode, a)] = sanode
     end
