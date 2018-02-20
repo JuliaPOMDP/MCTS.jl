@@ -120,18 +120,15 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     a = tree.a_labels[sanode]
 
     # state progressive widening
+    new_node = false
     if tree.n_a_children[sanode] <= sol.k_state*tree.n[sanode]^sol.alpha_state
-
         sp, r = generate_sr(dpw.mdp, s, a, dpw.rng)
 
-        if sol.check_repeat_state
-            spnode = get(tree.s_lookup, sp, 0)
-        else
-            spnode = 0
-        end
+        spnode = sol.check_repeat_state ? get(tree.s_lookup, sp, 0) : 0
 
         if spnode == 0 # there was not a state node for sp already in the tree
             spnode = insert_state_node!(tree, sp, sol.keep_tree || sol.check_repeat_state)
+            new_node = true
         end
         push!(tree.transitions[sanode], (spnode, r))
 
@@ -141,15 +138,15 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
             push!(tree.unique_transitions, (sanode,spnode))
             tree.n_a_children[sanode] += 1
         end
-
-        if tree.total_n[spnode] == 0
-            return r + estimate_value(dpw.solved_estimate, dpw.mdp, sp, d-1)
-        end
     else
-        (spnode, r) = rand(dpw.rng, tree.transitions[sanode])
+        spnode, r = rand(dpw.rng, tree.transitions[sanode])
     end
 
-    q = r + discount(dpw.mdp)*simulate(dpw, spnode, d-1)
+    if new_node
+        q = r + discount(dpw.mdp)*estimate_value(dpw.solved_estimate, dpw.mdp, sp, d-1)
+    else
+        q = r + discount(dpw.mdp)*simulate(dpw, spnode, d-1)
+    end
 
     tree.n[sanode] += 1
     tree.total_n[snode] += 1

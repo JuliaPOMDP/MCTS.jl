@@ -195,8 +195,8 @@ function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree", kwargs...)
                                  N: %6d
                                  """,
                                  node_tag(tree.a_labels[sa]),
-                                 tree.n[sa],
-                                 tree.q[sa]
+                                 tree.q[sa],
+                                 tree.n[sa]
                                 )
         tt[sa+lens] = """
                       $(tooltip_tag(tree.a_labels[sa]))
