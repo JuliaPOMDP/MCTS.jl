@@ -27,7 +27,7 @@ function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
     warn("""
          D3Tree(planner::DPWPlanner) is deprecated and may be removed in the future. Instead, please use
              
-             a, info = action(planner, state)
+             a, info = action_info(planner, state)
              D3Tree(info[:tree])
 
          Or, you can get this info from a POMDPToolbox History
