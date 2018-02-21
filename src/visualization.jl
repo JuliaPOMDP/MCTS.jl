@@ -23,7 +23,20 @@ function D3Trees.D3Tree(policy::MCTSPlanner, root_state; kwargs...)
     return D3Tree(policy.tree, root_state; kwargs...)
 end
 
-D3Trees.D3Tree(policy::DPWPlanner; kwargs...) = D3Tree(get(policy.tree); kwargs...)
+function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
+    warn("""
+         D3Tree(planner::DPWPlanner) is deprecated and may be removed in the future. Instead, please use
+             
+             a, info = action(planner, state)
+             D3Tree(info[:tree])
+
+         Or, you can get this info from a POMDPToolbox History
+         
+             info = first(ainfo_hist(hist))
+             D3Tree(info[:tree])
+         """)
+    return D3Tree(get(policy.tree); kwargs...)
+end
 
 
 # Note: creating all these dictionaries is a convoluted and inefficient way to do it
