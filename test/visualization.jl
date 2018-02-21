@@ -18,6 +18,7 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = action(policy, state)
+a, info = action_info(policy, state)
 
 tree = D3Tree(policy)
+tree = D3Tree(info[:tree])

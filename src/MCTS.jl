@@ -18,6 +18,7 @@ export
     AbstractMCTSSolver,
     solve,
     action,
+    action_info,
     rollout,
     StateNode,
     RandomActionGenerator,

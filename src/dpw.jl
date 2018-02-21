@@ -13,15 +13,22 @@ function clear_tree!(p::DPWPlanner)
 end
 
 """
-Call simulate and chooses the approximate best action from the reward approximations
+Construct an MCTSDPW tree and choose the best action.
 """
-function POMDPs.action(p::DPWPlanner, s)
+POMDPs.action(p::DPWPlanner, s) = first(action_info(p, s))
+
+"""
+Construct an MCTSDPW tree and choose the best action. Also output some information.
+"""
+function POMDPToolbox.action_info(p::DPWPlanner, s)
     if isterminal(p.mdp, s)
         error("""
               MCTS cannot handle terminal states. action was called with
               s = $s
               """)
     end
+    info = Dict{Symbol, Any}()
+
     S = state_type(p.mdp)
     A = action_type(p.mdp)
     if p.solver.keep_tree
@@ -41,6 +48,8 @@ function POMDPs.action(p::DPWPlanner, s)
         p.tree = Nullable(tree)
         snode = insert_state_node!(tree, s, p.solver.check_repeat_state)
     end
+
+    i = 0
     start_us = CPUtime_us()
     for i = 1:p.solver.n_iterations
         simulate(p, snode, p.solver.depth) # (not 100% sure we need to make a copy of the state here)
@@ -48,6 +57,10 @@ function POMDPs.action(p::DPWPlanner, s)
             break
         end
     end
+    info[:search_time_us] = CPUtime_us() - start_us
+    info[:tree_queries] = i
+    info[:tree] = tree
+    
     best_Q = -Inf
     sanode = 0
     for child in tree.children[snode]
@@ -57,7 +70,7 @@ function POMDPs.action(p::DPWPlanner, s)
         end
     end
     # XXX some publications say to choose action that has been visited the most
-    return tree.a_labels[sanode] # choose action with highest approximate value
+    return tree.a_labels[sanode], info # choose action with highest approximate value
 end
 
 
