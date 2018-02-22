@@ -74,7 +74,7 @@ function POMDPToolbox.action_info(p::DPWPlanner, s)
         # XXX some publications say to choose action that has been visited the most
         a = tree.a_labels[sanode] # choose action with highest approximate value
     catch ex
-        a = convert(action_type(p.problem), default_action(p.solver.default_action, p.mdp, s, ex))
+        a = convert(action_type(p.mdp), default_action(p.solver.default_action, p.mdp, s, ex))
         info[:exception] = ex
     end
 

@@ -124,7 +124,7 @@ function DPWSolver(;depth::Int=10,
                     next_action::Any = RandomActionGenerator(rng),
                     default_action::Any = ExceptionRethrow()
                    )
-    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, check_repeat_state, check_repeat_action, rng, estimate_value, init_Q, init_N, next_action)
+    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, check_repeat_state, check_repeat_action, rng, estimate_value, init_Q, init_N, next_action, default_action)
 end
 
 #=
