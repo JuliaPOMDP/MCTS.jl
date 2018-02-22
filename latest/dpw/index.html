@@ -181,9 +181,16 @@ next_action::Any
     If this is a function `f`, `f(mdp, s, snode)` will be called to set the value.
     If this is an object `o`, `next_action(o, mdp, s, snode)` will be called.
     default: RandomActionGenerator(rng)
+
+default_action::Any
+    Function, action, or Policy used to determine the action if POMCP fails with exception `ex`.
+    If this is a Function `f`, `f(pomdp, belief, ex)` will be called.
+    If this is a Policy `p`, `action(p, belief)` will be called.
+    If it is an object `a`, `default_action(a, pomdp, belief, ex)` will be called, and if this method is not implemented, `a` will be returned directly.
+    default: `ExceptionRethrow()`
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/blob/de99d587cb624ff117cd9e8fa21ca4626e33bd9d/src/dpw_types.jl#L1-L74' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/blob/d042a3431f15e83e5c01ab72d9c050fae0a93b4a/src/dpw_types.jl#L1-L81' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
