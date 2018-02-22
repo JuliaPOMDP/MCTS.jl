@@ -30,13 +30,17 @@ export
     init_Q,
     children,
     n_children,
-    isroot
+    isroot,
+    default_action
 
 export
     AbstractStateNode,
     StateActionStateNode,
     DPWStateActionNode,
-    DPWStateNode
+    DPWStateNode,
+
+    ExceptionRethrow,
+    ReportWhenUsed
 
 abstract type AbstractMCTSPlanner{P<:Union{MDP,POMDP}} <: Policy end
 abstract type AbstractMCTSSolver <: Solver end
@@ -49,6 +53,7 @@ include("dpw_types.jl")
 include("dpw.jl")
 include("action_gen.jl")
 include("util.jl")
+include("default_action.jl")
 include("belief_mcts.jl")
 
 include("visualization.jl")

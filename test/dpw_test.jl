@@ -5,7 +5,7 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = action(policy, state)
+a = @inferred action(policy, state)
 
 clear_tree!(policy)
 @test isnull(policy.tree)
@@ -19,4 +19,4 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = action(policy, state)
+a = @inferred action(policy, state)
