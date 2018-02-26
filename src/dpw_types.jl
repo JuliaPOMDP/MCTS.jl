@@ -41,6 +41,10 @@ Fields:
         When constructing the tree, check whether a state or action has been seen before (there is a computational cost to maintaining the dictionaries necessary for this)
         default: true
 
+    tree_in_info::Bool:
+        If true, return the tree in the info dict when action_info is called, this can use a lot of memory if histories are being saved.
+        default: true
+
     rng::AbstractRNG:
         Random number generator
 
@@ -92,6 +96,7 @@ mutable struct DPWSolver <: AbstractMCTSSolver
     enable_action_pw::Bool
     check_repeat_state::Bool
     check_repeat_action::Bool
+    tree_in_info::Bool
     rng::AbstractRNG
     estimate_value::Any
     init_Q::Any
@@ -117,6 +122,7 @@ function DPWSolver(;depth::Int=10,
                     enable_action_pw::Bool=true,
                     check_repeat_state::Bool=true,
                     check_repeat_action::Bool=true,
+                    tree_in_info::Bool=true,
                     rng::AbstractRNG=Base.GLOBAL_RNG,
                     estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
                     init_Q::Any = 0.0,
@@ -124,7 +130,7 @@ function DPWSolver(;depth::Int=10,
                     next_action::Any = RandomActionGenerator(rng),
                     default_action::Any = ExceptionRethrow()
                    )
-    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, check_repeat_state, check_repeat_action, rng, estimate_value, init_Q, init_N, next_action, default_action)
+    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, check_repeat_state, check_repeat_action, tree_in_info, rng, estimate_value, init_Q, init_N, next_action, default_action)
 end
 
 #=

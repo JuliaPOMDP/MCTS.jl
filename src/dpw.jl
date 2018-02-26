@@ -61,7 +61,9 @@ function POMDPToolbox.action_info(p::DPWPlanner, s)
         end
         info[:search_time_us] = CPUtime_us() - start_us
         info[:tree_queries] = i
-        info[:tree] = tree
+        if p.solver.tree_in_info
+            info[:tree] = tree
+        end
         
         best_Q = -Inf
         sanode = 0
