@@ -20,7 +20,7 @@ POMDPs.action(p::DPWPlanner, s) = first(action_info(p, s))
 """
 Construct an MCTSDPW tree and choose the best action. Also output some information.
 """
-function POMDPToolbox.action_info(p::DPWPlanner, s)
+function POMDPToolbox.action_info(p::DPWPlanner, s; tree_in_info=false)
     local a::action_type(p.mdp)
     info = Dict{Symbol, Any}()
     try
@@ -61,7 +61,7 @@ function POMDPToolbox.action_info(p::DPWPlanner, s)
         end
         info[:search_time_us] = CPUtime_us() - start_us
         info[:tree_queries] = i
-        if p.solver.tree_in_info
+        if p.solver.tree_in_info || tree_in_info
             info[:tree] = tree
         end
         

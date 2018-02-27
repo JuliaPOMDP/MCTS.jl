@@ -42,8 +42,8 @@ Fields:
         default: true
 
     tree_in_info::Bool:
-        If true, return the tree in the info dict when action_info is called, this can use a lot of memory if histories are being saved.
-        default: true
+        If true, return the tree in the info dict when action_info is called. False by default because it can use a lot of memory if histories are being saved.
+        default: false
 
     rng::AbstractRNG:
         Random number generator
@@ -122,7 +122,7 @@ function DPWSolver(;depth::Int=10,
                     enable_action_pw::Bool=true,
                     check_repeat_state::Bool=true,
                     check_repeat_action::Bool=true,
-                    tree_in_info::Bool=true,
+                    tree_in_info::Bool=false,
                     rng::AbstractRNG=Base.GLOBAL_RNG,
                     estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
                     init_Q::Any = 0.0,
