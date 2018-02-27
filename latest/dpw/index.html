@@ -152,8 +152,8 @@ check_repeat_action::Bool
     default: true
 
 tree_in_info::Bool:
-    If true, return the tree in the info dict when action_info is called, this can use a lot of memory if histories are being saved.
-    default: true
+    If true, return the tree in the info dict when action_info is called. False by default because it can use a lot of memory if histories are being saved.
+    default: false
 
 rng::AbstractRNG:
     Random number generator
@@ -194,7 +194,7 @@ default_action::Any
     default: `ExceptionRethrow()`
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/blob/69e438b0f47581074a0b24468923a37d28494481/src/dpw_types.jl#L1-L85' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/JuliaPOMDP/MCTS.jl/blob/f688b6fd23c30c2500b1b07eaa2b5daa66489bc1/src/dpw_types.jl#L1-L85' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
