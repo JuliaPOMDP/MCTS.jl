@@ -2,7 +2,7 @@ julia 0.6
 POMDPs 0.4
 Compat
 Blink
-POMDPToolbox
+POMDPToolbox 0.2.6
 CPUTime
 D3Trees
 Colors
