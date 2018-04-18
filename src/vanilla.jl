@@ -259,7 +259,7 @@ function best_sanode_UCB(snode, c::Float64)
     best_sanode = snode.sanodes[1]
     sN = snode.N
     for sanode in snode.sanodes
-        if sN == 1 && sanode.N == 0
+        if (sN == 1 && sanode.N == 0) || c == 0.0
             UCB = sanode.Q
         else
             UCB = sanode.Q + c*sqrt(log(sN)/sanode.N)

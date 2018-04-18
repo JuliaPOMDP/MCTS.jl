@@ -126,13 +126,13 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     for child in tree.children[snode]
         n = tree.n[child]
         q = tree.q[child]
-        if ltn <= 0 && n == 0
+        c = sol.exploration_constant # for clarity
+        if (ltn <= 0 && n == 0) || c == 0.0
             UCB = q
         else
-            c = sol.exploration_constant # for clarity
             UCB = q + c*sqrt(ltn/n)
         end
-        @assert !isnan(UCB)
+        @assert !isnan(UCB) "UCB was NaN (q=$q, c=$c, ltn=$ltn, n=$n)"
         @assert !isequal(UCB, -Inf)
         if UCB > best_UCB
             best_UCB = UCB

@@ -99,4 +99,24 @@ let
     @test_throws ErrorException action(policy, state)
 end
 
+# test c=0.0
+let
+    mdp = GridWorld()
+
+    solver = DPWSolver(n_iterations=typemax(Int),
+                       depth=depth,
+                       max_time=1.0,
+                       exploration_constant=0.0)
+
+    policy = solve(solver, mdp)
+    state = GridWorldState(1,1)
+    action(policy, state)
+
+    solver = MCTSSolver(exploration_constant=0.0)
+
+    policy = solve(solver, mdp)
+    state = GridWorldState(1,1)
+    action(policy, state)
+end
+
 nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")

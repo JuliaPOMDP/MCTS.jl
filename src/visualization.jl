@@ -30,7 +30,7 @@ function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
              a, info = action_info(planner, state)
              D3Tree(info[:tree])
 
-         Or, you can get this info from a POMDPToolbox History
+         Make sure that the tree_in_info solver option is set to true. You can also get this info from a POMDPToolbox History
          
              info = first(ainfo_hist(hist))
              D3Tree(info[:tree])
