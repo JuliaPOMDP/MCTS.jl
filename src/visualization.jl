@@ -218,7 +218,11 @@ function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree", kwargs...)
                       """
                       
         rel_q = (tree.q[sa]-min_q)/(max_q-min_q)
-        color = weighted_color_mean(rel_q, colorant"green", colorant"red")
+        if isnan(rel_q)
+            color = colorant"gray"
+        else
+            color = weighted_color_mean(rel_q, colorant"green", colorant"red")
+        end
         style[sa+lens] = "stroke:#$(hex(color))"
     end
     return D3Tree(children;
