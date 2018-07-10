@@ -15,10 +15,10 @@ end
 function StateNode{P}(policy::AbstractMCTSPlanner{P}, s)
     S = state_type(P)
     A = action_type(P)
-    ns = StateActionNode{A}[StateActionNode{A}(a,
-                                               init_N(policy.solver.init_N, policy.mdp, s, a),
-                                               init_Q(policy.solver.init_Q, policy.mdp, s, a))
-                            for a in iterator(actions(policy.mdp, s))]
+    ns = vec(collect(StateActionNode{A}(a,
+                                        init_N(policy.solver.init_N, policy.mdp, s, a),
+                                        init_Q(policy.solver.init_Q, policy.mdp, s, a))
+                     for a in iterator(actions(policy.mdp, s))))
     return StateNode{A}(0, ns)
 end
 
