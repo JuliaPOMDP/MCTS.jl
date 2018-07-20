@@ -35,7 +35,7 @@ state = GridWorldState(1,1)
 a = @inferred action(policy, state)
 
 clear_tree!(policy)
-@test isempty(policy.tree)
+@test isnull(policy.tree)
 
 include("options.jl")
 
@@ -44,7 +44,7 @@ include("dpw_test.jl")
 
 println("Testing visualization.")
 include("visualization.jl")
-nbinclude("../notebooks/Test_Visualization.ipynb")
+@nbinclude("../notebooks/Test_Visualization.ipynb")
 
 println("Testing other functions.")
 include("other.jl")
@@ -119,4 +119,4 @@ let
     action(policy, state)
 end
 
-nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
+@nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")

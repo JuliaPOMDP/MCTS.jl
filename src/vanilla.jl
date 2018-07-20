@@ -1,45 +1,3 @@
-mutable struct MCTSTree{S,A}
-    state_map::Dict{S,Int}
-
-    # these vectors have one entry for each state node
-    children::Vector{Vector{Int}}
-    total_n::Vector{Int}
-    s_labels::Vector{S}
-
-    # these vectors have one entry for each action node
-    n::Vector{Int}
-    q::Vector{Float64}
-    a_labels::Vector{A}
-
-    _vis_stats::Nullable{Any}
-
-    function MCTSTree{S,A}(sz::Int=1000) where {S,A}
-        sz = min(sz, 100_000)
-
-        return new(Dict{S, Int}(),
-
-                   sizehint!(Vector{Int}[], sz),
-                   sizehint!(Int[], sz),
-                   sizehint!(S[], sz),
-
-                   sizehint!(Int[], sz),
-                   sizehint!(Float64[], sz),
-                   sizehint!(A[], sz),
-
-                   Nullable{Any}()
-                  )
-    end
-end
-
-struct StateNode{S}
-    tree::MCTSTree{S}
-    id::Int
-end
-
-state(n::StateNode) = n.s_labels[n.id]
-
-
-
 """
 MCTS solver type
 
@@ -118,8 +76,64 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      init_N = 0,
                      reuse_tree::Bool = false,
                      enable_tree_vis::Bool=false)
-    return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, enable_tree_vis)
+    return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, reuse_tree, enable_tree_vis)
 end
+
+mutable struct MCTSTree{S,A}
+    state_map::Dict{S,Int}
+
+    # these vectors have one entry for each state node
+    child_ids::Vector{Vector{Int}}
+    total_n::Vector{Int}
+    s_labels::Vector{S}
+
+    # these vectors have one entry for each action node
+    n::Vector{Int}
+    q::Vector{Float64}
+    a_labels::Vector{A}
+
+    _vis_stats::Nullable{Dict{Pair{Int,Int}, Int}} # maps (said=>sid)=>number of transitions. THIS MAY CHANGE IN THE FUTURE
+
+    function MCTSTree{S,A}(sz::Int=1000) where {S,A}
+        sz = min(sz, 100_000)
+
+        return new(Dict{S, Int}(),
+
+                   sizehint!(Vector{Int}[], sz),
+                   sizehint!(Int[], sz),
+                   sizehint!(S[], sz),
+
+                   sizehint!(Int[], sz),
+                   sizehint!(Float64[], sz),
+                   sizehint!(A[], sz),
+
+                   Nullable(Dict{Pair{Int,Int},Int}())
+                  )
+    end
+end
+
+Base.isempty(t::MCTSTree) = isempty(t.state_map)
+state_nodes(t::MCTSTree) = (StateNode(t, id) for id in 1:length(t.total_n))
+
+struct StateNode{S,A}
+    tree::MCTSTree{S,A}
+    id::Int
+end
+
+@inline state(n::StateNode) = n.tree.s_labels[n.id]
+@inline total_n(n::StateNode) = n.tree.total_n[n.id]
+@inline child_ids(n::StateNode) = n.tree.child_ids[n.id]
+@inline children(n::StateNode) = (ActionNode(n.tree, id) for id in child_ids(n))
+
+struct ActionNode{S,A}
+    tree::MCTSTree{S,A}
+    id::Int
+end
+
+@inline POMDPs.action(n::ActionNode) = n.tree.a_labels[n.id]
+@inline n(n::ActionNode) = n.tree.n[n.id]
+@inline q(n::ActionNode) = n.tree.q[n.id]
+
 
 mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
 	solver::MCTSSolver # containts the solver parameters
@@ -131,7 +145,7 @@ end
 
 function MCTSPlanner(solver::MCTSSolver, mdp::Union{POMDP,MDP})
     # tree = Dict{state_type(mdp), StateNode{action_type(mdp)}}()
-    tree = MCTSTree{state_type(solver), action_type(solver)}(solver.n_iterations)
+    tree = MCTSTree{state_type(mdp), action_type(mdp)}(solver.n_iterations)
     se = convert_estimator(solver.estimate_value, solver, mdp)
     return MCTSPlanner(solver, mdp, Nullable(tree), se, solver.rng)
 end
@@ -151,13 +165,13 @@ POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, md
 end
 
 function POMDPs.action(planner::AbstractMCTSPlanner, s)
-    tree = build_tree(planner, state)
+    tree = build_tree(planner, s)
     planner.tree = Nullable(tree)
-    best = best_id_Q(tree[state])
-    return tree.a_labels[best]
+    best = best_sanode_Q(StateNode(tree, 1))
+    return action(best)
 end
 
-function build_tree(planner::AbstractMCTSPlanner, state)
+function build_tree(planner::AbstractMCTSPlanner, s)
     n_iterations = planner.solver.n_iterations
     depth = planner.solver.depth
     
@@ -182,10 +196,6 @@ function build_tree(planner::AbstractMCTSPlanner, state)
 end
 
 
-function POMDPs.action(planner::AbstractMCTSPlanner, state, action)
-    POMDPs.action(planner, state)
-end
-
 function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
     mdp = planner.mdp
     rng = planner.rng
@@ -198,56 +208,55 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
     end
 
     # pick action using UCT
-    snode.N += 1 # increase number of node visits by one
-    said = best_id_UCB(snode, planner.solver.exploration_constant)
+    sanode = best_sanode_UCB(node, planner.solver.exploration_constant)
+    said = sanode.id
 
     # transition to a new state
-    sp, r = generate_sr(mdp, state, sanode.action, rng)
+    sp, r = generate_sr(mdp, s, action(sanode), rng)
     
-    if planner.solver.enable_tree_vis
-        record_visit(planner, sanode, sp)
-    end
-
     spid = get(tree.state_map, sp, 0)
     if spid == 0
-        newnode = insert_node!(tree, planner, sp)
+        insert_node!(tree, planner, sp)
         q = r + discount(mdp) * estimate_value(planner.solved_estimate, planner.mdp, sp, depth - 1)
     else
         q = r + discount(mdp) * simulate(planner, StateNode(tree, spid) , depth - 1)
+        if planner.solver.enable_tree_vis
+            record_visit!(tree, said, spid)
+        end
     end
 
+    tree.total_n[node.id] += 1
     tree.n[said] += 1
-    tree.q[said[ += ((q - tree.q[said]) / (tree.n[said])) # moving average of Q value
+    tree.q[said] += (q - tree.q[said]) / tree.n[said] # moving average of Q value
     return q
 end
 
-@POMDP_require simulate(planner::AbstractMCTSPlanner, state, depth::Int64) begin
+@POMDP_require simulate(planner::AbstractMCTSPlanner, s, depth::Int64) begin
     mdp = planner.mdp
     P = typeof(mdp)
     S = state_type(P)
     A = action_type(P)
     @req discount(::P)
     @req isterminal(::P, ::S)
-    @subreq insert_node!(planner, state)
-    @subreq estimate_value(planner.solved_estimate, mdp, state, depth)
+    @subreq insert_node!(planner, s)
+    @subreq estimate_value(planner.solved_estimate, mdp, s, depth)
     @req generate_sr(::P, ::S, ::A, ::typeof(planner.rng))
     @req isequal(::S, ::S) # for hasnode
     @req hash(::S) # for hasnode
 end
 
-
-# these functions are here so that they can be overridden by the aggregating solver
-hasnode(planner::AbstractMCTSPlanner, s) = haskey(planner.tree, s)
-
 function insert_node!(tree::MCTSTree, planner::MCTSPlanner, s)
-    newnode = StateNode(planner, s)
-    planner.tree[s] = newnode
-    if planner.solver.enable_tree_vis
-        for sanode in newnode.sanodes
-            sanode._vis_stats = Set()
-        end
+    push!(tree.total_n, 0)
+    push!(tree.s_labels, s)
+    tree.state_map[s] = length(tree.total_n)
+    push!(tree.child_ids, [])
+    for a in iterator(actions(planner.mdp, s))
+        push!(tree.n, init_N(planner.solver.init_N, planner.mdp, s, a))
+        push!(tree.q, init_Q(planner.solver.init_Q, planner.mdp, s, a))
+        push!(tree.a_labels, a)
+        push!(last(tree.child_ids), length(tree.n))
     end
-    return newnode
+    return StateNode(tree, length(tree.total_n))
 end
 
 @POMDP_require insert_node!(planner::AbstractMCTSPlanner, s) begin
@@ -270,43 +279,53 @@ end
     @req hash(::S) # for tree[s]
 end
 
-getnode(policy::AbstractMCTSPlanner, s) = policy.tree[s]
-record_visit(policy::AbstractMCTSPlanner, sanode::StateActionNode, s) = push!(get(sanode._vis_stats), s)
+function record_visit!(tree::MCTSTree, said::Int, spid::Int)
+    vs = get(tree._vis_stats)
+    if !haskey(vs, said=>spid)
+        vs[said=>spid] = 0
+    end
+    vs[said=>spid] += 1
+end
 
 """
 Return the best action based on the Q score
 """
-function best_sanode_Q(snode)
+function best_sanode_Q(snode::StateNode)
     best_Q = -Inf
-    local best_sanode::StateActionNode
-    for sanode in snode.sanodes
-        if sanode.Q > best_Q
-            best_Q = sanode.Q
-            best_sanode = sanode
+    best = first(children(snode))
+    for sanode in children(snode)
+        if q(sanode) > best_Q
+            best_Q = q(sanode)
+            best = sanode
         end
     end
-    return best_sanode
+    return best
 end
 
 """
 Return the best action node based on the UCB score with exploration constant c
 """
-function best_sanode_UCB(snode, c::Float64)
+function best_sanode_UCB(snode::StateNode, c::Float64)
     best_UCB = -Inf
-    best_sanode = snode.sanodes[1]
-    sN = snode.N
-    for sanode in snode.sanodes
-        if (sN == 1 && sanode.N == 0) || c == 0.0
-            UCB = sanode.Q
+    best = first(children(snode))
+    sn = total_n(snode)
+    for sanode in children(snode)
+        if c == 0 || sn == 0 || (sn == 1 && n(sanode) == 0)
+            UCB = q(sanode)
         else
-            UCB = sanode.Q + c*sqrt(log(sN)/sanode.N)
+            UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
+        end
+        if isnan(UCB)
+            @show sn
+            @show n(sanode)
+            @show q(sanode)
         end
         @assert !isnan(UCB)
         @assert !isequal(UCB, -Inf)
         if UCB > best_UCB
             best_UCB = UCB
-            best_sanode = sanode
+            best = sanode
         end
     end
-    return best_sanode
+    return best
 end

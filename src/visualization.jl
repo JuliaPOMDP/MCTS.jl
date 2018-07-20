@@ -20,7 +20,7 @@ function D3Trees.D3Tree(policy::MCTSPlanner, root_state; kwargs...)
               Construct the solver with $(typeof(policy.solver))(enable_tree_vis=true, ...) to enable.
               """)
     end
-    return D3Tree(policy.tree, root_state; kwargs...)
+    return D3Tree(get(policy.tree), root_state; kwargs...)
 end
 
 function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
@@ -38,123 +38,109 @@ function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
     return D3Tree(get(policy.tree); kwargs...)
 end
 
-
-# Note: creating all these dictionaries is a convoluted and inefficient way to do it
-function D3Trees.D3Tree(tree::Dict, root_state; title="MCTS tree", kwargs...)
-    next_id = 2
-    node_dict = Dict{Int, Dict{String, Any}}()
-    s_dict = Dict{Any, Int}()
-    sa_dict = Dict{Any, Int}()
-    for (s, sn) in tree
-        if s == root_state
-            this_id = 1
-        else
-            this_id = next_id
-        end
-        # create state node
-        node_dict[this_id] = sd = Dict("id"=>this_id,
-                                       "type"=>:state,
-                                       "children_ids"=>Array{Int}(0),
-                                       "tag"=>node_tag(s),
-                                       "tt_tag"=>tooltip_tag(s),
-                                       "N"=>sn.N
-                                       )
-        s_dict[s] = this_id
-        if this_id == next_id
-            next_id += 1
-        end
-
-        max_N = maximum(san.N for san in sn.sanodes)
-        # create action nodes
-        for san in sn.sanodes
-            a = san.action
-            node_dict[next_id] = Dict("id"=>next_id,
-                                      "type"=>:action,
-                                      "children_ids"=>Array{Int}(0),
-                                      "tag"=>node_tag(a),
-                                      "tt_tag"=>tooltip_tag(a),
-                                      "N"=>san.N,
-                                      "Q"=>san.Q,
-                                      "max_N"=>max_N
-                                      )
-            push!(sd["children_ids"], next_id)
-            sa_dict[(s,a)] = next_id
-            next_id += 1
-        end
-    end
-
-    if !haskey(node_dict, 1)
+function D3Trees.D3Tree(tree::MCTSTree, root_state; title="MCTS tree", kwargs...)
+    if isnull(tree._vis_stats)
         error("""
-              MCTS tree visualization: tree does not have a node for state $root_state.
+              Visualization was not enabled for this tree.
+
+              Construct the MCTS solver with 'enable_tree_vis=true' to enable.
               """)
     end
 
-    # go back and refill action nodes
-    for (s, sn) in tree
-        for san in sn.sanodes
-            a = san.action
-            for sp in get(san._vis_stats)
-                sad = node_dict[sa_dict[(s,a)]]
-                if haskey(s_dict, sp)
-                    push!(sad["children_ids"], s_dict[sp])
-                else
-                    node_dict[next_id] = Dict("id"=>next_id,
-                                       "type"=>:state,
-                                       "children_ids"=>Array{Int}(0),
-                                       "tag"=>node_tag(sp),
-                                       "tt_tag"=>tooltip_tag(sp),
-                                       "N"=>0
-                                       )
-                    push!(sad["children_ids"], next_id)
-                    next_id += 1
-                end
-            end
-        end
+    vs = get(tree._vis_stats)
+
+    nsas = length(vs)
+    nsa = length(tree.n)
+    nodes = Vector{Dict{String, Any}}(1 + nsas + nsa)
+
+    # root node
+    if haskey(tree.state_map, root_state)
+        root_id = tree.state_map[root_state]
+    else
+        error("Could not find state $root_state in tree for visualization.")
+    end
+    max_n = maximum(tree.n)
+    nodes[1] = Dict("type"=>:state,
+                    "child_d3ids"=>[1+nsas+c for c in tree.child_ids[root_id]],
+                    "tag"=>node_tag(root_state),
+                    "tt_tag"=>tooltip_tag(root_state),
+                    "n"=>tree.total_n[root_id],
+                    "total_n"=>tree.total_n[root_id],
+                    "max_n"=>max_n
+                   )
+
+    # state-action nodes
+    for i in 1:nsa
+        a = tree.a_labels[i]
+        nodes[1+nsas+i] = Dict("type"=>:action,
+                               "child_d3ids"=>Int[],
+                               "tag"=>node_tag(a),
+                               "tt_tag"=>tooltip_tag(a),
+                               "n"=>tree.n[i],
+                               "q"=>tree.q[i],
+                               "max_n"=>max_n
+                              )
     end
 
-    return D3Tree(node_dict; title=title, kwargs...)
+    # state-action-state nodes
+    for (i,((said,sid),n)) in enumerate(vs)
+        s = tree.s_labels[sid]
+        nodes[1+i] = Dict("type"=>:state,
+                          "child_d3ids"=>[1+nsas+c for c in tree.child_ids[sid]],
+                          "tag"=>node_tag(s),
+                          "tt_tag"=>tooltip_tag(s),
+                          "n"=>n,
+                          "total_n"=>tree.total_n[sid],
+                          "max_n"=>max_n
+                         )
+        # add as a child to corresponding sa node
+        push!(nodes[1+nsas+said]["child_d3ids"], 1+i)
+    end
+
+    return D3Tree(nodes; title=title, kwargs...)
 end
 
-function D3Trees.D3Tree(node_dict::Dict{Int, Dict{String, Any}}; title="Julia D3Tree", kwargs...)
-    len = length(node_dict)
+function D3Trees.D3Tree(nodes::Vector{Dict{String, Any}}; title="Julia D3Tree", kwargs...)
+    len = length(nodes)
     children = Vector{Vector{Int}}(len)
     text = Vector{String}(len)
     tooltip = Vector{String}(len)
     style = fill("", len)
     link_style = fill("", len)
-    max_Q = maximum(get(n, "Q", 0.0) for n in values(node_dict))
-    min_Q = minimum(get(n, "Q", 0.0) for n in values(node_dict))
+    max_q = maximum(get(n, "q", 0.0) for n in nodes)
+    min_q = minimum(get(n, "q", 0.0) for n in nodes)
     for i in 1:len
-        n = node_dict[i]
-        children[i] = n["children_ids"]
+        n = nodes[i]
+        children[i] = n["child_d3ids"]
         if n["type"] == :state
             text[i] = @sprintf("""
                                %25s
                                N: %6d
                                """,
-                               n["tag"], n["N"])
+                               n["tag"], n["total_n"])
             tooltip[i] = """
                          $(n["tt_tag"])
-                         N: $(n["N"])
+                         N: $(n["total_n"])
                          """
+            w = 20.0*sqrt(n["n"]/n["max_n"])
+            link_style[i] = "stroke-width:$(w)px"
         elseif n["type"] == :action
             text[i] = @sprintf("""
                                %25s
                                Q: %6.2f
                                N: %6d
                                """,
-                               n["tag"], n["Q"], n["N"])
+                               n["tag"], n["q"], n["n"])
             tooltip[i] = """
                          $(n["tt_tag"])
-                         Q: $(n["Q"])
-                         N: $(n["N"])
+                         Q: $(n["q"])
+                         N: $(n["n"])
                          """
 
-            rel_Q = (n["Q"]-min_Q)/(max_Q-min_Q)
-            color = weighted_color_mean(rel_Q, colorant"green", colorant"red")
+            rel_q = (n["q"]-min_q)/(max_q-min_q)
+            color = weighted_color_mean(rel_q, colorant"green", colorant"red")
             style[i] = "stroke:#$(hex(color))"
-            #TODO Max N
-            w = 20.0*sqrt(n["N"]/n["max_N"])
+            w = 20.0*sqrt(n["n"]/n["max_n"])
             link_style[i] = "stroke-width:$(w)px"
         else
             warn("Unrecognized node type when constructing D3Tree.")
