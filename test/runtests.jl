@@ -37,6 +37,8 @@ a = @inferred action(policy, state)
 clear_tree!(policy)
 @test isnull(policy.tree)
 
+include("value_test.jl")
+
 include("options.jl")
 
 println("Testing DPW solver.")

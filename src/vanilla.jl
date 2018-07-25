@@ -165,10 +165,36 @@ POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, md
 end
 
 function POMDPs.action(planner::AbstractMCTSPlanner, s)
-    tree = build_tree(planner, s)
-    planner.tree = Nullable(tree)
+    tree = plan!(planner, s)
     best = best_sanode_Q(StateNode(tree, 1))
     return action(best)
+end
+
+"""
+Query the tree for a value estimate at state s. If the planner does not already have a tree, run the planner first.
+"""
+function POMDPs.value(planner::MCTSPlanner, s)
+    if isnull(planner.tree)
+        plan!(planner, s)
+    end
+    return value(get(planner.tree), s)
+end
+
+function POMDPs.value(tr::MCTSTree, s)
+    id = get(tr.state_map, s, 0)
+    if id == 0
+        error("State $s not present in MCTS tree.")
+    end
+    return maximum(q(san) for san in children(StateNode(tr, id)))
+end
+
+"""
+Build tree and store it in the planner.
+"""
+function plan!(planner::AbstractMCTSPlanner, s)
+    tree = build_tree(planner, s)
+    planner.tree = Nullable(tree)
+    return tree
 end
 
 function build_tree(planner::AbstractMCTSPlanner, s)
