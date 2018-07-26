@@ -1,26 +1,48 @@
 using POMDPModels
-using DiscreteValueIteration
-using Base.Test
 using MCTS
 
-vis = ValueIterationSolver()
 gw = GridWorld()
-vip = solve(vis, gw)
 
-test_states = GridWorldState[]
+# The commented-out code below can be used to generate ad. It is hard-coded here to avoid the dependency.
 
-for i in [1, 3, 5, 9]
-    for j in [1, 3, 5, 9]
-        push!(test_states, GridWorldState(i,j))
-    end
-end
+# using DiscreteValueIteration
+# using Base.Test
+# 
+# vis = ValueIterationSolver()
+# vip = solve(vis, gw)
+# 
+# test_states = GridWorldState[]
+# 
+# for i in [1, 3, 5, 9]
+#     for j in [1, 3, 5, 9]
+#         push!(test_states, GridWorldState(i,j))
+#     end
+# end
+# 
+# ad = Dict{GridWorldState, Symbol}()
+# for s in test_states
+#     ad[s] = action(vip, s)
+# end
+# 
+# @show ad
 
-ad = Dict()
-for s in test_states
-    ad[s] = action(vip, s)
-end
 
-@show ad
+ad = Dict(POMDPModels.GridWorldState(1, 9, false)=>:right,
+          POMDPModels.GridWorldState(9, 9, false)=>:down,
+          POMDPModels.GridWorldState(5, 9, false)=>:down,
+          POMDPModels.GridWorldState(3, 5, false)=>:right,
+          POMDPModels.GridWorldState(1, 5, false)=>:right,
+          POMDPModels.GridWorldState(5, 3, false)=>:right,
+          POMDPModels.GridWorldState(3, 3, false)=>:down,
+          POMDPModels.GridWorldState(1, 1, false)=>:right,
+          POMDPModels.GridWorldState(3, 9, false)=>:right,
+          POMDPModels.GridWorldState(1, 3, false)=>:down,
+          POMDPModels.GridWorldState(9, 3, false)=>:up,
+          POMDPModels.GridWorldState(9, 5, false)=>:down,
+          POMDPModels.GridWorldState(5, 5, false)=>:right,
+          POMDPModels.GridWorldState(9, 1, false)=>:up,
+          POMDPModels.GridWorldState(3, 1, false)=>:right,
+          POMDPModels.GridWorldState(5, 1, false)=>:right)
 
 ms = MCTSSolver(n_iterations=10_000,
                 depth=20,
