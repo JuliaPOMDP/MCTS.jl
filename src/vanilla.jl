@@ -119,6 +119,7 @@ struct StateNode{S,A}
     tree::MCTSTree{S,A}
     id::Int
 end
+StateNode(tree::MCTSTree{S}, s::S) where S = StateNode(tree, tree.state_map[s])
 
 @inline state(n::StateNode) = n.tree.s_labels[n.id]
 @inline total_n(n::StateNode) = n.tree.total_n[n.id]
@@ -187,6 +188,22 @@ function POMDPs.value(tr::MCTSTree, s)
     end
     return maximum(q(san) for san in children(StateNode(tr, id)))
 end
+
+function POMDPs.value(planner::MCTSPlanner{<:Union{POMDP,MDP}, S, A}, s::S, a::A) where {S,A}
+    if isnull(planner.tree)
+        plan!(planner, s)
+    end
+    return value(get(planner.tree), s, a)
+end
+
+function POMDPs.value(tr::MCTSTree{S,A}, s::S, a::A) where {S,A}
+    for san in children(StateNode(tr, s)) # slow search through children
+        if action(san) == a
+            return q(san)
+        end
+    end
+end
+
 
 """
 Build tree and store it in the planner.
