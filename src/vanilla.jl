@@ -121,6 +121,7 @@ struct StateNode{S,A}
 end
 StateNode(tree::MCTSTree{S}, s::S) where S = StateNode(tree, tree.state_map[s])
 
+# accessors for state nodes
 @inline state(n::StateNode) = n.tree.s_labels[n.id]
 @inline total_n(n::StateNode) = n.tree.total_n[n.id]
 @inline child_ids(n::StateNode) = n.tree.child_ids[n.id]
@@ -131,6 +132,7 @@ struct ActionNode{S,A}
     id::Int
 end
 
+# accessors for action nodes
 @inline POMDPs.action(n::ActionNode) = n.tree.a_labels[n.id]
 @inline n(n::ActionNode) = n.tree.n[n.id]
 @inline q(n::ActionNode) = n.tree.q[n.id]
