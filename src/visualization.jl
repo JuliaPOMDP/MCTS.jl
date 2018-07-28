@@ -59,14 +59,13 @@ function D3Trees.D3Tree(tree::MCTSTree, root_state; title="MCTS tree", kwargs...
     else
         error("Could not find state $root_state in tree for visualization.")
     end
-    max_n = maximum(tree.n)
     nodes[1] = Dict("type"=>:state,
                     "child_d3ids"=>[1+nsas+c for c in tree.child_ids[root_id]],
                     "tag"=>node_tag(root_state),
                     "tt_tag"=>tooltip_tag(root_state),
                     "n"=>tree.total_n[root_id],
                     "total_n"=>tree.total_n[root_id],
-                    "max_n"=>max_n
+                    "parent_n"=>tree.total_n[root_id]
                    )
 
     # state-action nodes
@@ -78,7 +77,6 @@ function D3Trees.D3Tree(tree::MCTSTree, root_state; title="MCTS tree", kwargs...
                                "tt_tag"=>tooltip_tag(a),
                                "n"=>tree.n[i],
                                "q"=>tree.q[i],
-                               "max_n"=>max_n
                               )
     end
 
@@ -91,10 +89,22 @@ function D3Trees.D3Tree(tree::MCTSTree, root_state; title="MCTS tree", kwargs...
                           "tt_tag"=>tooltip_tag(s),
                           "n"=>n,
                           "total_n"=>tree.total_n[sid],
-                          "max_n"=>max_n
+                          "parent_n"=>tree.n[said]
                          )
         # add as a child to corresponding sa node
         push!(nodes[1+nsas+said]["child_d3ids"], 1+i)
+        
+        n = total_n(StateNode(tree, sid))
+        # add parent_n to all children
+        for csan in children(StateNode(tree, sid))
+            csaid = csan.id
+            nodes[1+nsas+csaid]["parent_n"] = n
+        end
+    end
+
+    for csan in children(StateNode(tree, root_id))
+        csaid = csan.id
+        nodes[1+nsas+csaid]["parent_n"] = total_n(StateNode(tree, root_id))
     end
 
     return D3Tree(nodes; title=title, kwargs...)
@@ -122,7 +132,7 @@ function D3Trees.D3Tree(nodes::Vector{Dict{String, Any}}; title="Julia D3Tree", 
                          $(n["tt_tag"])
                          N: $(n["total_n"])
                          """
-            w = 20.0*sqrt(n["n"]/n["max_n"])
+            w = 20.0*sqrt(n["n"]/n["parent_n"])
             link_style[i] = "stroke-width:$(w)px"
         elseif n["type"] == :action
             text[i] = @sprintf("""
@@ -140,7 +150,7 @@ function D3Trees.D3Tree(nodes::Vector{Dict{String, Any}}; title="Julia D3Tree", 
             rel_q = (n["q"]-min_q)/(max_q-min_q)
             color = weighted_color_mean(rel_q, colorant"green", colorant"red")
             style[i] = "stroke:#$(hex(color))"
-            w = 20.0*sqrt(n["n"]/n["max_n"])
+            w = 20.0*sqrt(n["n"]/n["parent_n"])
             link_style[i] = "stroke-width:$(w)px"
         else
             warn("Unrecognized node type when constructing D3Tree.")

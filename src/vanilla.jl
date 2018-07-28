@@ -261,13 +261,14 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
     
     spid = get(tree.state_map, sp, 0)
     if spid == 0
-        insert_node!(tree, planner, sp)
+        spn = insert_node!(tree, planner, sp)
+        spid = spn.id
         q = r + discount(mdp) * estimate_value(planner.solved_estimate, planner.mdp, sp, depth - 1)
     else
         q = r + discount(mdp) * simulate(planner, StateNode(tree, spid) , depth - 1)
-        if planner.solver.enable_tree_vis
-            record_visit!(tree, said, spid)
-        end
+    end
+    if planner.solver.enable_tree_vis
+        record_visit!(tree, said, spid)
     end
 
     tree.total_n[node.id] += 1
@@ -291,16 +292,19 @@ end
 end
 
 function insert_node!(tree::MCTSTree, planner::MCTSPlanner, s)
-    push!(tree.total_n, 0)
     push!(tree.s_labels, s)
-    tree.state_map[s] = length(tree.total_n)
+    tree.state_map[s] = length(tree.s_labels)
     push!(tree.child_ids, [])
+    total_n = 0
     for a in iterator(actions(planner.mdp, s))
-        push!(tree.n, init_N(planner.solver.init_N, planner.mdp, s, a))
+        n = init_N(planner.solver.init_N, planner.mdp, s, a)
+        total_n += n
+        push!(tree.n, n)
         push!(tree.q, init_Q(planner.solver.init_Q, planner.mdp, s, a))
         push!(tree.a_labels, a)
         push!(last(tree.child_ids), length(tree.n))
     end
+    push!(tree.total_n, total_n)
     return StateNode(tree, length(tree.total_n))
 end
 
