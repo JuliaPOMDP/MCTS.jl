@@ -34,6 +34,10 @@ state = GridWorldState(1,1)
 
 a = @inferred action(policy, state)
 
+tree = get(policy.tree)
+@test get_state_node(tree, state).id == 1
+@test get_state_node(tree, state, policy).id == 1
+
 clear_tree!(policy)
 @test isnull(policy.tree)
 

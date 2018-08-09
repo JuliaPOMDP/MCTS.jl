@@ -121,6 +121,14 @@ struct StateNode{S,A}
 end
 StateNode(tree::MCTSTree{S}, s::S) where S = StateNode(tree, tree.state_map[s])
 
+"""
+    get_state_node(tree::MCTSTree, s)
+
+Return the StateNode in the tree corresponding to s.
+"""
+get_state_node(tree::MCTSTree, s) = StateNode(tree, s)
+
+
 # accessors for state nodes
 @inline state(n::StateNode) = n.tree.s_labels[n.id]
 @inline total_n(n::StateNode) = n.tree.total_n[n.id]
@@ -158,6 +166,19 @@ end
 Delete existing decision tree.
 """
 function clear_tree!{S,A}(p::MCTSPlanner{S,A}) p.tree = Nullable{MCTSTree{S,A}}() end
+
+"""
+    get_state_node(tree::MCTSTree, s, planner::MCTSPlanner)
+
+Return the StateNode in the tree corresponding to s. If there is no such node, add it using the planner.
+"""
+function get_state_node(tree::MCTSTree, s, planner::MCTSPlanner)
+    if haskey(tree.state_map, s)
+        return StateNode(tree, s)
+    else
+        return insert_node!(tree, planner, s)
+    end
+end
 
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
@@ -308,7 +329,7 @@ function insert_node!(tree::MCTSTree, planner::MCTSPlanner, s)
     return StateNode(tree, length(tree.total_n))
 end
 
-@POMDP_require insert_node!(planner::AbstractMCTSPlanner, s) begin
+@POMDP_require insert_node!(tree::MCTSTree, planner::AbstractMCTSPlanner, s) begin
     # from the StateNode constructor
     P = typeof(planner.mdp)
     A = action_type(P)

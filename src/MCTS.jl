@@ -31,7 +31,8 @@ export
     children,
     n_children,
     isroot,
-    default_action
+    default_action,
+    get_state_node
 
 export
     AbstractStateNode,
