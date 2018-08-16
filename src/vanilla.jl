@@ -106,8 +106,7 @@ mutable struct MCTSTree{S,A}
                    sizehint!(Int[], sz),
                    sizehint!(Float64[], sz),
                    sizehint!(A[], sz),
-
-                   nothing
+                   Dict{Pair{Int,Int},Int}()
                   )
     end
 end
