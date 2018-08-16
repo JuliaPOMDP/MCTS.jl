@@ -18,6 +18,6 @@ end
 function default_action(r::ReportWhenUsed, mdp, s, ex)
     showerror(STDERR, ex)
     a = default_action(r.a, mdp, s, ex)
-    warn("Using default action $a")
+    @warn("Using default action $a")
     return a
 end

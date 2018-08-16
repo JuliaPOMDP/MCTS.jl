@@ -8,7 +8,7 @@ state = GridWorldState(1,1)
 a = @inferred action(policy, state)
 
 clear_tree!(policy)
-@test isnull(policy.tree)
+@test policy.tree == nothing
 
 
 # no action pw

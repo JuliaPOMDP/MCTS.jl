@@ -1,10 +1,11 @@
 using MCTS
 using POMDPs
 using POMDPModels
-using Base.Test
+using Test
 using NBInclude
-using POMDPToolbox
 using D3Trees
+using Random
+using POMDPPolicies
 
 n_iter = 50
 depth = 15
@@ -34,12 +35,12 @@ state = GridWorldState(1,1)
 
 a = @inferred action(policy, state)
 
-tree = get(policy.tree)
+tree = policy.tree
 @test get_state_node(tree, state).id == 1
 @test get_state_node(tree, state, policy).id == 1
 
 clear_tree!(policy)
-@test isnull(policy.tree)
+@test policy.tree == nothing
 
 include("value_test.jl")
 
@@ -49,29 +50,29 @@ println("Testing DPW solver.")
 include("dpw_test.jl")
 
 println("Testing visualization.")
-include("visualization.jl")
-@nbinclude("../notebooks/Test_Visualization.ipynb")
+# include("visualization.jl")
+# @nbinclude("../notebooks/Test_Visualization.ipynb")
 
 println("Testing other functions.")
 include("other.jl")
 
-# test the BeliefMCTSSolver docstring
-let
-    using ParticleFilters
-    using POMDPModels
-    using MCTS
-    using POMDPToolbox
+# # test the BeliefMCTSSolver docstring
+# let
+#     using ParticleFilters
+#     using POMDPModels
+#     using MCTS
+#     using POMDPToolbox
 
-    pomdp = BabyPOMDP()
-    updater = SIRParticleFilter(pomdp, 1000)
+#     pomdp = BabyPOMDP()
+#     updater = SIRParticleFilter(pomdp, 1000)
 
-    solver = BeliefMCTSSolver(DPWSolver(), updater)
-    planner = solve(solver, pomdp)
+#     solver = BeliefMCTSSolver(DPWSolver(), updater)
+#     planner = solve(solver, pomdp)
 
-    @inferred action(planner, initialize_belief(updater, initial_state_distribution(pomdp)))
+#     @inferred action(planner, initialize_belief(updater, initialstate_distribution(pomdp)))
 
-    simulate(HistoryRecorder(max_steps=10), pomdp, planner, updater)
-end
+#     simulate(HistoryRecorder(max_steps=10), pomdp, planner, updater)
+# end
 
 # test timing
 let
@@ -84,10 +85,8 @@ let
     policy = solve(solver, mdp)
     state = GridWorldState(1,1)
     a = action(policy, state)
-    t = begin
-        tic()
+    t = @elapsed begin
         action(policy, state)
-        toc()
     end
     @test abs(t-1.0) < 0.5
 end

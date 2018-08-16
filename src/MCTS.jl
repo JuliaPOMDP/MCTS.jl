@@ -1,12 +1,13 @@
-__precompile__()
 module MCTS
 
 using POMDPs
-using POMDPToolbox
-
-using Compat
-using Blink
+using POMDPModelTools
+using POMDPPolicies
+using POMDPSimulators
+#using Blink
 using CPUTime
+using Random
+using Printf
 
 export
     MCTSSolver,

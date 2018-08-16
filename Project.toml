@@ -1,0 +1,23 @@
+name = "MCTS"
+uuid = "e12ccd36-dcad-5f33-8774-9175229e7b33"
+repo = "https://github.com/JuliaPOMDP/MCTS.jl"
+
+[deps]
+POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
+D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
+#Blink = "ad839575-38b3-5650-b840-f874b8c74a25"
+CPUTime = "a9c8d775-2e2e-55fc-8582-045d282d599e"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+POMDPModelTools = "ddee4e65-a780-5c57-ad17-2363fca24141"
+POMDPPolicies = "fd2a78ec-a0b2-11e8-254f-71ff51514d6b"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+POMDPSimulators = "a011d688-a0b9-11e8-2c70-290aeeeab7c9"
+
+[extras]
+NBInclude = "0db19996-df87-5ea3-a455-e3a50d440464"
+POMDPModels = "355abbd5-f08e-5560-ac9e-8b5f2592a0ca"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["POMDPModels", "NBInclude", "Test"]

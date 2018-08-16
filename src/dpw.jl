@@ -1,15 +1,15 @@
 function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP})
-    S = state_type(mdp)
-    A = action_type(mdp)
+    S = statetype(mdp)
+    A = actiontype(mdp)
     se = convert_estimator(solver.estimate_value, solver, mdp)
-    return DPWPlanner(solver, mdp, Nullable{DPWTree{S,A}}(), se, solver.next_action, solver.rng)
+    return DPWPlanner(solver, mdp, nothing, se, solver.next_action, solver.rng)
 end
 
 """
 Delete existing decision tree.
 """
 function clear_tree!(p::DPWPlanner)
-    p.tree = Nullable()
+    p.tree = nothing
 end
 
 """
@@ -20,8 +20,8 @@ POMDPs.action(p::DPWPlanner, s) = first(action_info(p, s))
 """
 Construct an MCTSDPW tree and choose the best action. Also output some information.
 """
-function POMDPToolbox.action_info(p::DPWPlanner, s; tree_in_info=false)
-    local a::action_type(p.mdp)
+function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
+    local a::actiontype(p.mdp)
     info = Dict{Symbol, Any}()
     try
         if isterminal(p.mdp, s)
@@ -31,14 +31,14 @@ function POMDPToolbox.action_info(p::DPWPlanner, s; tree_in_info=false)
                   """)
         end
 
-        S = state_type(p.mdp)
-        A = action_type(p.mdp)
+        S = statetype(p.mdp)
+        A = actiontype(p.mdp)
         if p.solver.keep_tree
-            if isnull(p.tree)
+            if p.tree == nothing
                 tree = DPWTree{S,A}(p.solver.n_iterations)
-                p.tree = Nullable(tree)
+                p.tree = tree
             else
-                tree = get(p.tree)
+                tree = p.tree
             end
             if haskey(tree.s_lookup, s)
                 snode = tree.s_lookup[s]
@@ -47,20 +47,21 @@ function POMDPToolbox.action_info(p::DPWPlanner, s; tree_in_info=false)
             end
         else
             tree = DPWTree{S,A}(p.solver.n_iterations)
-            p.tree = Nullable(tree)
+            p.tree = tree
             snode = insert_state_node!(tree, s, p.solver.check_repeat_state)
         end
 
-        i = 0
+        nquery = 0
         start_us = CPUtime_us()
         for i = 1:p.solver.n_iterations
+            nquery += 1
             simulate(p, snode, p.solver.depth) # (not 100% sure we need to make a copy of the state here)
             if CPUtime_us() - start_us >= p.solver.max_time * 1e6
                 break
             end
         end
         info[:search_time_us] = CPUtime_us() - start_us
-        info[:tree_queries] = i
+        info[:tree_queries] = nquery
         if p.solver.tree_in_info || tree_in_info
             info[:tree] = tree
         end
@@ -76,7 +77,7 @@ function POMDPToolbox.action_info(p::DPWPlanner, s; tree_in_info=false)
         # XXX some publications say to choose action that has been visited the most
         a = tree.a_labels[sanode] # choose action with highest approximate value
     catch ex
-        a = convert(action_type(p.mdp), default_action(p.solver.default_action, p.mdp, s, ex))
+        a = convert(actiontype(p.mdp), default_action(p.solver.default_action, p.mdp, s, ex))
         info[:exception] = ex
     end
 
@@ -88,10 +89,10 @@ end
 Return the reward for one iteration of MCTSDPW.
 """
 function simulate(dpw::DPWPlanner, snode::Int, d::Int)
-    S = state_type(dpw.mdp)
-    A = action_type(dpw.mdp)
+    S = statetype(dpw.mdp)
+    A = actiontype(dpw.mdp)
     sol = dpw.solver
-    tree = get(dpw.tree)
+    tree = dpw.tree
     s = tree.s_labels[snode]
     if d == 0 || isterminal(dpw.mdp, s)
         return 0.0
@@ -111,7 +112,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
             end
         end
     elseif isempty(tree.children[snode])
-        for a in iterator(actions(dpw.mdp, s))
+        for a in actions(dpw.mdp, s)
             n0 = init_N(sol.init_N, dpw.mdp, s, a)
             insert_action_node!(tree, snode, a, n0,
                                 init_Q(sol.init_Q, dpw.mdp, s, a),
@@ -146,8 +147,13 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     new_node = false
     if tree.n_a_children[sanode] <= sol.k_state*tree.n[sanode]^sol.alpha_state
         sp, r = generate_sr(dpw.mdp, s, a, dpw.rng)
-
-        spnode = sol.check_repeat_state ? get(tree.s_lookup, sp, 0) : 0
+        
+        if tree.s_lookup == nothing
+            lookup = 0
+        else
+            lookup = tree.s_lookup
+        end
+        spnode = sol.check_repeat_state ? lookup : 0
 
         if spnode == 0 # there was not a state node for sp already in the tree
             spnode = insert_state_node!(tree, sp, sol.keep_tree || sol.check_repeat_state)

@@ -20,11 +20,11 @@ function D3Trees.D3Tree(policy::MCTSPlanner, root_state; kwargs...)
               Construct the solver with $(typeof(policy.solver))(enable_tree_vis=true, ...) to enable.
               """)
     end
-    return D3Tree(get(policy.tree), root_state; kwargs...)
+    return D3Tree(policy.tree, root_state; kwargs...)
 end
 
 function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
-    warn("""
+    @warn("""
          D3Tree(planner::DPWPlanner) is deprecated and may be removed in the future. Instead, please use
              
              a, info = action_info(planner, state)
@@ -35,11 +35,11 @@ function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
              info = first(ainfo_hist(hist))
              D3Tree(info[:tree])
          """)
-    return D3Tree(get(policy.tree); kwargs...)
+    return D3Tree(policy.tree; kwargs...)
 end
 
 function D3Trees.D3Tree(tree::MCTSTree, root_state; title="MCTS tree", kwargs...)
-    if isnull(tree._vis_stats)
+    if tree._vis_stats == nothing
         error("""
               Visualization was not enabled for this tree.
 
@@ -47,7 +47,7 @@ function D3Trees.D3Tree(tree::MCTSTree, root_state; title="MCTS tree", kwargs...
               """)
     end
 
-    vs = get(tree._vis_stats)
+    vs = tree._vis_stats
 
     nsas = length(vs)
     nsa = length(tree.n)
@@ -153,7 +153,7 @@ function D3Trees.D3Tree(nodes::Vector{Dict{String, Any}}; title="Julia D3Tree", 
             w = 20.0*sqrt(n["n"]/n["parent_n"])
             link_style[i] = "stroke-width:$(w)px"
         else
-            warn("Unrecognized node type when constructing D3Tree.")
+            @warn("Unrecognized node type when constructing D3Tree.")
         end
     end
     return D3Tree(children;
