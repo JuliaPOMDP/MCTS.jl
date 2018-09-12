@@ -1,18 +1,18 @@
 name = "MCTS"
 uuid = "e12ccd36-dcad-5f33-8774-9175229e7b33"
 repo = "https://github.com/JuliaPOMDP/MCTS.jl"
+version = "0.1.0"
 
 [deps]
 POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
 D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
-#Blink = "ad839575-38b3-5650-b840-f874b8c74a25"
 CPUTime = "a9c8d775-2e2e-55fc-8582-045d282d599e"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-POMDPModelTools = "ddee4e65-a780-5c57-ad17-2363fca24141"
-POMDPPolicies = "fd2a78ec-a0b2-11e8-254f-71ff51514d6b"
+POMDPModelTools = "08074719-1b2a-587c-a292-00f91cc44415"
+POMDPPolicies = "182e52fb-cfd0-5e46-8c26-fd0667c990f4"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-POMDPSimulators = "a011d688-a0b9-11e8-2c70-290aeeeab7c9"
+POMDPSimulators = "e0d0a172-29c6-5d4e-96d0-f262df5d01fd"
 
 [extras]
 NBInclude = "0db19996-df87-5ea3-a455-e3a50d440464"
