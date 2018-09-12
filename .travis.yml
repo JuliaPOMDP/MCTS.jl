@@ -15,7 +15,7 @@ script:
   - git clone https://github.com/JuliaRegistries/General  $(julia -e 'import Pkg; println(joinpath(Pkg.depots1(), "registries", "General"))')
   - git clone https://github.com/JuliaPOMDP/Registry  $(julia -e 'import Pkg; println(joinpath(Pkg.depots1(), "registries", "JuliaPOMDP"))')
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --project --color=yes --check-bounds=yes -e 'import Pkg; Pkg.build(); Pkg.test("QMDP"; coverage=true)'
+  - julia --project --color=yes --check-bounds=yes -e 'import Pkg; Pkg.build(); Pkg.test("MCTS"; coverage=true)'
 after_success:
   - julia --project --color=yes -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
   - julia --project --color=yes -e 'import Pkg; Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))'
