@@ -19,7 +19,8 @@ After installing [POMDPs.jl](https://github.com/JuliaPOMDP/POMDPs.jl), start Jul
 
 ```julia
 using POMDPs
-POMDPs.add("MCTS")
+POMDPs.add_registry()
+import Pkg; Pkg.add("MCTS")
 ```
 
 ## Documentation
