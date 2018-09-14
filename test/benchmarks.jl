@@ -61,7 +61,7 @@ end
 
 ##############################
 
-mdp = GridWorld(10,10)
+mdp = LegacyGridWorld(10,10)
 rewards = zeros(20, 9)
 initialstate = GridWorldState(1,1)
 n=300

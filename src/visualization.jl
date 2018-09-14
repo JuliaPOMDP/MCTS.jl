@@ -51,7 +51,7 @@ function D3Trees.D3Tree(tree::MCTSTree, root_state; title="MCTS tree", kwargs...
 
     nsas = length(vs)
     nsa = length(tree.n)
-    nodes = Vector{Dict{String, Any}}(1 + nsas + nsa)
+    nodes = Vector{Dict{String, Any}}(undef, 1 + nsas + nsa)
 
     # root node
     if haskey(tree.state_map, root_state)
@@ -112,9 +112,9 @@ end
 
 function D3Trees.D3Tree(nodes::Vector{Dict{String, Any}}; title="Julia D3Tree", kwargs...)
     len = length(nodes)
-    children = Vector{Vector{Int}}(len)
-    text = Vector{String}(len)
-    tooltip = Vector{String}(len)
+    children = Vector{Vector{Int}}(undef, len)
+    text = Vector{String}(undef, len)
+    tooltip = Vector{String}(undef, len)
     style = fill("", len)
     link_style = fill("", len)
     max_q = maximum(get(n, "q", 0.0) for n in nodes)
@@ -170,8 +170,8 @@ function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree", kwargs...)
     lens = length(tree.total_n)
     lensa = length(tree.n)
     len = lens + lensa
-    children = Vector{Vector{Int}}(len)
-    text = Vector{String}(len)
+    children = Vector{Vector{Int}}(undef, len)
+    text = Vector{String}(undef, len)
     tt = fill("", len)
     style = fill("", len)
     link_style = fill("", len)

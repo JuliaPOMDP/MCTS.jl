@@ -1,6 +1,6 @@
 let
     solver = DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec)
-    mdp = GridWorld()
+    mdp = LegacyGridWorld()
 
     policy = solve(solver, mdp)
 
@@ -14,7 +14,7 @@ let
 
     # no action pw
     solver = DPWSolver(n_iterations=n_iter, depth=depth, keep_tree=true, exploration_constant=ec, enable_action_pw=false)
-    mdp = GridWorld()
+    mdp = LegacyGridWorld()
 
     policy = solve(solver, mdp)
 

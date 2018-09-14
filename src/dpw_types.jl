@@ -237,14 +237,19 @@ mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCT
     rng::RNG
 end
 
-function DPWPlanner(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}}) where {S,A}
+function DPWPlanner(solver::DPWSolver, mdp::P) where P<:Union{POMDP,MDP}
     se = convert_estimator(solver.estimate_value, solver, mdp)
-    return DPWPlanner(solver,
-                      mdp,
-                      nothing,
-                      se,
-                      solver.next_action,
-                      solver.rng
+    return DPWPlanner{P,
+                      statetype(P),
+                      actiontype(P),
+                      typeof(se),
+                      typeof(solver.next_action),
+                      typeof(solver.rng)}(solver,
+                                          mdp,
+                                          nothing,
+                                          se,
+                                          solver.next_action,
+                                          solver.rng
                      )
 end
 

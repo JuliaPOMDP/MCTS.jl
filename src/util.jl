@@ -5,7 +5,10 @@ Return a vector of action=>Q pairs ranked by Q.
 
 For debugging/ checking purposes - this may be slow
 """
-ranked_actions(planner::AbstractMCTSPlanner, state) = ranked_actions(get(planner.tree), state)
+function ranked_actions(planner::AbstractMCTSPlanner, state)
+    @assert planner.tree != nothing "in ranked_actions, planner did not have a tree; use keep_tree=true when constructing the solver"
+    ranked_actions(planner.tree, state)
+end
 
 function ranked_actions(tree::MCTSTree, state)
     sanodes = children(StateNode(tree, tree.state_map[state]))

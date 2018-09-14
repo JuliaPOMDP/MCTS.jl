@@ -1,9 +1,4 @@
-function POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP})
-    S = statetype(mdp)
-    A = actiontype(mdp)
-    se = convert_estimator(solver.estimate_value, solver, mdp)
-    return DPWPlanner(solver, mdp, nothing, se, solver.next_action, solver.rng)
-end
+POMDPs.solve(solver::DPWSolver, mdp::Union{POMDP,MDP}) = DPWPlanner(solver, mdp)
 
 """
 Delete existing decision tree.
@@ -148,17 +143,13 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     if tree.n_a_children[sanode] <= sol.k_state*tree.n[sanode]^sol.alpha_state
         sp, r = generate_sr(dpw.mdp, s, a, dpw.rng)
         
-        if tree.s_lookup == nothing
-            lookup = 0
+        if sol.check_repeat_state && haskey(tree.s_lookup, sp)
+            spnode = tree.s_lookup[sp]
         else
-            lookup = tree.s_lookup
-        end
-        spnode = sol.check_repeat_state ? lookup : 0
-
-        if spnode == 0 # there was not a state node for sp already in the tree
             spnode = insert_state_node!(tree, sp, sol.keep_tree || sol.check_repeat_state)
             new_node = true
         end
+
         push!(tree.transitions[sanode], (spnode, r))
 
         if !sol.check_repeat_state 

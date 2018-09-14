@@ -14,7 +14,7 @@ ec = 1.0
 println("Testing vanilla MCTS solver.")
 
 solver = MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, enable_tree_vis=true)
-mdp = GridWorld()
+mdp = LegacyGridWorld()
 
 struct A
     a::Vector{Int}
@@ -33,28 +33,37 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = @inferred action(policy, state)
+@testset "basic" begin
+    a = @inferred action(policy, state)
 
-tree = policy.tree
-@test get_state_node(tree, state).id == 1
-@test get_state_node(tree, state, policy).id == 1
+    tree = policy.tree
+    @test get_state_node(tree, state).id == 1
+    @test get_state_node(tree, state, policy).id == 1
 
-clear_tree!(policy)
-@test policy.tree == nothing
+    clear_tree!(policy)
+    @test policy.tree == nothing
+end
 
-include("value_test.jl")
+@testset "value" begin
+    include("value_test.jl")
+end
 
-include("options.jl")
+@testset "options" begin
+    include("options.jl")
+end
 
-println("Testing DPW solver.")
-include("dpw_test.jl")
+@testset "dpw" begin
+    include("dpw_test.jl")
+end
 
-println("Testing visualization.")
-# include("visualization.jl")
-# @nbinclude("../notebooks/Test_Visualization.ipynb")
+@testset "visualization" begin
+    include("visualization.jl")
+end
+@nbinclude("../notebooks/Test_Visualization.ipynb")
 
-println("Testing other functions.")
-include("other.jl")
+@testset "other" begin
+    include("other.jl")
+end
 
 # # test the BeliefMCTSSolver docstring
 # let
@@ -74,13 +83,12 @@ include("other.jl")
 #     simulate(HistoryRecorder(max_steps=10), pomdp, planner, updater)
 # end
 
-# test timing
-let
+@testset "timing" begin
     solver = DPWSolver(n_iterations=typemax(Int),
                        depth=depth,
                        max_time=1.0,
                        exploration_constant=ec)
-    mdp = GridWorld()
+    mdp = LegacyGridWorld()
 
     policy = solve(solver, mdp)
     state = GridWorldState(1,1)
@@ -91,22 +99,20 @@ let
     @test abs(t-1.0) < 0.5
 end
 
-# test terminal state error
-let
+@testset "timing" begin
     solver = DPWSolver(n_iterations=typemax(Int),
                        depth=depth,
                        max_time=1.0,
                        exploration_constant=ec)
-    mdp = GridWorld()
+    mdp = LegacyGridWorld()
 
     policy = solve(solver, mdp)
     state = GridWorldState(1,1,true)
     @test_throws ErrorException action(policy, state)
 end
 
-# test c=0.0
-let
-    mdp = GridWorld()
+@testset "c=0" begin
+    mdp = LegacyGridWorld()
 
     solver = DPWSolver(n_iterations=typemax(Int),
                        depth=depth,
