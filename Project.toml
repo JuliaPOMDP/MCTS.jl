@@ -1,7 +1,7 @@
 name = "MCTS"
 uuid = "e12ccd36-dcad-5f33-8774-9175229e7b33"
 repo = "https://github.com/JuliaPOMDP/MCTS.jl"
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
