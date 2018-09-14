@@ -1,7 +1,7 @@
 using POMDPModels
 using MCTS
 
-gw = GridWorld()
+gw = LegacyGridWorld()
 
 # The commented-out code below can be used to generate ad. It is hard-coded here to avoid the dependency.
 

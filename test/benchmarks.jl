@@ -4,13 +4,13 @@ using POMDPModels
 
 function POMDPs.simulate(mdp::POMDP,
                   policy::Policy,
-                  initial_state::Any,
+                  initialstate::Any,
                   rng::AbstractRNG=MersenneTwister(rand(Uint32)),
                   eps::Float64=0.0)
 
     disc = 1.0
     r = 0.0
-    s = deepcopy(initial_state)
+    s = deepcopy(initialstate)
 
     trans_dist = create_transition_distribution(mdp)
 
@@ -34,7 +34,7 @@ end
 function run_batch(n::Int64,
                    mdp::POMDP,
                    policy::Policy,
-                   initial_state::Any;
+                   initialstate::Any;
                    rng=MersenneTwister(rand(Uint32)),
                    eps=0.0)
     rewards = zeros(n)
@@ -45,7 +45,7 @@ function run_batch(n::Int64,
         rand!(s, space) 
     end
     for i = 1:n
-        rewards[i] = simulate(mdp, policy, initial_state, rng, eps)
+        rewards[i] = simulate(mdp, policy, initialstate, rng, eps)
     end
     return mean(rewards)
 end
@@ -61,9 +61,9 @@ end
 
 ##############################
 
-mdp = GridWorld(10,10)
+mdp = LegacyGridWorld(10,10)
 rewards = zeros(20, 9)
-initial_state = GridWorldState(1,1)
+initialstate = GridWorldState(1,1)
 n=300
 
 
@@ -72,5 +72,5 @@ for (i,d) in enumerate(1:20), (j,ec) in enumerate(0.0:0.5:4.0)
   println("On: $d, $ec, $i, $j")
   mcts = MCTSSolver(depth=d, exploration_constant=ec)
   policy = MCTSPlanner(mcts, mdp)
-  rewards[i,j] = run_batch(n, mdp, policy, initial_state,eps=0.5)
+  rewards[i,j] = run_batch(n, mdp, policy, initialstate,eps=0.5)
 end

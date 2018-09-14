@@ -123,7 +123,7 @@ function DPWSolver(;depth::Int=10,
                     check_repeat_state::Bool=true,
                     check_repeat_action::Bool=true,
                     tree_in_info::Bool=false,
-                    rng::AbstractRNG=Base.GLOBAL_RNG,
+                    rng::AbstractRNG=Random.GLOBAL_RNG,
                     estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
                     init_Q::Any = 0.0,
                     init_N::Any = 0,
@@ -192,7 +192,7 @@ mutable struct DPWTree{S,A}
     end
 end
 
-function insert_state_node!{S,A}(tree::DPWTree{S,A}, s::S, maintain_s_lookup=true)
+function insert_state_node!(tree::DPWTree{S,A}, s::S, maintain_s_lookup=true) where {S,A}
     push!(tree.total_n, 0)
     push!(tree.children, Int[])
     push!(tree.s_labels, s)
@@ -203,7 +203,7 @@ function insert_state_node!{S,A}(tree::DPWTree{S,A}, s::S, maintain_s_lookup=tru
     return snode
 end
 
-function insert_action_node!{S,A}(tree::DPWTree{S,A}, snode::Int, a::A, n0::Int, q0::Float64, maintain_a_lookup=true)
+function insert_action_node!(tree::DPWTree{S,A}, snode::Int, a::A, n0::Int, q0::Float64, maintain_a_lookup=true) where {S,A}
     push!(tree.n, n0)
     push!(tree.q, q0)
     push!(tree.a_labels, a)
@@ -219,7 +219,7 @@ end
 
 Base.isempty(tree::DPWTree) = isempty(tree.n) && isempty(tree.q)
 
-immutable DPWStateNode{S,A} <: AbstractStateNode
+struct DPWStateNode{S,A} <: AbstractStateNode
     tree::DPWTree{S,A}
     index::Int
 end
@@ -231,21 +231,26 @@ isroot(n::DPWStateNode) = n.index == 1
 mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
     solver::DPWSolver
     mdp::P
-    tree::Nullable{DPWTree{S,A}}
+    tree::Union{Nothing, DPWTree{S,A}}
     solved_estimate::SE
     next_action::NA
     rng::RNG
 end
 
-function DPWPlanner{S,A}(solver::DPWSolver, mdp::Union{POMDP{S,A},MDP{S,A}})
+function DPWPlanner(solver::DPWSolver, mdp::P) where P<:Union{POMDP,MDP}
     se = convert_estimator(solver.estimate_value, solver, mdp)
-    return DPWPlanner(solver,
-                      mdp,
-                      Nullable{DPWTree{S,A}},
-                      se,
-                      solver.next_action,
-                      solver.rng
+    return DPWPlanner{P,
+                      statetype(P),
+                      actiontype(P),
+                      typeof(se),
+                      typeof(solver.next_action),
+                      typeof(solver.rng)}(solver,
+                                          mdp,
+                                          nothing,
+                                          se,
+                                          solver.next_action,
+                                          solver.rng
                      )
 end
 
-Base.srand(p::DPWPlanner, seed) = srand(p.rng, seed)
+Random.seed!(p::DPWPlanner, seed) = Random.seed!(p.rng, seed)

@@ -1,9 +1,9 @@
 using POMDPModels
-using Base.Test
+using Test
 
 # test ranked_actions for vanilla
 solver = MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, enable_tree_vis=true)
-mdp = GridWorld()
+mdp = LegacyGridWorld()
 
 policy = solve(solver, mdp)
 
@@ -17,7 +17,7 @@ ranked = MCTS.ranked_actions(policy, state)
 
 # test ranked_actions for dpw
 solver = DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec)
-mdp = GridWorld()
+mdp = LegacyGridWorld()
 
 policy = solve(solver, mdp)
 

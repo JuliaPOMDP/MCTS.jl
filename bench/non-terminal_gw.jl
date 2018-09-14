@@ -25,7 +25,7 @@ simulate(sim, mdp, planner)
 # ProfileView.view()
 
 @show N=1000
-rewards = Array(Float64, N)
+rewards = Array{Float64}(undef, N)
 @time @showprogress for i = 1:N
     rewards[i] = simulate(sim, mdp, planner)
 end

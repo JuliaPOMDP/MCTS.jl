@@ -1,10 +1,11 @@
 using MCTS
 using POMDPs
 using POMDPModels
-using Base.Test
+using Test
 using NBInclude
-using POMDPToolbox
 using D3Trees
+using Random
+using POMDPPolicies
 
 n_iter = 50
 depth = 15
@@ -13,7 +14,7 @@ ec = 1.0
 println("Testing vanilla MCTS solver.")
 
 solver = MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, enable_tree_vis=true)
-mdp = GridWorld()
+mdp = LegacyGridWorld()
 
 struct A
     a::Vector{Int}
@@ -32,82 +33,86 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = @inferred action(policy, state)
+@testset "basic" begin
+    a = @inferred action(policy, state)
 
-tree = get(policy.tree)
-@test get_state_node(tree, state).id == 1
-@test get_state_node(tree, state, policy).id == 1
+    tree = policy.tree
+    @test get_state_node(tree, state).id == 1
+    @test get_state_node(tree, state, policy).id == 1
 
-clear_tree!(policy)
-@test isnull(policy.tree)
-
-include("value_test.jl")
-
-include("options.jl")
-
-println("Testing DPW solver.")
-include("dpw_test.jl")
-
-println("Testing visualization.")
-include("visualization.jl")
-@nbinclude("../notebooks/Test_Visualization.ipynb")
-
-println("Testing other functions.")
-include("other.jl")
-
-# test the BeliefMCTSSolver docstring
-let
-    using ParticleFilters
-    using POMDPModels
-    using MCTS
-    using POMDPToolbox
-
-    pomdp = BabyPOMDP()
-    updater = SIRParticleFilter(pomdp, 1000)
-
-    solver = BeliefMCTSSolver(DPWSolver(), updater)
-    planner = solve(solver, pomdp)
-
-    @inferred action(planner, initialize_belief(updater, initial_state_distribution(pomdp)))
-
-    simulate(HistoryRecorder(max_steps=10), pomdp, planner, updater)
+    clear_tree!(policy)
+    @test policy.tree == nothing
 end
 
-# test timing
-let
+@testset "value" begin
+    include("value_test.jl")
+end
+
+@testset "options" begin
+    include("options.jl")
+end
+
+@testset "dpw" begin
+    include("dpw_test.jl")
+end
+
+@testset "visualization" begin
+    include("visualization.jl")
+end
+@nbinclude("../notebooks/Test_Visualization.ipynb")
+
+@testset "other" begin
+    include("other.jl")
+end
+
+# # test the BeliefMCTSSolver docstring
+# let
+#     using ParticleFilters
+#     using POMDPModels
+#     using MCTS
+#     using POMDPToolbox
+
+#     pomdp = BabyPOMDP()
+#     updater = SIRParticleFilter(pomdp, 1000)
+
+#     solver = BeliefMCTSSolver(DPWSolver(), updater)
+#     planner = solve(solver, pomdp)
+
+#     @inferred action(planner, initialize_belief(updater, initialstate_distribution(pomdp)))
+
+#     simulate(HistoryRecorder(max_steps=10), pomdp, planner, updater)
+# end
+
+@testset "timing" begin
     solver = DPWSolver(n_iterations=typemax(Int),
                        depth=depth,
                        max_time=1.0,
                        exploration_constant=ec)
-    mdp = GridWorld()
+    mdp = LegacyGridWorld()
 
     policy = solve(solver, mdp)
     state = GridWorldState(1,1)
     a = action(policy, state)
-    t = begin
-        tic()
+    t = @elapsed begin
         action(policy, state)
-        toc()
     end
     @test abs(t-1.0) < 0.5
 end
 
-# test terminal state error
-let
+@testset "timing" begin
     solver = DPWSolver(n_iterations=typemax(Int),
                        depth=depth,
                        max_time=1.0,
                        exploration_constant=ec)
-    mdp = GridWorld()
+    mdp = LegacyGridWorld()
 
     policy = solve(solver, mdp)
     state = GridWorldState(1,1,true)
     @test_throws ErrorException action(policy, state)
 end
 
-# test c=0.0
-let
-    mdp = GridWorld()
+@testset "c=0" begin
+    mdp = LegacyGridWorld()
 
     solver = DPWSolver(n_iterations=typemax(Int),
                        depth=depth,

@@ -4,7 +4,7 @@ using POMDPModels
 using DiscreteValueIteration
 using POMDPs
 
-mdp = GridWorld()
+mdp = LegacyGridWorld()
 N = 50
 rng = MersenneTwister(1)
 init_states = [GridWorldState(rand(rng, 1:mdp.size_x), rand(rng, 1:mdp.size_y)) for i in 1:N]
