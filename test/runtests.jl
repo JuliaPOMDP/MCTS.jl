@@ -130,4 +130,11 @@ end
     action(policy, state)
 end
 
+@testset "default_action" begin
+    sol = DPWSolver(default_action=:up, estimate_value=error)
+    p = solve(sol, mdp)
+    println("There should be a warning below:")
+    action(p, state)
+end
+
 @nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
