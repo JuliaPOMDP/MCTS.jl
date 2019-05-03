@@ -13,6 +13,17 @@ tooltip_tag(s) = node_tag(s)
 
 function D3Trees.D3Tree(policy::MCTSPlanner, root_state; kwargs...)
     # check to see if visualization was enabled
+    @warn("""
+         D3Tree(planner::MCTSPlanner, root_state) is deprecated and may be removed in the future. Instead, please use
+             
+             a, info = action_info(planner, state)
+             D3Tree(info[:tree])
+
+         Make sure that the tree_in_info solver option is set to true. You can also get this info from a POMDPToolbox History
+         
+             info = first(ainfo_hist(hist))
+             D3Tree(info[:tree])
+         """)
     if !policy.solver.enable_tree_vis
         error("""
               Tree visualization was not enabled for this policy.
@@ -38,7 +49,7 @@ function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
     return D3Tree(policy.tree; kwargs...)
 end
 
-function D3Trees.D3Tree(tree::MCTSTree, root_state; title="MCTS tree", kwargs...)
+function D3Trees.D3Tree(tree::MCTSTree, root_state=first(tree.s_labels); title="MCTS tree", kwargs...)
     if tree._vis_stats == nothing
         error("""
               Visualization was not enabled for this tree.
