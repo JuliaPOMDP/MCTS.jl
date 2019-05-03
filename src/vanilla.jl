@@ -187,11 +187,13 @@ POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, md
     @subreq simulate(policy, state, policy.solver.depth)
 end
 
-function POMDPs.action(planner::AbstractMCTSPlanner, s)
-    tree = plan!(planner, s)
+function POMDPModelTools.action_info(p::AbstractMCTSPlanner, s)
+    tree = plan!(p, s)
     best = best_sanode_Q(StateNode(tree, 1))
-    return action(best)
+    return action(best), (tree=tree,)
 end
+
+POMDPs.action(p::AbstractMCTSPlanner, s) = first(action_info(p, s))
 
 """
 Query the tree for a value estimate at state s. If the planner does not already have a tree, run the planner first.

@@ -6,9 +6,11 @@ policy = solve(solver, mdp)
 
 state = GridWorldState(1,1)
 
-a = action(policy, state)
+a, info = action_info(policy, state)
 
-tree = D3Tree(policy, state)
+@test_logs (:warn,) D3Tree(policy, state)
+tree = @test_nowarn D3Tree(info[:tree], state)
+tree = @test_nowarn D3Tree(info[:tree])
 
 io = IOBuffer()
 show(io, MIME("text/plain"), tree)
@@ -26,7 +28,6 @@ state = GridWorldState(1,1)
 a, info = action_info(policy, state)
 
 @test_logs (:warn,) tree = D3Tree(policy)
-@test_logs (:warn,) tree = D3Tree(policy, state)
 tree = @test_nowarn D3Tree(info[:tree])
 
 io = IOBuffer()
