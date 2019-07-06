@@ -241,7 +241,7 @@ end
 function build_tree(planner::AbstractMCTSPlanner, s)
     n_iterations = planner.solver.n_iterations
     depth = planner.solver.depth
-    
+
     if planner.solver.reuse_tree
         tree = planner.tree
     else
@@ -271,7 +271,7 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
 
     # once depth is zero return
     if depth == 0 || isterminal(planner.mdp, s)
-        return 0.0
+        return estimate_value(planner.solved_estimate, planner.mdp, s, depth)
     end
 
     # pick action using UCT
@@ -280,7 +280,7 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
 
     # transition to a new state
     sp, r = generate_sr(mdp, s, action(sanode), rng)
-    
+
     spid = get(tree.state_map, sp, 0)
     if spid == 0
         spn = insert_node!(tree, planner, sp)
