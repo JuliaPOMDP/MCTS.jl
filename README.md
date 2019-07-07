@@ -36,8 +36,8 @@ using POMDPModels # for the GridWorld problem
 using MCTS
 mdp = GridWorld()
 solver = MCTSSolver(n_iterations=50, depth=20, exploration_constant=5.0)
-policy = solve(solver, mdp)
-a = action(policy, s)
+planner = solve(solver, mdp)
+a = action(planner, s)
 ```
 
 See [this notebook](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) for an example of how to visualize the search tree.
