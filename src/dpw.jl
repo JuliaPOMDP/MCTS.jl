@@ -89,8 +89,10 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     sol = dpw.solver
     tree = dpw.tree
     s = tree.s_labels[snode]
-    if d == 0 || isterminal(dpw.mdp, s)
+    if d == 0
         return estimate_value(dpw.solved_estimate, dpw.mdp, s, d)
+    elseif isterminal(dpw.mdp, s)
+        return 0.0
     end
 
     # action progressive widening
