@@ -60,7 +60,7 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
         if p.solver.tree_in_info || tree_in_info
             info[:tree] = tree
         end
-        
+
         best_Q = -Inf
         sanode = 0
         for child in tree.children[snode]
@@ -89,8 +89,10 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     sol = dpw.solver
     tree = dpw.tree
     s = tree.s_labels[snode]
-    if d == 0 || isterminal(dpw.mdp, s)
+    if isterminal(dpw.mdp, s)
         return 0.0
+    elseif d == 0
+        return estimate_value(dpw.solved_estimate, dpw.mdp, s, d)
     end
 
     # action progressive widening
@@ -142,7 +144,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     new_node = false
     if tree.n_a_children[sanode] <= sol.k_state*tree.n[sanode]^sol.alpha_state
         sp, r = generate_sr(dpw.mdp, s, a, dpw.rng)
-        
+
         if sol.check_repeat_state && haskey(tree.s_lookup, sp)
             spnode = tree.s_lookup[sp]
         else
@@ -152,7 +154,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
 
         push!(tree.transitions[sanode], (spnode, r))
 
-        if !sol.check_repeat_state 
+        if !sol.check_repeat_state
             tree.n_a_children[sanode] += 1
         elseif !((sanode,spnode) in tree.unique_transitions)
             push!(tree.unique_transitions, (sanode,spnode))
