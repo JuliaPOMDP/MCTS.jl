@@ -382,18 +382,25 @@ function best_sanode_UCB(snode::StateNode, c::Float64)
     best = first(children(snode))
     sn = total_n(snode)
     for sanode in children(snode)
+	
+	# if sn==0, log(sn) = -Inf. We want to avoid this.
+        # in most cases, if n(sanode)==0, UCB will be Inf, which is desired,
+	# but if sn==1 as well, then we have 0/0, which is NaN
         if c == 0 || sn == 0 || (sn == 1 && n(sanode) == 0)
             UCB = q(sanode)
         else
             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
         end
+		
         if isnan(UCB)
             @show sn
             @show n(sanode)
             @show q(sanode)
         end
+		
         @assert !isnan(UCB)
         @assert !isequal(UCB, -Inf)
+		
         if UCB > best_UCB
             best_UCB = UCB
             best = sanode
