@@ -281,7 +281,7 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
     said = sanode.id
 
     # transition to a new state
-    sp, r = generate_sr(mdp, s, action(sanode), rng)
+    sp, r = gen(DDNOut(:sp, :r), mdp, s, action(sanode), rng)
 
     spid = get(tree.state_map, sp, 0)
     if spid == 0
@@ -310,7 +310,7 @@ end
     @req isterminal(::P, ::S)
     @subreq insert_node!(planner, s)
     @subreq estimate_value(planner.solved_estimate, mdp, s, depth)
-    @req generate_sr(::P, ::S, ::A, ::typeof(planner.rng))
+    @req gen(::DDNOut{(:sp, :r)}, ::P, ::S, ::A, ::typeof(planner.rng))
     @req isequal(::S, ::S) # for hasnode
     @req hash(::S) # for hasnode
 end

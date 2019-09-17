@@ -143,7 +143,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     # state progressive widening
     new_node = false
     if tree.n_a_children[sanode] <= sol.k_state*tree.n[sanode]^sol.alpha_state
-        sp, r = generate_sr(dpw.mdp, s, a, dpw.rng)
+        sp, r = gen(DDNOut(:sp, :r), dpw.mdp, s, a, dpw.rng)
 
         if sol.check_repeat_state && haskey(tree.s_lookup, sp)
             spnode = tree.s_lookup[sp]
