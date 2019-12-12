@@ -189,7 +189,7 @@ end
 
 function POMDPModelTools.action_info(p::AbstractMCTSPlanner, s)
     tree = plan!(p, s)
-    best = best_sanode_Q(StateNode(tree, 1))
+    best = best_sanode_Q(StateNode(tree, s))
     return action(best), (tree=tree,)
 end
 
