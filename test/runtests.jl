@@ -2,7 +2,7 @@ using MCTS
 using POMDPs
 using POMDPModels
 using Test
-using NBInclude
+# using NBInclude
 using D3Trees
 using Random
 using POMDPPolicies
@@ -59,7 +59,8 @@ end
 @testset "visualization" begin
     include("visualization.jl")
 end
-@nbinclude("../notebooks/Test_Visualization.ipynb")
+@warn("skipping nbinclude tests")
+# @nbinclude("../notebooks/Test_Visualization.ipynb")
 
 @testset "other" begin
     include("other.jl")
@@ -97,9 +98,21 @@ end
         action(policy, state)
     end
     @test abs(t-1.0) < 0.5
-end
 
-@testset "timing" begin
+    solver = MCTSSolver(n_iterations=typemax(Int),
+                       depth=depth,
+                       max_time=1.0,
+                       exploration_constant=ec)
+    mdp = LegacyGridWorld()
+
+    policy = solve(solver, mdp)
+    state = GridWorldState(1,1)
+    a = action(policy, state)
+    t = @elapsed begin
+        action(policy, state)
+    end
+    @test abs(t-1.0) < 0.5
+
     solver = DPWSolver(n_iterations=typemax(Int),
                        depth=depth,
                        max_time=1.0,
@@ -136,4 +149,5 @@ end
     @test_logs (:warn,) action(p, state)
 end
 
-@nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
+@warn("Skipping NBInclude tests.")
+# @nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")

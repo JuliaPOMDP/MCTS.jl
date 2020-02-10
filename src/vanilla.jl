@@ -7,6 +7,10 @@ Fields:
         Number of iterations during each action() call.
         default: 100
 
+    max_time::Float64
+        Maximum amount of CPU time spent iterating through simulations.
+        default: Inf
+
     depth::Int64:
         Maximum rollout horizon and tree depth.
         default: 10
@@ -52,6 +56,7 @@ Fields:
 """
 mutable struct MCTSSolver <: AbstractMCTSSolver
 	n_iterations::Int64
+    max_time::Float64
 	depth::Int64
 	exploration_constant::Float64
     rng::AbstractRNG
@@ -68,6 +73,7 @@ end
 Use keyword arguments to specify values for the fields.
 """
 function MCTSSolver(;n_iterations::Int64 = 100,
+                     max_time::Float64 = Inf,
                      depth::Int64 = 10,
                      exploration_constant::Float64 = 1.0,
                      rng = Random.GLOBAL_RNG,
@@ -76,7 +82,7 @@ function MCTSSolver(;n_iterations::Int64 = 100,
                      init_N = 0,
                      reuse_tree::Bool = false,
                      enable_tree_vis::Bool=false)
-    return MCTSSolver(n_iterations, depth, exploration_constant, rng, estimate_value, init_Q, init_N, reuse_tree, enable_tree_vis)
+    return MCTSSolver(n_iterations, max_time, depth, exploration_constant, rng, estimate_value, init_Q, init_N, reuse_tree, enable_tree_vis)
 end
 
 mutable struct MCTSTree{S,A}
@@ -255,9 +261,13 @@ function build_tree(planner::AbstractMCTSPlanner, s)
         root = StateNode(tree, sid)
     end
 
+    start_us = CPUtime_us()
     # build the tree
     for n = 1:n_iterations
         simulate(planner, root, depth)
+        if CPUtime_us() - start_us >= planner.solver.max_time * 1e6
+            break
+        end
     end
     return tree
 end
