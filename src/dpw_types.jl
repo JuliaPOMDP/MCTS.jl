@@ -36,6 +36,10 @@ Fields:
         If true, enable progressive widening on the action space; if false just use the whole action space.
         default: true
 
+    enable_state_pw::Bool
+        If true, enable progressive widening on the state space; if false just use the single next state (for deterministic problems).
+        default: true
+
     check_repeat_state::Bool
     check_repeat_action::Bool
         When constructing the tree, check whether a state or action has been seen before (there is a computational cost to maintaining the dictionaries necessary for this)
@@ -94,6 +98,7 @@ mutable struct DPWSolver <: AbstractMCTSSolver
     alpha_state::Float64
     keep_tree::Bool
     enable_action_pw::Bool
+    enable_state_pw::Bool
     check_repeat_state::Bool
     check_repeat_action::Bool
     tree_in_info::Bool
@@ -120,6 +125,7 @@ function DPWSolver(;depth::Int=10,
                     alpha_state::Float64=0.5,
                     keep_tree::Bool=false,
                     enable_action_pw::Bool=true,
+                    enable_state_pw::Bool=true,
                     check_repeat_state::Bool=true,
                     check_repeat_action::Bool=true,
                     tree_in_info::Bool=false,
@@ -130,7 +136,7 @@ function DPWSolver(;depth::Int=10,
                     next_action::Any = RandomActionGenerator(rng),
                     default_action::Any = ExceptionRethrow()
                    )
-    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, check_repeat_state, check_repeat_action, tree_in_info, rng, estimate_value, init_Q, init_N, next_action, default_action)
+    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, enable_state_pw, check_repeat_state, check_repeat_action, tree_in_info, rng, estimate_value, init_Q, init_N, next_action, default_action)
 end
 
 #=
