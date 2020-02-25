@@ -8,6 +8,7 @@ using POMDPSimulators
 using CPUTime
 using Random
 using Printf
+using ProgressMeter
 
 export
     MCTSSolver,
