@@ -55,10 +55,10 @@ Fields:
         default: false
 """
 mutable struct MCTSSolver <: AbstractMCTSSolver
-	n_iterations::Int64
+    n_iterations::Int64
     max_time::Float64
-	depth::Int64
-	exploration_constant::Float64
+    depth::Int64
+    exploration_constant::Float64
     rng::AbstractRNG
     estimate_value::Any
     init_Q::Any
@@ -98,6 +98,7 @@ mutable struct MCTSTree{S,A}
     q::Vector{Float64}
     a_labels::Vector{A}
 
+    lock::ReentrantLock
     _vis_stats::Union{Nothing, Dict{Pair{Int,Int}, Int}} # maps (said=>sid)=>number of transitions. THIS MAY CHANGE IN THE FUTURE
 
     function MCTSTree{S,A}(sz::Int=1000) where {S,A}
@@ -112,6 +113,7 @@ mutable struct MCTSTree{S,A}
                    sizehint!(Int[], sz),
                    sizehint!(Float64[], sz),
                    sizehint!(A[], sz),
+                   ReentrantLock(),
                    Dict{Pair{Int,Int},Int}()
                   )
     end
@@ -152,8 +154,8 @@ end
 
 
 mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
-	solver::MCTSSolver # containts the solver parameters
-	mdp::P # model
+  solver::MCTSSolver # containts the solver parameters
+  mdp::P # model
     tree::Union{Nothing,MCTSTree{S,A}} # the search tree
     solved_estimate::SE
     rng::RNG
@@ -263,8 +265,8 @@ function build_tree(planner::AbstractMCTSPlanner, s)
 
     start_us = CPUtime_us()
     # build the tree
-    for n = 1:n_iterations
-        simulate(planner, root, depth)
+    @sync for n = 1:n_iterations
+        @spawn simulate(planner, root, depth)
         if CPUtime_us() - start_us >= planner.solver.max_time * 1e6
             break
         end
@@ -281,13 +283,15 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
 
     # once depth is zero return
     if isterminal(planner.mdp, s)
-	return 0.0
-    elseif depth == 0 
+        return 0.0
+    elseif depth == 0
         return estimate_value(planner.solved_estimate, planner.mdp, s, depth)
     end
 
     # pick action using UCT
-    sanode = best_sanode_UCB(node, planner.solver.exploration_constant)
+    sanode = lock(tree.lock) do
+        best_sanode_UCB(node, planner.solver.exploration_constant)
+    end
     said = sanode.id
 
     # transition to a new state
@@ -295,19 +299,26 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
 
     spid = get(tree.state_map, sp, 0)
     if spid == 0
-        spn = insert_node!(tree, planner, sp)
+        spn = lock(tree.lock) do
+            insert_node!(tree, planner, sp)
+        end
         spid = spn.id
         q = r + discount(mdp) * estimate_value(planner.solved_estimate, planner.mdp, sp, depth - 1)
     else
         q = r + discount(mdp) * simulate(planner, StateNode(tree, spid) , depth - 1)
     end
-    if planner.solver.enable_tree_vis
-        record_visit!(tree, said, spid)
+
+    lock(tree.lock) do
+        if planner.solver.enable_tree_vis
+            record_visit!(tree, said, spid)
+        end
     end
 
-    tree.total_n[node.id] += 1
-    tree.n[said] += 1
-    tree.q[said] += (q - tree.q[said]) / tree.n[said] # moving average of Q value
+    lock(tree.lock) do
+        tree.total_n[node.id] += 1
+        tree.n[said] += 1
+        tree.q[said] += (q - tree.q[said]) / tree.n[said] # moving average of Q value
+    end
     return q
 end
 
@@ -392,25 +403,25 @@ function best_sanode_UCB(snode::StateNode, c::Float64)
     best = first(children(snode))
     sn = total_n(snode)
     for sanode in children(snode)
-	
-	# if sn==0, log(sn) = -Inf. We want to avoid this.
+
+  # if sn==0, log(sn) = -Inf. We want to avoid this.
         # in most cases, if n(sanode)==0, UCB will be Inf, which is desired,
-	# but if sn==1 as well, then we have 0/0, which is NaN
+  # but if sn==1 as well, then we have 0/0, which is NaN
         if c == 0 || sn == 0 || (sn == 1 && n(sanode) == 0)
             UCB = q(sanode)
         else
             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
         end
-		
+
         if isnan(UCB)
             @show sn
             @show n(sanode)
             @show q(sanode)
         end
-		
+
         @assert !isnan(UCB)
         @assert !isequal(UCB, -Inf)
-		
+
         if UCB > best_UCB
             best_UCB = UCB
             best = sanode

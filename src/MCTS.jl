@@ -9,6 +9,13 @@ using CPUTime
 using Random
 using Printf
 
+@static if VERSION >= v"1.3-alpha"
+    using Base.Threads: @spawn
+else
+    # Mock `@spawn` using `@async`:
+    @eval const $(Symbol("@spawn")) = $(Symbol("@async"))
+end
+
 export
     MCTSSolver,
     MCTSPlanner,
