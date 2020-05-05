@@ -13,6 +13,9 @@ There is also a BeliefMCTSSolver that solves a POMDP by converting it to an MDP 
 
 Special thanks to Jon Cox for writing the original version of this code.
 
+For reference, see the UCT algorithm in this paper:
+Kocsis, Levente, and Csaba Szepesvári. "Bandit Based Monte-Carlo planning." European Conference on Machine Learning. Springer, Berlin, Heidelberg, 2006.
+
 ## Installation
 
 After installing [POMDPs.jl](https://github.com/JuliaPOMDP/POMDPs.jl), start Julia and run the following command:
