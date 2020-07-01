@@ -35,12 +35,13 @@ Documentation can be found on the following site: [juliapomdp.github.io/MCTS.jl/
 If `mdp` is an MDP defined with the [POMDPs.jl](https://github.com/sisl/POMDPs.jl) interface, the MCTS solver can be used to find an optimized action, `a`, for the MDP in state `s` as follows:
 
 ```julia
-using POMDPModels # for the GridWorld problem
+using POMDPModels # for the SimpleGridWorld problem
 using MCTS
-mdp = GridWorld()
+using StaticArrays
+mdp = SimpleGridWorld()
 solver = MCTSSolver(n_iterations=50, depth=20, exploration_constant=5.0)
 planner = solve(solver, mdp)
-a = action(planner, s)
+a = action(planner, SA[1,2])
 ```
 
 See [this notebook](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) for an example of how to visualize the search tree.
