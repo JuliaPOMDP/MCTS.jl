@@ -7,11 +7,14 @@
 [![MCTS Tree for Grid World, visualized](https://github.com/JuliaPOMDP/MCTS.jl/raw/master/img/tree.png)](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb)
 
 This package implements the Monte-Carlo Tree Search algorithm in Julia for solving Markov decision processes (MDPs).
-The user should define the problem according to the [generative interface](http://juliapomdp.github.io/POMDPs.jl/latest/generative) in [POMDPs.jl](https://github.com/JuliaPOMDP/POMDPs.jl). Examples of problem definitions can be found in [POMDPModels.jl](https://github.com/JuliaPOMDP/POMDPModels.jl). For an extensive tutorial, see [this](http://nbviewer.ipython.org/JuliaPOMDP/POMDPs.jl/blob/master/examples/GridWorld.ipynb) notebook.
+The user should define the problem according to the [generative interface](http://juliapomdp.github.io/POMDPs.jl/latest/generative) in [POMDPs.jl](https://github.com/JuliaPOMDP/POMDPs.jl). Examples of problem definitions can be found in [POMDPModels.jl](https://github.com/JuliaPOMDP/POMDPModels.jl). 
 
 There is also a BeliefMCTSSolver that solves a POMDP by converting it to an MDP in the belief space.
 
 Special thanks to Jon Cox for writing the original version of this code.
+
+For reference, see the UCT algorithm in this paper:
+Kocsis, Levente, and Csaba Szepesvári. "Bandit Based Monte-Carlo planning." European Conference on Machine Learning. Springer, Berlin, Heidelberg, 2006.
 
 ## Installation
 
@@ -32,12 +35,13 @@ Documentation can be found on the following site: [juliapomdp.github.io/MCTS.jl/
 If `mdp` is an MDP defined with the [POMDPs.jl](https://github.com/sisl/POMDPs.jl) interface, the MCTS solver can be used to find an optimized action, `a`, for the MDP in state `s` as follows:
 
 ```julia
-using POMDPModels # for the GridWorld problem
+using POMDPModels # for the SimpleGridWorld problem
 using MCTS
-mdp = GridWorld()
+using StaticArrays
+mdp = SimpleGridWorld()
 solver = MCTSSolver(n_iterations=50, depth=20, exploration_constant=5.0)
 planner = solve(solver, mdp)
-a = action(planner, s)
+a = action(planner, SA[1,2])
 ```
 
 See [this notebook](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb) for an example of how to visualize the search tree.
