@@ -15,9 +15,10 @@ POMDPs.action(p::DPWPlanner, s) = first(action_info(p, s))
 """
 Construct an MCTSDPW tree and choose the best action. Also output some information.
 """
-function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
+function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false, show_progress=false)
     local a::actiontype(p.mdp)
     info = Dict{Symbol, Any}()
+    dt = show_progress ? 0.1 : Inf
     try
         if isterminal(p.mdp, s)
             error("""
@@ -48,7 +49,7 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
 
         nquery = 0
         start_us = CPUtime_us()
-        @showprogress for i = 1:p.solver.n_iterations
+        @showprogress dt for i = 1:p.solver.n_iterations
             nquery += 1
             simulate(p, snode, p.solver.depth) # (not 100% sure we need to make a copy of the state here)
             if CPUtime_us() - start_us >= p.solver.max_time * 1e6
