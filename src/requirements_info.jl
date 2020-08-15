@@ -1,20 +1,24 @@
-function POMDPs.requirements_info(solver::AbstractMCTSSolver, problem::Union{POMDP,MDP})
-    if @implemented initialstate(::typeof(problem), ::MersenneTwister)
-        requirements_info(solver, problem, initialstate(problem, MersenneTwister(1)))
-    elseif statetype(typeof(problem)) <: Number
-        s = one(statetype(typeof(problem)))
-        requirements_info(solver, problem, s)
-    else
-        println("""
-            Since MCTS is an online solver, most of the computation occurs in `action(policy, state)`. In order to view the requirements for this function, please, supply a state as the third argument to `requirements_info`, e.g.
+function POMDPLinter.requirements_info(solver::AbstractMCTSSolver, problem::Union{POMDP,MDP})
+    try
+        isd = initialstate(problem)
+        s = rand(MersenneTwister(1), isd)
+        return requirements_info(solver, problem, s)
+    catch
+        if statetype(typeof(problem)) <: Number
+            s = one(statetype(typeof(problem)))
+            return requirements_info(solver, problem, s)
+        else
+            println("""
+                Since MCTS is an online solver, most of the computation occurs in `action(policy, state)`. In order to view the requirements for this function, please, supply a state as the third argument to `requirements_info`, e.g.
 
-                @requirements_info $(typeof(solver))() $(typeof(problem))() $(statetype(typeof(problem)))()
+                    @requirements_info $(typeof(solver))() $(typeof(problem))() $(statetype(typeof(problem)))()
 
-                """)
+                    """)
+        end
     end
 end
 
-function POMDPs.requirements_info(solver::AbstractMCTSSolver, problem::Union{POMDP,MDP}, s)
+function POMDPLinter.requirements_info(solver::AbstractMCTSSolver, problem::Union{POMDP,MDP}, s)
     policy = solve(solver, problem)
     requirements_info(policy, s)
 end
