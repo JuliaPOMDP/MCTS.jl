@@ -9,6 +9,8 @@ using CPUTime
 using Random
 using Printf
 using ProgressMeter
+using POMDPLinter: @show_requirements, requirements_info, @POMDP_require, @req, @subreq
+import POMDPLinter
 
 export
     MCTSSolver,
