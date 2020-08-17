@@ -47,11 +47,13 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false, show_
             snode = insert_state_node!(tree, s, p.solver.check_repeat_state)
         end
 
+        show_progress ? progress = Progress(p.solver.n_iterations) : nothing
         nquery = 0
         start_us = CPUtime_us()
-        @showprogress dt for i = 1:p.solver.n_iterations
+        for i = 1:p.solver.n_iterations
             nquery += 1
             simulate(p, snode, p.solver.depth) # (not 100% sure we need to make a copy of the state here)
+            show_progress ? next!(progress) : nothing
             if CPUtime_us() - start_us >= p.solver.max_time * 1e6
                 break
             end
