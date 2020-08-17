@@ -56,7 +56,7 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false, show_
                 break
             end
         end
-        if !isnothing(p.solver.reset_callback)
+        if p.solver.reset_callback !== nothing
             p.solver.reset_callback(p.mdp, s) # Optional: used to reset/reinitialize MDP to a given state.
         end
         info[:search_time_us] = CPUtime_us() - start_us
@@ -93,7 +93,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     sol = dpw.solver
     tree = dpw.tree
     s = tree.s_labels[snode]
-    if !isnothing(sol.reset_callback)
+    if sol.reset_callback !== nothing
         sol.reset_callback(dpw.mdp, s) # Optional: used to reset/reinitialize MDP to a given state.
     end
     if isterminal(dpw.mdp, s)
