@@ -89,6 +89,7 @@ Fields:
 
     reset_callback::Function
         Function used to reset/reinitialize the MDP to a given state `s`.
+        Useful when the simulator state is not truly separate from the MDP state.
         `f(mdp, s)` will be called.
         default: `nothing`
 """

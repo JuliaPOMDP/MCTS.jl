@@ -59,7 +59,7 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false, show_
             end
         end
         if p.solver.reset_callback !== nothing
-            p.solver.reset_callback(p.mdp, s) # Optional: used to reset/reinitialize MDP to a given state.
+            p.solver.reset_callback(p.mdp, s) # Optional: leave the MDP in the current state.
         end
         info[:search_time_us] = CPUtime_us() - start_us
         info[:tree_queries] = nquery
