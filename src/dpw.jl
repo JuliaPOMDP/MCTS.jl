@@ -18,7 +18,6 @@ Construct an MCTSDPW tree and choose the best action. Also output some informati
 function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false, show_progress=false)
     local a::actiontype(p.mdp)
     info = Dict{Symbol, Any}()
-    dt = show_progress ? 0.1 : Inf
     try
         if isterminal(p.mdp, s)
             error("""
