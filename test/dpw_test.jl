@@ -31,5 +31,5 @@ let
 
     state = GridWorldState(1,1)
 
-    @inferred action_info(policy, state, show_progress=true)
+    @inferred action_info(policy, state)
 end
