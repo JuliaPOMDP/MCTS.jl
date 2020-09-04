@@ -3,11 +3,11 @@ MCTS solver with DPW
 
 Fields:
 
-    depth::Int64:
+    depth::Int64
         Maximum rollout horizon and tree depth.
         default: 10
 
-    exploration_constant::Float64:
+    exploration_constant::Float64
         Specified how much the solver should explore.
         In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
         default: 1.0
@@ -45,11 +45,11 @@ Fields:
         When constructing the tree, check whether a state or action has been seen before (there is a computational cost to maintaining the dictionaries necessary for this)
         default: true
 
-    tree_in_info::Bool:
+    tree_in_info::Bool
         If true, return the tree in the info dict when action_info is called. False by default because it can use a lot of memory if histories are being saved.
         default: false
 
-    rng::AbstractRNG:
+    rng::AbstractRNG
         Random number generator
 
     estimate_value::Any (rollout policy)
@@ -91,7 +91,11 @@ Fields:
         Function used to reset/reinitialize the MDP to a given state `s`.
         Useful when the simulator state is not truly separate from the MDP state.
         `f(mdp, s)` will be called.
-        default: `nothing`
+        default: `(mdp, s)->false` (optimized out)
+
+    show_progress::Bool
+        Show progress bar during simulation.
+        default: false
 """
 mutable struct DPWSolver <: AbstractMCTSSolver
     depth::Int
@@ -114,7 +118,8 @@ mutable struct DPWSolver <: AbstractMCTSSolver
     init_N::Any
     next_action::Any
     default_action::Any
-    reset_callback::Any
+    reset_callback::Function
+    show_progress::Bool
 end
 
 """
@@ -142,9 +147,10 @@ function DPWSolver(;depth::Int=10,
                     init_N::Any = 0,
                     next_action::Any = RandomActionGenerator(rng),
                     default_action::Any = ExceptionRethrow(),
-                    reset_callback::Any = nothing,
+                    reset_callback::Function = (mdp, s)->false,
+                    show_progress::Bool = false,
                    )
-    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, enable_state_pw, check_repeat_state, check_repeat_action, tree_in_info, rng, estimate_value, init_Q, init_N, next_action, default_action, reset_callback)
+    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, enable_state_pw, check_repeat_state, check_repeat_action, tree_in_info, rng, estimate_value, init_Q, init_N, next_action, default_action, reset_callback, show_progress)
 end
 
 #=
