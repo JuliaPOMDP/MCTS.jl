@@ -46,15 +46,19 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
             snode = insert_state_node!(tree, s, p.solver.check_repeat_state)
         end
 
+        p.solver.show_progress ? progress = Progress(p.solver.n_iterations) : nothing
         nquery = 0
         start_us = CPUtime_us()
         for i = 1:p.solver.n_iterations
             nquery += 1
             simulate(p, snode, p.solver.depth) # (not 100% sure we need to make a copy of the state here)
+            p.solver.show_progress ? next!(progress) : nothing
             if CPUtime_us() - start_us >= p.solver.max_time * 1e6
+                p.solver.show_progress ? finish!(progress) : nothing
                 break
             end
         end
+        p.reset_callback(p.mdp, s) # Optional: leave the MDP in the current state.
         info[:search_time_us] = CPUtime_us() - start_us
         info[:tree_queries] = nquery
         if p.solver.tree_in_info || tree_in_info
@@ -89,6 +93,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     sol = dpw.solver
     tree = dpw.tree
     s = tree.s_labels[snode]
+    dpw.reset_callback(dpw.mdp, s) # Optional: used to reset/reinitialize MDP to a given state.
     if isterminal(dpw.mdp, s)
         return 0.0
     elseif d == 0

@@ -3,11 +3,11 @@ MCTS solver with DPW
 
 Fields:
 
-    depth::Int64:
+    depth::Int64
         Maximum rollout horizon and tree depth.
         default: 10
 
-    exploration_constant::Float64:
+    exploration_constant::Float64
         Specified how much the solver should explore.
         In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
         default: 1.0
@@ -45,11 +45,11 @@ Fields:
         When constructing the tree, check whether a state or action has been seen before (there is a computational cost to maintaining the dictionaries necessary for this)
         default: true
 
-    tree_in_info::Bool:
+    tree_in_info::Bool
         If true, return the tree in the info dict when action_info is called. False by default because it can use a lot of memory if histories are being saved.
         default: false
 
-    rng::AbstractRNG:
+    rng::AbstractRNG
         Random number generator
 
     estimate_value::Any (rollout policy)
@@ -86,6 +86,16 @@ Fields:
         If this is a Policy `p`, `action(p, belief)` will be called.
         If it is an object `a`, `default_action(a, pomdp, belief, ex)` will be called, and if this method is not implemented, `a` will be returned directly.
         default: `ExceptionRethrow()`
+
+    reset_callback::Function
+        Function used to reset/reinitialize the MDP to a given state `s`.
+        Useful when the simulator state is not truly separate from the MDP state.
+        `f(mdp, s)` will be called.
+        default: `(mdp, s)->false` (optimized out)
+
+    show_progress::Bool
+        Show progress bar during simulation.
+        default: false
 """
 mutable struct DPWSolver <: AbstractMCTSSolver
     depth::Int
@@ -108,6 +118,8 @@ mutable struct DPWSolver <: AbstractMCTSSolver
     init_N::Any
     next_action::Any
     default_action::Any
+    reset_callback::Function
+    show_progress::Bool
 end
 
 """
@@ -134,9 +146,11 @@ function DPWSolver(;depth::Int=10,
                     init_Q::Any = 0.0,
                     init_N::Any = 0,
                     next_action::Any = RandomActionGenerator(rng),
-                    default_action::Any = ExceptionRethrow()
+                    default_action::Any = ExceptionRethrow(),
+                    reset_callback::Function = (mdp, s)->false,
+                    show_progress::Bool = false,
                    )
-    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, enable_state_pw, check_repeat_state, check_repeat_action, tree_in_info, rng, estimate_value, init_Q, init_N, next_action, default_action)
+    DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, enable_state_pw, check_repeat_state, check_repeat_action, tree_in_info, rng, estimate_value, init_Q, init_N, next_action, default_action, reset_callback, show_progress)
 end
 
 #=
@@ -234,12 +248,13 @@ children(n::DPWStateNode) = n.tree.children[n.index]
 n_children(n::DPWStateNode) = length(children(n))
 isroot(n::DPWStateNode) = n.index == 1
 
-mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
+mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RCB, RNG} <: AbstractMCTSPlanner{P}
     solver::DPWSolver
     mdp::P
     tree::Union{Nothing, DPWTree{S,A}}
     solved_estimate::SE
     next_action::NA
+    reset_callback::RCB
     rng::RNG
 end
 
@@ -250,11 +265,13 @@ function DPWPlanner(solver::DPWSolver, mdp::P) where P<:Union{POMDP,MDP}
                       actiontype(P),
                       typeof(se),
                       typeof(solver.next_action),
+                      typeof(solver.reset_callback),
                       typeof(solver.rng)}(solver,
                                           mdp,
                                           nothing,
                                           se,
                                           solver.next_action,
+                                          solver.reset_callback,
                                           solver.rng
                      )
 end
