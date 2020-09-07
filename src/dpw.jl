@@ -58,7 +58,7 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
                 break
             end
         end
-        p.solver.reset_callback(p.mdp, s) # Optional: leave the MDP in the current state.
+        p.reset_callback(p.mdp, s) # Optional: leave the MDP in the current state.
         info[:search_time_us] = CPUtime_us() - start_us
         info[:tree_queries] = nquery
         if p.solver.tree_in_info || tree_in_info
@@ -93,7 +93,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     sol = dpw.solver
     tree = dpw.tree
     s = tree.s_labels[snode]
-    sol.reset_callback(dpw.mdp, s) # Optional: used to reset/reinitialize MDP to a given state.
+    dpw.reset_callback(dpw.mdp, s) # Optional: used to reset/reinitialize MDP to a given state.
     if isterminal(dpw.mdp, s)
         return 0.0
     elseif d == 0

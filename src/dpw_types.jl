@@ -248,12 +248,13 @@ children(n::DPWStateNode) = n.tree.children[n.index]
 n_children(n::DPWStateNode) = length(children(n))
 isroot(n::DPWStateNode) = n.index == 1
 
-mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RNG} <: AbstractMCTSPlanner{P}
+mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RCB, RNG} <: AbstractMCTSPlanner{P}
     solver::DPWSolver
     mdp::P
     tree::Union{Nothing, DPWTree{S,A}}
     solved_estimate::SE
     next_action::NA
+    reset_callback::RCB
     rng::RNG
 end
 
@@ -264,11 +265,13 @@ function DPWPlanner(solver::DPWSolver, mdp::P) where P<:Union{POMDP,MDP}
                       actiontype(P),
                       typeof(se),
                       typeof(solver.next_action),
+                      typeof(solver.reset_callback),
                       typeof(solver.rng)}(solver,
                                           mdp,
                                           nothing,
                                           se,
                                           solver.next_action,
+                                          solver.reset_callback,
                                           solver.rng
                      )
 end
