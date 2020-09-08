@@ -30,11 +30,12 @@ import Pkg; Pkg.add("MCTS")
 
 Documentation can be found on the following site: [juliapomdp.github.io/MCTS.jl/latest/](http://juliapomdp.github.io/MCTS.jl/latest/)
 
-## Usage Example
+## Usage
 
 If `mdp` is an MDP defined with the [POMDPs.jl](https://github.com/sisl/POMDPs.jl) interface, the MCTS solver can be used to find an optimized action, `a`, for the MDP in state `s` as follows:
 
 ```julia
+using POMDPs
 using POMDPModels # for the SimpleGridWorld problem
 using MCTS
 using StaticArrays

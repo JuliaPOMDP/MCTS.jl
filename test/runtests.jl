@@ -2,10 +2,11 @@ using MCTS
 using POMDPs
 using POMDPModels
 using Test
-# using NBInclude
+using NBInclude
 using D3Trees
 using Random
 using POMDPPolicies
+using POMDPLinter: @requirements_info
 
 n_iter = 50
 depth = 15
@@ -22,9 +23,9 @@ end
 
 @testset "requirements_info" begin
     println("============== @requirements_info with only solver:")
-    @requirements_info solver
+    @test_skip @requirements_info solver
     println("============== @requirements_info with solver and mdp:")
-    @requirements_info solver mdp
+    @test_skip @requirements_info solver mdp
     println("============== @requirements_info with solver, mdp, and state:")
     @test_skip @requirements_info solver mdp GridWorldState(1,1)
     println("============== isequal and hash warnings:")
@@ -61,8 +62,7 @@ end
 @testset "visualization" begin
     include("visualization.jl")
 end
-@warn("skipping nbinclude tests")
-# @nbinclude("../notebooks/Test_Visualization.ipynb")
+@nbinclude("../notebooks/Test_Visualization.ipynb")
 
 @testset "other" begin
     include("other.jl")
@@ -151,5 +151,4 @@ end
     @test_logs (:warn,) action(p, state)
 end
 
-@warn("Skipping NBInclude tests.")
-# @nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
+@nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")

@@ -28,8 +28,9 @@ POMDPs = "0.9"
 julia = "1"
 
 [extras]
+NBInclude = "0db19996-df87-5ea3-a455-e3a50d440464"
 POMDPModels = "355abbd5-f08e-5560-ac9e-8b5f2592a0ca"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["POMDPModels", "Test"]
+test = ["POMDPModels", "NBInclude", "Test"]
