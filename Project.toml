@@ -24,6 +24,7 @@ POMDPLinter = "0.1"
 POMDPModelTools = "0.3"
 POMDPPolicies = "0.3"
 POMDPSimulators = "0.3"
+ProgressMeter = "1"
 POMDPs = "0.9"
 julia = "1"
 
