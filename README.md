@@ -18,13 +18,7 @@ Kocsis, Levente, and Csaba Szepesvári. "Bandit Based Monte-Carlo planning." Eur
 
 ## Installation
 
-After installing [POMDPs.jl](https://github.com/JuliaPOMDP/POMDPs.jl), start Julia and run the following command:
-
-```julia
-using POMDPs
-POMDPs.add_registry()
-import Pkg; Pkg.add("MCTS")
-```
+In Julia, type, `]add MCTS`
 
 ## Documentation
 
