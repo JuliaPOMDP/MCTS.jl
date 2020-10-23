@@ -208,7 +208,16 @@ function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree", kwargs...)
         end
     end
     for sa in 1:lensa
-        children[sa+lens] = collect(first(t) for t in tree.transitions[sa])
+        children[sa+lens] = let
+            sp_children = if !isempty(tree.unique_transitions)
+                last.(filter(((sanode,spnode),) -> sanode == sa, tree.unique_transitions))
+            else
+                first.(tree.transitions[sa])
+            end
+            @assert length(sp_children) == tree.n_a_children[sa]
+            collect(sp_children)
+        end
+
         text[sa+lens] = @sprintf("""
                                  %25s
                                  Q: %6.2f
