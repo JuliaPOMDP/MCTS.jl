@@ -15,12 +15,12 @@ function D3Trees.D3Tree(policy::MCTSPlanner, root_state; kwargs...)
     # check to see if visualization was enabled
     @warn("""
          D3Tree(planner::MCTSPlanner, root_state) is deprecated and may be removed in the future. Instead, please use
-             
+
              a, info = action_info(planner, state)
              D3Tree(info[:tree])
 
          Make sure that the tree_in_info solver option is set to true. You can also get this info from a POMDPToolbox History
-         
+
              info = first(ainfo_hist(hist))
              D3Tree(info[:tree])
          """)
@@ -37,12 +37,12 @@ end
 function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
     @warn("""
          D3Tree(planner::DPWPlanner) is deprecated and may be removed in the future. Instead, please use
-             
+
              a, info = action_info(planner, state)
              D3Tree(info[:tree])
 
          Make sure that the tree_in_info solver option is set to true. You can also get this info from a POMDPToolbox History
-         
+
              info = first(ainfo_hist(hist))
              D3Tree(info[:tree])
          """)
@@ -104,7 +104,7 @@ function D3Trees.D3Tree(tree::MCTSTree, root_state=first(tree.s_labels); title="
                          )
         # add as a child to corresponding sa node
         push!(nodes[1+nsas+said]["child_d3ids"], 1+i)
-        
+
         n = total_n(StateNode(tree, sid))
         # add parent_n to all children
         for csan in children(StateNode(tree, sid))
@@ -208,7 +208,16 @@ function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree", kwargs...)
         end
     end
     for sa in 1:lensa
-        children[sa+lens] = collect(first(t) for t in tree.transitions[sa])
+        children[sa+lens] = let
+            sp_children = if !isempty(tree.unique_transitions)
+                last.(filter(((sanode,spnode),) -> sanode == sa, tree.unique_transitions))
+            else
+                first.(tree.transitions[sa])
+            end
+            @assert length(sp_children) == tree.n_a_children[sa]
+            collect(sp_children)
+        end
+
         text[sa+lens] = @sprintf("""
                                  %25s
                                  Q: %6.2f
@@ -220,10 +229,10 @@ function D3Trees.D3Tree(tree::DPWTree; title="MCTS-DPW Tree", kwargs...)
                                 )
         tt[sa+lens] = """
                       $(tooltip_tag(tree.a_labels[sa]))
-                      Q: $(tree.q[sa]) 
+                      Q: $(tree.q[sa])
                       N: $(tree.n[sa])
                       """
-                      
+
         rel_q = (tree.q[sa]-min_q)/(max_q-min_q)
         if isnan(rel_q)
             color = colorant"gray"
