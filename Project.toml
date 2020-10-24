@@ -1,7 +1,7 @@
 name = "MCTS"
 uuid = "e12ccd36-dcad-5f33-8774-9175229e7b33"
 repo = "https://github.com/JuliaPOMDP/MCTS.jl"
-version = "0.4.6"
+version = "0.4.7"
 
 [deps]
 CPUTime = "a9c8d775-2e2e-55fc-8582-045d282d599e"
