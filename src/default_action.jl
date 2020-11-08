@@ -39,7 +39,7 @@ struct ReportWhenUsed{T}
 end
 
 function default_action(r::ReportWhenUsed, mdp, s, ex)
-    showerror(STDERR, ex)
+    @warn(sprint(showerror, ex))
     a = default_action(r.a, mdp, s, ex)
     @warn("Using default action $a")
     return a

@@ -149,6 +149,10 @@ end
     sol = DPWSolver(default_action=:up, estimate_value=error)
     p = solve(sol, mdp)
     @test_logs (:warn,) action(p, state)
+
+    sol = DPWSolver(default_action=ReportWhenUsed(:up), estimate_value=error)
+    p = solve(sol, mdp)
+    @test_logs (:warn,) (:warn,) (:warn,) action(p, state)
 end
 
 @nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
