@@ -74,7 +74,7 @@ end
 """
 Return the reward for one iteration of MCTSDPW.
 """
-function simulate(dpw::DPWPlanner, snode::Int, d::Int, timeout_us::Float64=0.0)
+function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     S = statetype(dpw.mdp)
     A = actiontype(dpw.mdp)
     sol = dpw.solver
@@ -83,7 +83,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int, timeout_us::Float64=0.0)
     dpw.reset_callback(dpw.mdp, s) # Optional: used to reset/reinitialize MDP to a given state.
     if isterminal(dpw.mdp, s)
         return 0.0
-    elseif d == 0 || (timeout_us > 0.0 && CPUtime_us() > timeout_us)
+    elseif d == 0
         return estimate_value(dpw.solved_estimate, dpw.mdp, s, d)
     end
 
