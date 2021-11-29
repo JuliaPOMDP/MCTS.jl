@@ -142,13 +142,13 @@ function DPWSolver(;depth::Int=10,
                     check_repeat_action::Bool=true,
                     tree_in_info::Bool=false,
                     rng::AbstractRNG=Random.GLOBAL_RNG,
-                    estimate_value::Any = RolloutEstimator(RandomSolver(rng)),
-                    init_Q::Any = 0.0,
-                    init_N::Any = 0,
-                    next_action::Any = RandomActionGenerator(rng),
-                    default_action::Any = ExceptionRethrow(),
-                    reset_callback::Function = (mdp, s)->false,
-                    show_progress::Bool = false,
+                    estimate_value::Any=RolloutEstimator(RandomSolver(rng)),
+                    init_Q::Any=0.0,
+                    init_N::Any=0,
+                    next_action::Any=RandomActionGenerator(rng),
+                    default_action::Any=ExceptionRethrow(),
+                    reset_callback::Function=(mdp, s) -> false,
+                    show_progress::Bool=false,
                    )
     DPWSolver(depth, exploration_constant, n_iterations, max_time, k_action, alpha_action, k_state, alpha_state, keep_tree, enable_action_pw, enable_state_pw, check_repeat_state, check_repeat_action, tree_in_info, rng, estimate_value, init_Q, init_N, next_action, default_action, reset_callback, show_progress)
 end
@@ -212,6 +212,7 @@ mutable struct DPWTree{S,A}
     end
 end
 
+
 function insert_state_node!(tree::DPWTree{S,A}, s::S, maintain_s_lookup=true) where {S,A}
     push!(tree.total_n, 0)
     push!(tree.children, Int[])
@@ -222,6 +223,7 @@ function insert_state_node!(tree::DPWTree{S,A}, s::S, maintain_s_lookup=true) wh
     end
     return snode
 end
+
 
 function insert_action_node!(tree::DPWTree{S,A}, snode::Int, a::A, n0::Int, q0::Float64, maintain_a_lookup=true) where {S,A}
     push!(tree.n, n0)
@@ -248,6 +250,7 @@ children(n::DPWStateNode) = n.tree.children[n.index]
 n_children(n::DPWStateNode) = length(children(n))
 isroot(n::DPWStateNode) = n.index == 1
 
+
 mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RCB, RNG} <: AbstractMCTSPlanner{P}
     solver::DPWSolver
     mdp::P
@@ -257,6 +260,7 @@ mutable struct DPWPlanner{P<:Union{MDP,POMDP}, S, A, SE, NA, RCB, RNG} <: Abstra
     reset_callback::RCB
     rng::RNG
 end
+
 
 function DPWPlanner(solver::DPWSolver, mdp::P) where P<:Union{POMDP,MDP}
     se = convert_estimator(solver.estimate_value, solver, mdp)
