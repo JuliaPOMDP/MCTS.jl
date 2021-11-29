@@ -28,13 +28,8 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
 
         S = statetype(p.mdp)
         A = actiontype(p.mdp)
-        if p.solver.keep_tree
-            if p.tree == nothing
-                tree = DPWTree{S,A}(p.solver.n_iterations)
-                p.tree = tree
-            else
-                tree = p.tree
-            end
+        if p.solver.keep_tree && p.tree != nothing
+            tree = p.tree
             if haskey(tree.s_lookup, s)
                 snode = tree.s_lookup[s]
             else
@@ -65,15 +60,7 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
             info[:tree] = tree
         end
 
-        best_Q = -Inf
-        sanode = 0
-        for child in tree.children[snode]
-            if tree.q[child] > best_Q
-                best_Q = tree.q[child]
-                sanode = child
-            end
-        end
-        # XXX some publications say to choose action that has been visited the most
+        sanode = best_sanode(tree, snode)
         a = tree.a_labels[sanode] # choose action with highest approximate value
     catch ex
         a = convert(actiontype(p.mdp), default_action(p.solver.default_action, p.mdp, s, ex))
@@ -87,7 +74,7 @@ end
 """
 Return the reward for one iteration of MCTSDPW.
 """
-function simulate(dpw::DPWPlanner, snode::Int, d::Int)
+function simulate(dpw::DPWPlanner, snode::Int, d::Int, timeout_us::Float64=0.0)
     S = statetype(dpw.mdp)
     A = actiontype(dpw.mdp)
     sol = dpw.solver
@@ -96,7 +83,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     dpw.reset_callback(dpw.mdp, s) # Optional: used to reset/reinitialize MDP to a given state.
     if isterminal(dpw.mdp, s)
         return 0.0
-    elseif d == 0
+    elseif d == 0 || (timeout_us > 0.0 && CPUtime_us() > timeout_us)
         return estimate_value(dpw.solved_estimate, dpw.mdp, s, d)
     end
 
@@ -123,26 +110,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
         end
     end
 
-    best_UCB = -Inf
-    sanode = 0
-    ltn = log(tree.total_n[snode])
-    for child in tree.children[snode]
-        n = tree.n[child]
-        q = tree.q[child]
-        c = sol.exploration_constant # for clarity
-        if (ltn <= 0 && n == 0) || c == 0.0
-            UCB = q
-        else
-            UCB = q + c*sqrt(ltn/n)
-        end
-        @assert !isnan(UCB) "UCB was NaN (q=$q, c=$c, ltn=$ltn, n=$n)"
-        @assert !isequal(UCB, -Inf)
-        if UCB > best_UCB
-            best_UCB = UCB
-            sanode = child
-        end
-    end
-
+    sanode = best_sanode_UCB(tree, snode, sol.exploration_constant)
     a = tree.a_labels[sanode]
 
     # state progressive widening
@@ -177,8 +145,52 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
 
     tree.n[sanode] += 1
     tree.total_n[snode] += 1
-
     tree.q[sanode] += (q - tree.q[sanode])/tree.n[sanode]
 
     return q
+end
+
+
+"""
+Return the best action.
+
+Some publications say to choose action that has been visited the most
+e.g., Continuous Upper Confidence Trees by Couëtoux et al.
+"""
+function best_sanode(tree::DPWTree, snode::Int)
+    best_Q = -Inf
+    sanode = 0
+    for child in tree.children[snode]
+        if tree.q[child] > best_Q
+            best_Q = tree.q[child]
+            sanode = child
+        end
+    end
+    return sanode
+end
+
+
+"""
+Return the best action node based on the UCB score with exploration constant c
+"""
+function best_sanode_UCB(tree::DPWTree, snode::Int, c::Float64)
+    best_UCB = -Inf
+    sanode = 0
+    ltn = log(tree.total_n[snode])
+    for child in tree.children[snode]
+        n = tree.n[child]
+        q = tree.q[child]
+        if (ltn <= 0 && n == 0) || c == 0.0
+            UCB = q
+        else
+            UCB = q + c*sqrt(ltn/n)
+        end
+        @assert !isnan(UCB) "UCB was NaN (q=$q, c=$c, ltn=$ltn, n=$n)"
+        @assert !isequal(UCB, -Inf)
+        if UCB > best_UCB
+            best_UCB = UCB
+            sanode = child
+        end
+    end
+    return sanode
 end
