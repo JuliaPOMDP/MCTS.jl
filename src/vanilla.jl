@@ -55,10 +55,10 @@ Fields:
         default: false
 """
 mutable struct MCTSSolver <: AbstractMCTSSolver
-	n_iterations::Int64
+    n_iterations::Int64
     max_time::Float64
-	depth::Int64
-	exploration_constant::Float64
+    depth::Int64
+    exploration_constant::Float64
     rng::AbstractRNG
     estimate_value::Any
     init_Q::Any
@@ -152,8 +152,8 @@ end
 
 
 mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
-	solver::MCTSSolver # containts the solver parameters
-	mdp::P # model
+    solver::MCTSSolver # containts the solver parameters
+    mdp::P # model
     tree::Union{Nothing,MCTSTree{S,A}} # the search tree
     solved_estimate::SE
     rng::RNG
@@ -281,7 +281,7 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
 
     # once depth is zero return
     if isterminal(planner.mdp, s)
-	return 0.0
+    return 0.0
     elseif depth == 0 
         return estimate_value(planner.solved_estimate, planner.mdp, s, depth)
     end
@@ -392,25 +392,25 @@ function best_sanode_UCB(snode::StateNode, c::Float64)
     best = first(children(snode))
     sn = total_n(snode)
     for sanode in children(snode)
-	
-	# if sn==0, log(sn) = -Inf. We want to avoid this.
+    
+    # if sn==0, log(sn) = -Inf. We want to avoid this.
         # in most cases, if n(sanode)==0, UCB will be Inf, which is desired,
-	# but if sn==1 as well, then we have 0/0, which is NaN
+    # but if sn==1 as well, then we have 0/0, which is NaN
         if c == 0 || sn == 0 || (sn == 1 && n(sanode) == 0)
             UCB = q(sanode)
         else
             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
         end
-		
+        
         if isnan(UCB)
             @show sn
             @show n(sanode)
             @show q(sanode)
         end
-		
+        
         @assert !isnan(UCB)
         @assert !isequal(UCB, -Inf)
-		
+        
         if UCB > best_UCB
             best_UCB = UCB
             best = sanode

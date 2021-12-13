@@ -5,6 +5,7 @@ using Test
 using NBInclude
 using D3Trees
 using Random
+using PerformanceTestTools
 using POMDPPolicies
 using POMDPLinter: @requirements_info
 
@@ -37,7 +38,7 @@ policy = solve(solver, mdp)
 state = GridWorldState(1,1)
 
 @testset "basic" begin
-    a = @inferred action(policy, state)
+    a = @inferred Symbol action(policy, state)
 
     tree = policy.tree
     @test get_state_node(tree, state).id == 1
@@ -153,6 +154,13 @@ end
     sol = DPWSolver(default_action=ReportWhenUsed(:up), estimate_value=error)
     p = solve(sol, mdp)
     @test_logs (:warn,) (:warn,) (:warn,) action(p, state)
+end
+
+@testset "multithreading" begin
+    PerformanceTestTools.@include_foreach(
+    "multithreading.jl",
+    [nothing, ["JULIA_NUM_THREADS" => "4"]],
+)
 end
 
 @nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")

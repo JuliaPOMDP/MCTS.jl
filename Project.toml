@@ -24,12 +24,13 @@ POMDPLinter = "0.1"
 POMDPModelTools = "0.3"
 POMDPPolicies = "0.3, 0.4"
 POMDPSimulators = "0.3"
-ProgressMeter = "1"
 POMDPs = "0.9"
+ProgressMeter = "1"
 julia = "1"
 
 [extras]
 NBInclude = "0db19996-df87-5ea3-a455-e3a50d440464"
+PerformanceTestTools = "dc46b164-d16f-48ec-a853-60448fc869fe"
 POMDPModels = "355abbd5-f08e-5560-ac9e-8b5f2592a0ca"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
