@@ -210,7 +210,6 @@ function get_state_node(tree::MCTSTree, s, planner::MCTSPlanner)
         return StateNode(tree, s)
     else
         return lock(() -> insert_node!(tree, planner, s), tree.node_insertion_lock)
-        # return insert_node!(tree, planner, s)
     end
 end
 
