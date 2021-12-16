@@ -156,11 +156,11 @@ end
     @test_logs (:warn,) (:warn,) (:warn,) action(p, state)
 end
 
+@nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
+
 @testset "multithreading" begin
     PerformanceTestTools.@include_foreach(
     "multithreading.jl",
     [nothing, ["JULIA_NUM_THREADS" => "4"]],
 )
 end
-
-@nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
