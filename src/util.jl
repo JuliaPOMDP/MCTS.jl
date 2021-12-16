@@ -11,7 +11,7 @@ function ranked_actions(planner::AbstractMCTSPlanner, state)
 end
 
 function ranked_actions(tree::MCTSTree, state)
-    sanodes = children(StateNode(tree, tree.state_map[state]))
+    sanodes = children(tree.states[state])
     sorted_sanodes = sort(collect(sanodes), by=q, rev=true)
     return [action(n)=>q(n) for n in sorted_sanodes]
 end
