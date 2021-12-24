@@ -53,18 +53,22 @@ Fields:
         If this is true, extra information needed for tree visualization will
         be recorded. If it is false, the tree cannot be visualized.
         default: false
+
+    timer::Function:
+        Timekeeping method. Search iterations ended when `timer() - start_time ≥ max_time`.
 """
 mutable struct MCTSSolver <: AbstractMCTSSolver
-	n_iterations::Int64
+    n_iterations::Int64
     max_time::Float64
-	depth::Int64
-	exploration_constant::Float64
+    depth::Int64
+    exploration_constant::Float64
     rng::AbstractRNG
     estimate_value::Any
     init_Q::Any
     init_N::Any
     reuse_tree::Bool
     enable_tree_vis::Bool
+    timer::Function
 end
 
 """
@@ -72,17 +76,19 @@ end
 
 Use keyword arguments to specify values for the fields.
 """
-function MCTSSolver(;n_iterations::Int64 = 100,
-                     max_time::Float64 = Inf,
-                     depth::Int64 = 10,
-                     exploration_constant::Float64 = 1.0,
-                     rng = Random.GLOBAL_RNG,
-                     estimate_value = RolloutEstimator(RandomSolver(rng)),
-                     init_Q = 0.0,
-                     init_N = 0,
-                     reuse_tree::Bool = false,
-                     enable_tree_vis::Bool=false)
-    return MCTSSolver(n_iterations, max_time, depth, exploration_constant, rng, estimate_value, init_Q, init_N, reuse_tree, enable_tree_vis)
+function MCTSSolver(;n_iterations::Int64=100,
+                     max_time::Float64=Inf,
+                     depth::Int64=10,
+                     exploration_constant::Float64=1.0,
+                     rng=Random.GLOBAL_RNG,
+                     estimate_value=RolloutEstimator(RandomSolver(rng)),
+                     init_Q=0.0,
+                     init_N=0,
+                     reuse_tree::Bool=false,
+                     enable_tree_vis::Bool=false,
+                     timer=() -> 1e-9 * time_ns())
+    return MCTSSolver(n_iterations, max_time, depth, exploration_constant, rng, estimate_value, init_Q, init_N,
+                      reuse_tree, enable_tree_vis, timer)
 end
 
 mutable struct MCTSTree{S,A}
@@ -261,11 +267,12 @@ function build_tree(planner::AbstractMCTSPlanner, s)
         root = StateNode(tree, sid)
     end
 
-    start_us = CPUtime_us()
+    timer = planner.solver.timer
+    start_s = timer()
     # build the tree
     for n = 1:n_iterations
         simulate(planner, root, depth)
-        if CPUtime_us() - start_us >= planner.solver.max_time * 1e6
+        if timer() - start_s >= planner.solver.max_time
             break
         end
     end
