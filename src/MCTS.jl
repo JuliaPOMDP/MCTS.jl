@@ -4,8 +4,6 @@ using POMDPs
 using POMDPModelTools
 using POMDPPolicies
 using POMDPSimulators
-#using Blink
-using CPUTime
 using Random
 using Printf
 using ProgressMeter
