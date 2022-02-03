@@ -11,15 +11,15 @@ gw = SimpleGridWorld()
 # vis = ValueIterationSolver()
 # vip = solve(vis, gw)
 # 
-# test_states = GridWorldState[]
+# test_states = GWPos[]
 # 
 # for i in [1, 3, 5, 9]
 #     for j in [1, 3, 5, 9]
-#         push!(test_states, GridWorldState(i,j))
+#         push!(test_states, GWPos(i,j))
 #     end
 # end
 # 
-# ad = Dict{GridWorldState, Symbol}()
+# ad = Dict{GWPos, Symbol}()
 # for s in test_states
 #     ad[s] = action(vip, s)
 # end
