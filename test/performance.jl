@@ -3,11 +3,12 @@ using MCTS
 using POMDPModels
 using DiscreteValueIteration
 using POMDPs
+using SharedArrays
 
-mdp = LegacyGridWorld()
+mdp = SimpleGridWorld()
 N = 50
 rng = MersenneTwister(1)
-init_states = [GridWorldState(rand(rng, 1:mdp.size_x), rand(rng, 1:mdp.size_y)) for i in 1:N]
+init_states = [GWPos(rand(rng, 1:mdp.size[1]), rand(rng, 1:mdp.size[2])) for i in 1:N]
 
 solvers = Dict(:vi => ValueIterationSolver(),
                :mcts1k => MCTSSolver(n_iterations=1000,
@@ -22,11 +23,11 @@ solvers = Dict(:vi => ValueIterationSolver(),
                                  k_action=100.0, # these are all just set to large values so that behavior should be equivalent to MCTS
                                  alpha_action=1.0,
                                  k_state=100.0,
-                                 alpha_action=1.0,
+                                 alpha_state=1.0,
                                  ))
 
 policies = Dict([(k, solve(s,mdp)) for (k,s) in solvers])
-rewards = SharedArray(Float64, length(solvers), N)
+rewards = Array{Float64}(undef, length(solvers), N)
 index = Dict([(k, i) for (i, k) in enumerate(keys(solvers))])
 
 for (k,p) in policies

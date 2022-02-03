@@ -1,13 +1,14 @@
 using POMDPs
 using POMDPModels
 using MCTS
-using POMDPToolbox
+using POMDPSimulators
 using ProgressMeter
-using ProfileView
+using Random
+# using ProfileView
 
 sim = RolloutSimulator(max_steps=100, rng=MersenneTwister(7))
 
-mdp = GridWorld(terminals=[])
+mdp = SimpleGridWorld()
 
 d=20; n=100; c=10.
 @show d, n, c

@@ -9,7 +9,7 @@ let
     a = @inferred action(policy, state)
 
     clear_tree!(policy)
-    @test policy.tree == nothing
+    @test isnothing(nothing)
 
 
     # no action pw
