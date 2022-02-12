@@ -72,7 +72,7 @@ solver = MCTSSolver(estimate_value=RolloutEstimator(rollout_policy)) # default s
 Since Monte-Carlo Tree Search is an online method, the solve function simply specifies the mdp model to the solver (which is embedded in the policy object). (Note that an MCTSPlanner can also be constructed directly without calling `solve()`.) The computation is done during calls to the action function. To extract the policy for a given state, simply call the action function:
 
 ```julia
-s = create_state(mdp) # this can be any valid state
+s = rand(states(mdp)) # this can be any valid state
 a = action(planner, s) # returns the action for state s
 ```
 

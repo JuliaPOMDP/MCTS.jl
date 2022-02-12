@@ -1,13 +1,14 @@
 using POMDPs
 using POMDPModels
 using MCTS
-using POMDPToolbox
+using POMDPSimulators
 using ProgressMeter
-using ProfileView
+using Random
+# using ProfileView
 
 sim = RolloutSimulator(max_steps=100, rng=MersenneTwister(7))
 
-mdp = GridWorld(terminals=[])
+mdp = SimpleGridWorld()
 
 d=20; n=1000; c=10.
 @show d, n, c
@@ -23,17 +24,17 @@ solver = DPWSolver(depth=d,
 planner = solve(solver, mdp)
 simulate(sim, mdp, planner)
 
-# @code_warntype MCTS.simulate(planner, GridWorldState(1,1,false), 10)
+# @code_warntype MCTS.simulate(planner, GWPos(1,1), 10)
 
-Profile.clear()
-@profile for i in 1:1
-    simulate(sim, mdp, planner)
-end
-ProfileView.view()
-
-# @show N=100
-# rewards = Array(Float64, N)
-# @time @showprogress for i = 1:N
-#     rewards[i] = simulate(sim, mdp, planner)
+# Profile.clear()
+# @profile for i in 1:1
+#     simulate(sim, mdp, planner)
 # end
-# @show mean(rewards)
+# ProfileView.view()
+
+@show N=100
+rewards = Array{Float64}(undef, N)
+@time @showprogress for i = 1:N
+    rewards[i] = simulate(sim, mdp, planner)
+end
+@show mean(rewards)

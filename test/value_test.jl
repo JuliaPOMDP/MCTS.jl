@@ -1,7 +1,7 @@
 using POMDPModels
 using MCTS
 
-gw = LegacyGridWorld()
+gw = SimpleGridWorld()
 
 # The commented-out code below can be used to generate ad. It is hard-coded here to avoid the dependency.
 
@@ -11,15 +11,15 @@ gw = LegacyGridWorld()
 # vis = ValueIterationSolver()
 # vip = solve(vis, gw)
 # 
-# test_states = GridWorldState[]
+# test_states = GWPos[]
 # 
 # for i in [1, 3, 5, 9]
 #     for j in [1, 3, 5, 9]
-#         push!(test_states, GridWorldState(i,j))
+#         push!(test_states, GWPos(i,j))
 #     end
 # end
 # 
-# ad = Dict{GridWorldState, Symbol}()
+# ad = Dict{GWPos, Symbol}()
 # for s in test_states
 #     ad[s] = action(vip, s)
 # end
@@ -27,22 +27,22 @@ gw = LegacyGridWorld()
 # @show ad
 
 
-ad = Dict(POMDPModels.GridWorldState(1, 9, false)=>:right,
-          POMDPModels.GridWorldState(9, 9, false)=>:down,
-          POMDPModels.GridWorldState(5, 9, false)=>:down,
-          POMDPModels.GridWorldState(3, 5, false)=>:right,
-          POMDPModels.GridWorldState(1, 5, false)=>:right,
-          POMDPModels.GridWorldState(5, 3, false)=>:right,
-          POMDPModels.GridWorldState(3, 3, false)=>:down,
-          POMDPModels.GridWorldState(1, 1, false)=>:right,
-          POMDPModels.GridWorldState(3, 9, false)=>:right,
-          POMDPModels.GridWorldState(1, 3, false)=>:down,
-          POMDPModels.GridWorldState(9, 3, false)=>:up,
-          POMDPModels.GridWorldState(9, 5, false)=>:down,
-          POMDPModels.GridWorldState(5, 5, false)=>:right,
-          POMDPModels.GridWorldState(9, 1, false)=>:up,
-          POMDPModels.GridWorldState(3, 1, false)=>:right,
-          POMDPModels.GridWorldState(5, 1, false)=>:right)
+ad = Dict(GWPos(1, 9)=>:right,
+          GWPos(9, 9)=>:down,
+          GWPos(5, 9)=>:down,
+          GWPos(3, 5)=>:right,
+          GWPos(1, 5)=>:right,
+          GWPos(5, 3)=>:right,
+          GWPos(3, 3)=>:down,
+          GWPos(1, 1)=>:right,
+          GWPos(3, 9)=>:right,
+          GWPos(1, 3)=>:down,
+          GWPos(9, 3)=>:up,
+          GWPos(9, 5)=>:down,
+          GWPos(5, 5)=>:right,
+          GWPos(9, 1)=>:up,
+          GWPos(3, 1)=>:right,
+          GWPos(5, 1)=>:right)
 
 ms = MCTSSolver(n_iterations=10_000,
                 depth=20,
