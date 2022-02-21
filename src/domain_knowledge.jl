@@ -1,12 +1,12 @@
 """
-    estimate_value(estimator, mdp, state, depth)
+    estimate_value(estimator, mdp, state)
 
 Return an estimate of the value.
 
 """
 function estimate_value end
-estimate_value(f::Function, mdp::Union{POMDP,MDP}, state, depth::Int) = f(mdp, state, depth)
-estimate_value(estimator::Number, mdp::Union{POMDP,MDP}, state, depth::Int) = convert(Float64, estimator)
+estimate_value(f::Function, mdp::Union{POMDP,MDP}, state) = f(mdp, state)
+estimate_value(estimator::Number, mdp::Union{POMDP,MDP}, state) = convert(Float64, estimator)
 
 """
 RolloutEstimator
@@ -31,6 +31,11 @@ This is within the policy when a RolloutEstimator is passed to an AbstractMCTSSo
 mutable struct SolvedRolloutEstimator{P<:Policy, RNG<:AbstractRNG}
     policy::P
     rng::RNG
+    depth::Union{Int, Nothing}
+
+    function SolvedRolloutEstimator(policy, rng, depth::Union{Int, Nothing}=nothing)
+        new(policy, rng, depth)
+    end
 end
 
 convert_estimator(ev, solver, mdp) = ev
@@ -42,20 +47,20 @@ convert_to_policy(s::Solver, mdp::Union{POMDP,MDP}) = solve(s, mdp)
 convert_to_policy(f::Function, mdp::Union{POMDP,MDP}) = FunctionPolicy(f)
 
 
-@POMDP_require estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, depth::Int) begin
-    @subreq rollout(estimator, mdp, state, depth)
+@POMDP_require estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state) begin
+    @subreq rollout(estimator, mdp, state)
 end
 
-estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, depth::Int) = rollout(estimator, mdp, state, depth)
+estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state) = rollout(estimator, mdp, state)
 
 # this rollout function is really just here in case people search for rollout
-function rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s, d::Int)
-    sim = RolloutSimulator(estimator.rng, d)
+function rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s)
+    sim = RolloutSimulator(estimator.rng, estimator.depth)
     POMDPs.simulate(sim, mdp, estimator.policy, s)
 end
 
-@POMDP_require rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s, d::Int) begin
-    sim = RolloutSimulator(rng=estimator.rng, max_steps=d)
+@POMDP_require rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s) begin
+    sim = RolloutSimulator(rng=estimator.rng, max_steps=estimator.depth)
     @subreq POMDPs.simulate(sim, mdp, estimator.policy, s)
 end
 
