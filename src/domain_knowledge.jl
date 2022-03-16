@@ -18,20 +18,20 @@ Fields:
         If this is a Solver, solve(solver, mdp) will be called to find the rollout policy
         If this is a Policy, the policy will be used for rollouts
         If this is a Function, a POMDPToolbox.FunctionPolicy with this function will be used for rollouts
-    depth::Union{Int, Nothing}
+    max_depth::Union{Int, Nothing}
         Rollout depth.
     eps::Union{Float64, Nothing}
         A small number; if γᵗ where γ is the discount factor and t is the time step becomes smaller than this, the rollout will be terminated.
 """
 mutable struct RolloutEstimator
     solver::Union{Solver,Policy,Function} # rollout policy or solver
-    depth::Union{Int, Nothing}
+    max_depth::Union{Int, Nothing}
     eps::Union{Float64, Nothing}
 
     function RolloutEstimator(solver::Union{Solver,Policy,Function},
-                              depth::Union{Int, Nothing}=50,
+                              max_depth::Union{Int, Nothing}=50,
                               eps::Union{Float64, Nothing}=nothing)
-        new(solver, depth, eps)
+        new(solver, max_depth, eps)
     end
 end
 
@@ -43,13 +43,13 @@ This is within the policy when a RolloutEstimator is passed to an AbstractMCTSSo
 mutable struct SolvedRolloutEstimator{P<:Policy, RNG<:AbstractRNG}
     policy::P
     rng::RNG
-    depth::Union{Int, Nothing}
+    max_depth::Union{Int, Nothing}
     eps::Union{Float64, Nothing}
 end
 
 convert_estimator(ev, solver, mdp) = ev
 function convert_estimator(ev::RolloutEstimator, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP})
-    return SolvedRolloutEstimator(convert_to_policy(ev.solver, mdp), solver.rng, ev.depth, ev.eps)
+    return SolvedRolloutEstimator(convert_to_policy(ev.solver, mdp), solver.rng, ev.max_depth, ev.eps)
 end
 convert_to_policy(p::Policy, mdp::Union{POMDP,MDP}) = p
 convert_to_policy(s::Solver, mdp::Union{POMDP,MDP}) = solve(s, mdp)
@@ -64,12 +64,12 @@ estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state) = rollout(est
 
 # this rollout function is really just here in case people search for rollout
 function rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s)
-    sim = RolloutSimulator(rng=estimator.rng, max_steps=estimator.depth, eps=estimator.eps)
+    sim = RolloutSimulator(rng=estimator.rng, max_steps=estimator.max_depth, eps=estimator.eps)
     POMDPs.simulate(sim, mdp, estimator.policy, s)
 end
 
 @POMDP_require rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s) begin
-    sim = RolloutSimulator(rng=estimator.rng, max_steps=estimator.depth, eps=estimator.eps)
+    sim = RolloutSimulator(rng=estimator.rng, max_steps=estimator.max_depth, eps=estimator.eps)
     @subreq POMDPs.simulate(sim, mdp, estimator.policy, s)
 end
 
