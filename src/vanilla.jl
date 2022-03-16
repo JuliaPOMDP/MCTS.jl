@@ -28,7 +28,7 @@ Fields:
         If this is a function `f`, `f(mdp, s)` will be called to estimate the value.
         If this is an object `o`, `estimate_value(o, mdp, s)` will be called.
         If this is a number, the value will be set to that number
-        default: RolloutEstimator(RandomSolver(rng))
+        default: RolloutEstimator(RandomSolver(rng); max_depth=50, eps=nothing)
 
     init_Q::Any
         Function, object, or number used to set the initial Q(s,a) value at a new node.

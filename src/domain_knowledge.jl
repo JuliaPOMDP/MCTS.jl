@@ -28,7 +28,7 @@ mutable struct RolloutEstimator
     max_depth::Union{Int, Nothing}
     eps::Union{Float64, Nothing}
 
-    function RolloutEstimator(solver::Union{Solver,Policy,Function},
+    function RolloutEstimator(solver::Union{Solver,Policy,Function};
                               max_depth::Union{Int, Nothing}=50,
                               eps::Union{Float64, Nothing}=nothing)
         new(solver, max_depth, eps)
