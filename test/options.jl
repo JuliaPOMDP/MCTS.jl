@@ -9,7 +9,7 @@ mutable struct DomanKnowledgeTestTp end
 
 MCTS.init_Q(d::DomanKnowledgeTestTp, mdp::SimpleGridWorld, s, a) = -1.0
 MCTS.init_N(d::DomanKnowledgeTestTp, mdp::SimpleGridWorld, s, a) = 2
-MCTS.estimate_value(d::DomanKnowledgeTestTp, mdp::SimpleGridWorld, s, depth::Int) = 4.0
+MCTS.estimate_value(d::DomanKnowledgeTestTp, mdp::SimpleGridWorld, s) = 4.0
 MCTS.next_action(d::DomanKnowledgeTestTp, mdp::SimpleGridWorld, s, snode::DPWStateNode) = rand(Random.GLOBAL_RNG, actions(mdp))
 
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, init_Q=1.0))
@@ -23,7 +23,7 @@ test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_con
 @test_throws MethodError test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, init_N="bad"))
 
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=3.0))
-test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=(mdp, s, d)->9))
+test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=(mdp, s)->9))
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=DomanKnowledgeTestTp()))
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(RandomPolicy(SimpleGridWorld(), rng=Random.GLOBAL_RNG))))
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(x->:up)))
@@ -40,7 +40,7 @@ test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_cons
 @test_throws MethodError test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, init_N="bad"))
 
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=3.0))
-test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=(mdp, s, d)->9))
+test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=(mdp, s)->9))
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=DomanKnowledgeTestTp()))
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(RandomPolicy(SimpleGridWorld(), rng=Random.GLOBAL_RNG))))
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(x->:up)))

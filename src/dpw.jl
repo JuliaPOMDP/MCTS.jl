@@ -85,7 +85,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     if isterminal(dpw.mdp, s)
         return 0.0
     elseif d == 0
-        return estimate_value(dpw.solved_estimate, dpw.mdp, s, d)
+        return estimate_value(dpw.solved_estimate, dpw.mdp, s)
     end
 
     # action progressive widening
@@ -139,7 +139,7 @@ function simulate(dpw::DPWPlanner, snode::Int, d::Int)
     end
 
     if new_node
-        q = r + discount(dpw.mdp)*estimate_value(dpw.solved_estimate, dpw.mdp, sp, d-1)
+        q = r + discount(dpw.mdp)*estimate_value(dpw.solved_estimate, dpw.mdp, sp)
     else
         q = r + discount(dpw.mdp)*simulate(dpw, spnode, d-1)
     end
