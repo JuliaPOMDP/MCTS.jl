@@ -56,6 +56,7 @@ function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
         end
         p.reset_callback(p.mdp, s) # Optional: leave the MDP in the current state.
         info[:search_time] = timer() - start_s
+        info[:search_time_us] = info[:search_time]*1e6
         info[:tree_queries] = nquery
         if p.solver.tree_in_info || tree_in_info
             info[:tree] = tree
