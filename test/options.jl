@@ -27,6 +27,7 @@ test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_con
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=DomanKnowledgeTestTp()))
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(RandomPolicy(SimpleGridWorld(), rng=Random.GLOBAL_RNG))))
 test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(x->:up)))
+test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value=RolloutEstimator(x->:up, max_depth=-1)))
 @test_throws MethodError test_solver_options(MCTSSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, estimate_value="bad"))
 
 test_solver_options(DPWSolver(n_iterations=n_iter, depth=depth, exploration_constant=ec, init_Q=1.0))
