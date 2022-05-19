@@ -54,7 +54,7 @@ Fields:
 
     estimate_value::Any (rollout policy)
         Function, object, or number used to estimate the value at the leaf nodes.
-        If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
+        If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value (depth can be ignored).
         If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
         If this is a number, the value will be set to that number.
         default: RolloutEstimator(RandomSolver(rng))

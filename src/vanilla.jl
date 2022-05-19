@@ -25,10 +25,10 @@ Fields:
 
     estimate_value::Any (rollout policy)
         Function, object, or number used to estimate the value at the leaf nodes.
-        If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value.
-        If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
+        If this is a function `f`, `f(mdp, s, remaining_depth)` will be called to estimate the value (remaining_depth can be ignored).
+        If this is an object `o`, `estimate_value(o, mdp, s, remaining_depth)` will be called.
         If this is a number, the value will be set to that number
-        default: RolloutEstimator(RandomSolver(rng))
+        default: RolloutEstimator(RandomSolver(rng); max_depth=50, eps=nothing)
 
     init_Q::Any
         Function, object, or number used to set the initial Q(s,a) value at a new node.
@@ -304,9 +304,9 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
     if spid == 0
         spn = insert_node!(tree, planner, sp)
         spid = spn.id
-        q = r + discount(mdp) * estimate_value(planner.solved_estimate, planner.mdp, sp, depth - 1)
+        q = r + discount(mdp) * estimate_value(planner.solved_estimate, planner.mdp, sp, depth-1)
     else
-        q = r + discount(mdp) * simulate(planner, StateNode(tree, spid) , depth - 1)
+        q = r + discount(mdp) * simulate(planner, StateNode(tree, spid) , depth-1)
     end
     if planner.solver.enable_tree_vis
         record_visit!(tree, said, spid)

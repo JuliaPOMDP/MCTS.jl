@@ -1,12 +1,13 @@
 """
-    estimate_value(estimator, mdp, state, depth)
+    estimate_value(estimator, mdp, state, remaining_depth)
 
 Return an estimate of the value.
 
+The `remaining_depth` argument indicates the remaining number of steps from the point where `estimate_value` is called to the `depth` argument of the MCTS solver. It can be safely ignored, but can be used to limit rollouts to a fixed horizon from the *root node*.
 """
 function estimate_value end
-estimate_value(f::Function, mdp::Union{POMDP,MDP}, state, depth::Int) = f(mdp, state, depth)
-estimate_value(estimator::Number, mdp::Union{POMDP,MDP}, state, depth::Int) = convert(Float64, estimator)
+estimate_value(f::Function, mdp::Union{POMDP,MDP}, state, remaining_depth) = f(mdp, state, remaining_depth)
+estimate_value(estimator::Number, mdp::Union{POMDP,MDP}, state, remaining_depth) = convert(Float64, estimator)
 
 """
 RolloutEstimator
@@ -18,9 +19,21 @@ Fields:
         If this is a Solver, solve(solver, mdp) will be called to find the rollout policy
         If this is a Policy, the policy will be used for rollouts
         If this is a Function, a POMDPToolbox.FunctionPolicy with this function will be used for rollouts
+    max_depth::Union{Int, Nothing}
+        Rollout depth. If this is -1, it will roll out to the `depth` argument of the `MCTSSolver` from the root node.
+    eps::Union{Float64, Nothing}
+        A small number; if γᵗ where γ is the discount factor and t is the time step becomes smaller than this, the rollout will be terminated.
 """
 mutable struct RolloutEstimator
     solver::Union{Solver,Policy,Function} # rollout policy or solver
+    max_depth::Union{Int, Nothing}
+    eps::Union{Float64, Nothing}
+
+    function RolloutEstimator(solver::Union{Solver,Policy,Function};
+                              max_depth::Union{Int, Nothing}=50,
+                              eps::Union{Float64, Nothing}=nothing)
+        new(solver, max_depth, eps)
+    end
 end
 
 """
@@ -31,32 +44,32 @@ This is within the policy when a RolloutEstimator is passed to an AbstractMCTSSo
 mutable struct SolvedRolloutEstimator{P<:Policy, RNG<:AbstractRNG}
     policy::P
     rng::RNG
+    max_depth::Union{Int, Nothing}
+    eps::Union{Float64, Nothing}
 end
 
 convert_estimator(ev, solver, mdp) = ev
 function convert_estimator(ev::RolloutEstimator, solver::AbstractMCTSSolver, mdp::Union{POMDP,MDP})
-    return SolvedRolloutEstimator(convert_to_policy(ev.solver, mdp), solver.rng)
+    return SolvedRolloutEstimator(convert_to_policy(ev.solver, mdp), solver.rng, ev.max_depth, ev.eps)
 end
 convert_to_policy(p::Policy, mdp::Union{POMDP,MDP}) = p
 convert_to_policy(s::Solver, mdp::Union{POMDP,MDP}) = solve(s, mdp)
 convert_to_policy(f::Function, mdp::Union{POMDP,MDP}) = FunctionPolicy(f)
 
-
-@POMDP_require estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, depth::Int) begin
-    @subreq rollout(estimator, mdp, state, depth)
-end
-
-estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, depth::Int) = rollout(estimator, mdp, state, depth)
-
-# this rollout function is really just here in case people search for rollout
-function rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s, d::Int)
-    sim = RolloutSimulator(estimator.rng, d)
-    POMDPs.simulate(sim, mdp, estimator.policy, s)
-end
-
-@POMDP_require rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s, d::Int) begin
-    sim = RolloutSimulator(rng=estimator.rng, max_steps=d)
+@POMDP_require estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, remaining_depth) begin
+    sim = RolloutSimulator(rng=estimator.rng, max_steps=estimator.max_depth, eps=estimator.eps)
     @subreq POMDPs.simulate(sim, mdp, estimator.policy, s)
+end
+
+# rollouts occur here
+function estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, remaining_depth)
+    if estimator.max_depth == -1
+        max_steps = remaining_depth
+    else
+        max_steps = estimator.max_depth
+    end
+    sim = RolloutSimulator(rng=estimator.rng, max_steps=max_steps, eps=estimator.eps)
+    return POMDPs.simulate(sim, mdp, estimator.policy, state)
 end
 
 """
