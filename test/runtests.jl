@@ -22,13 +22,13 @@ struct A
 end
 
 @testset "requirements_info" begin
-    println("============== @requirements_info with only solver:")
+    # println("============== @requirements_info with only solver:")
     @test_skip @requirements_info solver
-    println("============== @requirements_info with solver and mdp:")
+    # println("============== @requirements_info with solver and mdp:")
     @test_skip @requirements_info solver mdp
-    println("============== @requirements_info with solver, mdp, and state:")
+    # println("============== @requirements_info with solver, mdp, and state:")
     @test_skip @requirements_info solver mdp GWPos(1,1)
-    println("============== isequal and hash warnings:")
+    # println("============== isequal and hash warnings:")
     @test_skip @requirements_info solver mdp A([1,2,3])
 end
 

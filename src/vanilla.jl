@@ -25,8 +25,8 @@ Fields:
 
     estimate_value::Any (rollout policy)
         Function, object, or number used to estimate the value at the leaf nodes.
-        If this is a function `f`, `f(mdp, s)` will be called to estimate the value.
-        If this is an object `o`, `estimate_value(o, mdp, s)` will be called.
+        If this is a function `f`, `f(mdp, s, remaining_depth)` will be called to estimate the value (remaining_depth can be ignored).
+        If this is an object `o`, `estimate_value(o, mdp, s, remaining_depth)` will be called.
         If this is a number, the value will be set to that number
         default: RolloutEstimator(RandomSolver(rng); max_depth=50, eps=nothing)
 
@@ -290,7 +290,7 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
     if isterminal(planner.mdp, s)
 	return 0.0
     elseif depth == 0 
-        return estimate_value(planner.solved_estimate, planner.mdp, s)
+        return estimate_value(planner.solved_estimate, planner.mdp, s, depth)
     end
 
     # pick action using UCT
@@ -304,9 +304,9 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
     if spid == 0
         spn = insert_node!(tree, planner, sp)
         spid = spn.id
-        q = r + discount(mdp) * estimate_value(planner.solved_estimate, planner.mdp, sp)
+        q = r + discount(mdp) * estimate_value(planner.solved_estimate, planner.mdp, sp, depth-1)
     else
-        q = r + discount(mdp) * simulate(planner, StateNode(tree, spid) , depth - 1)
+        q = r + discount(mdp) * simulate(planner, StateNode(tree, spid) , depth-1)
     end
     if planner.solver.enable_tree_vis
         record_visit!(tree, said, spid)
@@ -326,7 +326,7 @@ end
     @req discount(::P)
     @req isterminal(::P, ::S)
     @subreq insert_node!(planner, s)
-    @subreq estimate_value(planner.solved_estimate, mdp, s)
+    @subreq estimate_value(planner.solved_estimate, mdp, s, depth)
     @req gen(::P, ::S, ::A, ::typeof(planner.rng)) # XXX this is not exactly right - it could be satisfied with transition
     @req isequal(::S, ::S) # for hasnode
     @req hash(::S) # for hasnode

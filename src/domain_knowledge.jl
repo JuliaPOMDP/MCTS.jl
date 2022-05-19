@@ -1,12 +1,13 @@
 """
-    estimate_value(estimator, mdp, state)
+    estimate_value(estimator, mdp, state, remaining_depth)
 
 Return an estimate of the value.
 
+The `remaining_depth` argument indicates the remaining number of steps from the point where `estimate_value` is called to the `depth` argument of the MCTS solver. It can be safely ignored, but can be used to limit rollouts to a fixed horizon from the *root node*.
 """
 function estimate_value end
-estimate_value(f::Function, mdp::Union{POMDP,MDP}, state) = f(mdp, state)
-estimate_value(estimator::Number, mdp::Union{POMDP,MDP}, state) = convert(Float64, estimator)
+estimate_value(f::Function, mdp::Union{POMDP,MDP}, state, remaining_depth) = f(mdp, state, remaining_depth)
+estimate_value(estimator::Number, mdp::Union{POMDP,MDP}, state, remaining_depth) = convert(Float64, estimator)
 
 """
 RolloutEstimator
@@ -19,7 +20,7 @@ Fields:
         If this is a Policy, the policy will be used for rollouts
         If this is a Function, a POMDPToolbox.FunctionPolicy with this function will be used for rollouts
     max_depth::Union{Int, Nothing}
-        Rollout depth.
+        Rollout depth. If this is -1, it will roll out to the `depth` argument of the `MCTSSolver` from the root node.
     eps::Union{Float64, Nothing}
         A small number; if γᵗ where γ is the discount factor and t is the time step becomes smaller than this, the rollout will be terminated.
 """
@@ -55,22 +56,20 @@ convert_to_policy(p::Policy, mdp::Union{POMDP,MDP}) = p
 convert_to_policy(s::Solver, mdp::Union{POMDP,MDP}) = solve(s, mdp)
 convert_to_policy(f::Function, mdp::Union{POMDP,MDP}) = FunctionPolicy(f)
 
-
-@POMDP_require estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state) begin
-    @subreq rollout(estimator, mdp, state)
-end
-
-estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state) = rollout(estimator, mdp, state)
-
-# this rollout function is really just here in case people search for rollout
-function rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s)
-    sim = RolloutSimulator(rng=estimator.rng, max_steps=estimator.max_depth, eps=estimator.eps)
-    POMDPs.simulate(sim, mdp, estimator.policy, s)
-end
-
-@POMDP_require rollout(estimator::SolvedRolloutEstimator, mdp::MDP, s) begin
+@POMDP_require estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, remaining_depth) begin
     sim = RolloutSimulator(rng=estimator.rng, max_steps=estimator.max_depth, eps=estimator.eps)
     @subreq POMDPs.simulate(sim, mdp, estimator.policy, s)
+end
+
+# rollouts occur here
+function estimate_value(estimator::SolvedRolloutEstimator, mdp::MDP, state, remaining_depth)
+    if estimator.max_depth == -1
+        max_steps = remaining_depth
+    else
+        max_steps = estimator.max_depth
+    end
+    sim = RolloutSimulator(rng=estimator.rng, max_steps=max_steps, eps=estimator.eps)
+    return POMDPs.simulate(sim, mdp, estimator.policy, state)
 end
 
 """
