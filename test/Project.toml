@@ -1,7 +1,6 @@
 [deps]
 D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
 DiscreteValueIteration = "4b033969-44f6-5439-a48b-c11fa3648068"
-MCTS = "e12ccd36-dcad-5f33-8774-9175229e7b33"
 NBInclude = "0db19996-df87-5ea3-a455-e3a50d440464"
 POMDPLinter = "f3bd98c0-eb40-45e2-9eb1-f2763262d755"
 POMDPModels = "355abbd5-f08e-5560-ac9e-8b5f2592a0ca"
