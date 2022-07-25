@@ -15,7 +15,7 @@ POMDPs.action(p::DPWPlanner, s) = first(action_info(p, s))
 """
 Construct an MCTSDPW tree and choose the best action. Also output some information.
 """
-function POMDPModelTools.action_info(p::DPWPlanner, s; tree_in_info=false)
+function POMDPTools.action_info(p::DPWPlanner, s; tree_in_info=false)
     local a::actiontype(p.mdp)
     info = Dict{Symbol, Any}()
     try

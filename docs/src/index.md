@@ -17,7 +17,7 @@ POMDPs.add("MCTS")
 
 ## Usage
 
-Problems should be defined using the [POMDPs.jl generative interface](https://juliapomdp.github.io/POMDPs.jl/stable/generative/).
+Problems should be defined using the [POMDPs.jl generative interface](https://juliapomdp.github.io/POMDPs.jl/stable/def_pomdp/#Using-a-single-generative-function-instead-of-separate-T,-Z,-and-R).
 
 To see the methods that you need to implement to use MCTS with your MDP (assume you're defining an MDP of type `MyMDP` with states represented by integers and 3 possible integer actions), run
 ```julia
@@ -49,9 +49,9 @@ For rollout(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64) (in estimate_value(
 For simulate(::RolloutSimulator, ::MDP, ::Policy, ::Any) (in rollout(::SolvedRolloutEstimator, ::MDP, ::Any, ::Int64)):
   [✔] action(::RandomPolicy, ::Int64)
 ```
-indicating that the generative interface still needs to be implemented for `MyMDP` to be used with MCTS. See the [geneartive interface documentation](http://juliapomdp.github.io/POMDPs.jl/stable/generative/) for further details.
+indicating that the generative interface still needs to be implemented for `MyMDP` to be used with MCTS. See the [geneartive interface documentation](https://juliapomdp.github.io/POMDPs.jl/stable/def_pomdp/#Using-a-single-generative-function-instead-of-separate-T,-Z,-and-R) for further details.
 
-Note: MDPs that implement the [POMDPs.jl explicit interface](http://juliapomdp.github.io/POMDPs.jl/stable/explicit/) can also be used with MCTS since the implementation of the explicit interface automatically defines the functions in the generative interface.
+Note: MDPs that implement the [POMDPs.jl explicit interface](https://juliapomdp.github.io/POMDPs.jl/stable/def_pomdp/) can also be used with MCTS since the implementation of the explicit interface automatically defines the functions in the generative interface.
 
 Once the above functions are defined, the solver can be called with the following syntax:
 

@@ -1,7 +1,7 @@
 using POMDPs
 using POMDPModels
 using MCTS
-using POMDPSimulators
+using POMDPTools
 using ProgressMeter
 using Random
 # using ProfileView
