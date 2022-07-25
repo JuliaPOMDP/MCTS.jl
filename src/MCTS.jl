@@ -1,9 +1,7 @@
 module MCTS
 
 using POMDPs
-using POMDPModelTools
-using POMDPPolicies
-using POMDPSimulators
+using POMDPTools
 using Random
 using Printf
 using ProgressMeter

@@ -1,7 +1,7 @@
 using POMDPs
 using MCTS
 using POMDPModels
-using POMDPSimulators
+using POMDPTools
 
 # function POMDPs.simulate(mdp::POMDP,
 #                          policy::Policy,

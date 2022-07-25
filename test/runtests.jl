@@ -5,7 +5,7 @@ using Test
 using NBInclude
 using D3Trees
 using Random
-using POMDPPolicies
+using POMDPTools
 using POMDPLinter: @requirements_info
 
 n_iter = 50
