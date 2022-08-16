@@ -1,7 +1,6 @@
-*.jl.cov
-*.jl.mem
 docs/build/
 docs/site/
 *.swp
 *Manifest.toml
 *ipynb_checkpoints/
+.vscode

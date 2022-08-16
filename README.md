@@ -1,8 +1,8 @@
 # MCTS
 
-[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliapomdp.github.io/MCTS.jl/latest)
-[![Build Status](https://travis-ci.org/JuliaPOMDP/MCTS.jl.svg?branch=master)](https://travis-ci.org/JuliaPOMDP/MCTS.jl)
-[![Coverage Status](https://coveralls.io/repos/github/JuliaPOMDP/MCTS.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaPOMDP/MCTS.jl?branch=master)
+[![CI](https://github.com/JuliaPOMDP/MCTS.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/JuliaPOMDP/MCTS.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/JuliaPOMDP/MCTS.jl/branch/master/graph/badge.svg?token=lwo3VqC7eQ)](https://codecov.io/gh/JuliaPOMDP/MCTS.jl)
+[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliapomdp.github.io/MCTS.jl/stable)
 
 [![MCTS Tree for Grid World, visualized](https://github.com/JuliaPOMDP/MCTS.jl/raw/master/img/tree.png)](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb)
 

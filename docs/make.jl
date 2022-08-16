@@ -1,10 +1,18 @@
 using Documenter, MCTS
 
-makedocs()
+makedocs(
+    modules = [MCTS],
+    format = Documenter.HTML(),
+    sitename = "MCTS.jl",
+    pages = [
+        "index.md",
+        "vanilla.md",
+        "dpw.md",
+        "belief_mcts.md",
+    ]
+)
 
 deploydocs(
-    deps = Deps.pip("mkdocs", "python-markdown-math"),
     repo = "github.com/JuliaPOMDP/MCTS.jl.git",
-    julia = "0.6",
-    osname = "linux"
+    versions = ["stable" => "v^", "v#.#"],
 )
