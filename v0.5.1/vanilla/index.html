@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Vanilla · MCTS.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">MCTS.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">MCTS</a></li><li class="is-active"><a class="tocitem" href>Vanilla</a></li><li><a class="tocitem" href="../dpw/">Double Progressive Widening</a></li><li><a class="tocitem" href="../belief_mcts/">Belief MCTS</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Vanilla</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Vanilla</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaPOMDP/MCTS.jl/blob/master/docs/src/vanilla.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Vanilla"><a class="docs-heading-anchor" href="#Vanilla">Vanilla</a><a id="Vanilla-1"></a><a class="docs-heading-anchor-permalink" href="#Vanilla" title="Permalink"></a></h1><p>The &quot;vanilla&quot; solver is the most basic version of MCTS. It works well with small discrete state and action spaces.</p><p>The solver fields are used to specify solver parameters. All of them can be specified as keyword arguments to the solver constructor.</p><article class="docstring"><header><a class="docstring-binding" id="MCTS.MCTSSolver" href="#MCTS.MCTSSolver"><code>MCTS.MCTSSolver</code></a> — <span class="docstring-category">Type</span></header><section><div><p>MCTS solver type</p><p>Fields:</p><pre><code class="nohighlight hljs">n_iterations::Int64
+    Number of iterations during each action() call.
+    default: 100
+
+max_time::Float64
+    Maximum amount of CPU time spent iterating through simulations.
+    default: Inf
+
+depth::Int64:
+    Maximum rollout horizon and tree depth.
+    default: 10
+
+exploration_constant::Float64:
+    Specifies how much the solver should explore.
+    In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
+    default: 1.0
+
+rng::AbstractRNG:
+    Random number generator
+
+estimate_value::Any (rollout policy)
+    Function, object, or number used to estimate the value at the leaf nodes.
+    If this is a function `f`, `f(mdp, s, remaining_depth)` will be called to estimate the value (remaining_depth can be ignored).
+    If this is an object `o`, `estimate_value(o, mdp, s, remaining_depth)` will be called.
+    If this is a number, the value will be set to that number
+    default: RolloutEstimator(RandomSolver(rng); max_depth=50, eps=nothing)
+
+init_Q::Any
+    Function, object, or number used to set the initial Q(s,a) value at a new node.
+    If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+    If this is an object `o`, `init_Q(o, mdp, s, a)` will be called.
+    If this is a number, Q will be set to that number
+    default: 0.0
+
+init_N::Any
+    Function, object, or number used to set the initial N(s,a) value at a new node.
+    If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+    If this is an object `o`, `init_N(o, mdp, s, a)` will be called.
+    If this is a number, N will be set to that number
+    default: 0
+
+reuse_tree::Bool:
+    If this is true, the tree information is re-used for calculating the next plan.
+    Of course, clear_tree! can always be called to override this.
+    default: false
+
+enable_tree_vis::Bool:
+    If this is true, extra information needed for tree visualization will
+    be recorded. If it is false, the tree cannot be visualized.
+    default: false
+
+timer::Function:
+    Timekeeping method. Search iterations ended when `timer() - start_time ≥ max_time`.</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaPOMDP/MCTS.jl/blob/16042d999f9bb75838038ddb7ea8fa702b77322d/src/vanilla.jl#L1-L59">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« MCTS</a><a class="docs-footer-nextpage" href="../dpw/">Double Progressive Widening »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Tuesday 16 August 2022 19:54">Tuesday 16 August 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
