@@ -3,6 +3,7 @@
 [![CI](https://github.com/JuliaPOMDP/MCTS.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/JuliaPOMDP/MCTS.jl/actions/workflows/CI.yml)
 [![codecov](https://codecov.io/gh/JuliaPOMDP/MCTS.jl/branch/master/graph/badge.svg?token=lwo3VqC7eQ)](https://codecov.io/gh/JuliaPOMDP/MCTS.jl)
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliapomdp.github.io/MCTS.jl/stable)
+[![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliapomdp.github.io/MCTS.jl/dev)
 
 [![MCTS Tree for Grid World, visualized](https://github.com/JuliaPOMDP/MCTS.jl/raw/master/img/tree.png)](https://nbviewer.jupyter.org/github/JuliaPOMDP/MCTS.jl/blob/master/notebooks/Test_Visualization.ipynb)
 
