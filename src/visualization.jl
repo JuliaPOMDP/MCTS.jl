@@ -50,7 +50,7 @@ function D3Trees.D3Tree(policy::DPWPlanner; kwargs...)
 end
 
 function D3Trees.D3Tree(tree::MCTSTree, root_state=first(tree.s_labels); title="MCTS tree", kwargs...)
-    if tree._vis_stats == nothing
+    if length(tree._vis_stats) == 0
         error("""
               Visualization was not enabled for this tree.
 
@@ -161,8 +161,12 @@ function D3Trees.D3Tree(nodes::Vector{Dict{String, Any}}; title="Julia D3Tree", 
             rel_q = (n["q"]-min_q)/(max_q-min_q)
             color = weighted_color_mean(rel_q, colorant"green", colorant"red")
             style[i] = "stroke:#$(hex(color))"
-            w = 20.0*sqrt(n["n"]/n["parent_n"])
-            link_style[i] = "stroke-width:$(w)px"
+            try # Some nodes may not have "parent_n"
+                w = 20.0*sqrt(n["n"]/n["parent_n"])
+                link_style[i] = "stroke-width:$(w)px"
+            catch
+                nothing
+            end
         else
             @warn("Unrecognized node type when constructing D3Tree.")
         end
