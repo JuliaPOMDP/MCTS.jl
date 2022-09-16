@@ -104,7 +104,7 @@ mutable struct MCTSTree{S,A}
     q::Vector{Float64}
     a_labels::Vector{A}
 
-    _vis_stats::Union{Nothing, Dict{Pair{Int,Int}, Int}} # maps (said=>sid)=>number of transitions. THIS MAY CHANGE IN THE FUTURE
+    _vis_stats::Dict{Pair{Int,Int}, Int} # maps (said=>sid)=>number of transitions. THIS MAY CHANGE IN THE FUTURE
 
     function MCTSTree{S,A}(sz::Int=1000) where {S,A}
         sz = min(sz, 100_000)
