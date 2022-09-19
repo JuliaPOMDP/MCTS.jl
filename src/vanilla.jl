@@ -211,7 +211,7 @@ POMDPs.action(p::AbstractMCTSPlanner, s) = first(action_info(p, s))
 Query the tree for a value estimate at state s. If the planner does not already have a tree, run the planner first.
 """
 function POMDPs.value(planner::MCTSPlanner, s)
-    if planner.tree == nothing
+    if planner.tree === nothing
         plan!(planner, s)
     end
     return value(planner.tree, s)
@@ -226,7 +226,7 @@ function POMDPs.value(tr::MCTSTree, s)
 end
 
 function POMDPs.value(planner::MCTSPlanner{<:Union{POMDP,MDP}, S, A}, s::S, a::A) where {S,A}
-    if planner.tree == nothing
+    if planner.tree === nothing
         plan!(planner, s)
     end
     return value(planner.tree, s, a)
