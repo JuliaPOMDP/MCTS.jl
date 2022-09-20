@@ -52,7 +52,7 @@ end
 function D3Trees.D3Tree(tree::MCTSTree, root_state=first(tree.s_labels); title="MCTS tree", kwargs...)
     if length(tree._vis_stats) == 0
         error("""
-              Visualization was not enabled for this tree.
+              Visualization was not enabled for this MCTS tree or the tree was empty.
 
               Construct the MCTS solver with 'enable_tree_vis=true' to enable.
               """)
