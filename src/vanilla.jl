@@ -403,8 +403,10 @@ function best_sanode_UCB(snode::StateNode, c::Float64)
 	# if sn==0, log(sn) = -Inf. We want to avoid this.
         # in most cases, if n(sanode)==0, UCB will be Inf, which is desired,
 	# but if sn==1 as well, then we have 0/0, which is NaN
-        if c == 0 || sn == 0 || (sn == 1 && n(sanode) == 0)
+        if sn == 0 || c == 0
             UCB = q(sanode)
+        elseif sn == 1 && n(sanode) == 0
+            UCB = Inf
         else
             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
         end
