@@ -395,30 +395,30 @@ end
 Return the best action node based on the UCB score with exploration constant c
 """
 function best_sanode_UCB(snode::StateNode, c::Float64)
+    if c==0
+        return argmax(q, children(snode))
+    end
+
     best_UCB = -Inf
-    best = first(children(snode))
+    best=first(children(snode))
     sn = total_n(snode)
     for sanode in children(snode)
-	
-	# if sn==0, log(sn) = -Inf. We want to avoid this.
-        # in most cases, if n(sanode)==0, UCB will be Inf, which is desired,
-	# but if sn==1 as well, then we have 0/0, which is NaN
-        if sn == 0 || c == 0
-            UCB = q(sanode)
-        elseif sn == 1 && n(sanode) == 0
-            UCB = Inf
+        # if action was not used, use it. This also handles the case sn==0, 
+        # since sn==0 is possible only when for all available actions n(sanode)==0
+        if n(sanode) == 0
+            return sanode
         else
             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
         end
 		
-        if isnan(UCB)
-            @show sn
-            @show n(sanode)
-            @show q(sanode)
-        end
+        # if isnan(UCB)
+        #     @show sn
+        #     @show n(sanode)
+        #     @show q(sanode)
+        # end
 		
-        @assert !isnan(UCB)
-        @assert !isequal(UCB, -Inf)
+        # @assert !isnan(UCB)
+        # @assert !isequal(UCB, -Inf)
 		
         if UCB > best_UCB
             best_UCB = UCB
