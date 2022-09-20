@@ -288,8 +288,8 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
 
     # once depth is zero return
     if isterminal(planner.mdp, s)
-	    return 0.0
-    elseif depth == 0 
+        return 0.0
+    elseif depth == 0
         return estimate_value(planner.solved_estimate, planner.mdp, s, depth)
     end
 
