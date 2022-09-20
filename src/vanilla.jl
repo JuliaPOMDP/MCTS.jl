@@ -400,7 +400,7 @@ function best_sanode_UCB(snode::StateNode, c::Float64)
     end
 
     best_UCB = -Inf
-    best=first(children(snode))
+    best = first(children(snode))
     sn = total_n(snode)
     for sanode in children(snode)
         # if action was not used, use it. This also handles the case sn==0, 
