@@ -104,7 +104,7 @@ mutable struct MCTSTree{S,A}
     q::Vector{Float64}
     a_labels::Vector{A}
 
-    _vis_stats::Union{Nothing, Dict{Pair{Int,Int}, Int}} # maps (said=>sid)=>number of transitions. THIS MAY CHANGE IN THE FUTURE
+    _vis_stats::Dict{Pair{Int,Int}, Int} # maps (said=>sid)=>number of transitions. THIS MAY CHANGE IN THE FUTURE
 
     function MCTSTree{S,A}(sz::Int=1000) where {S,A}
         sz = min(sz, 100_000)
@@ -211,7 +211,7 @@ POMDPs.action(p::AbstractMCTSPlanner, s) = first(action_info(p, s))
 Query the tree for a value estimate at state s. If the planner does not already have a tree, run the planner first.
 """
 function POMDPs.value(planner::MCTSPlanner, s)
-    if planner.tree == nothing
+    if planner.tree === nothing
         plan!(planner, s)
     end
     return value(planner.tree, s)
@@ -226,7 +226,7 @@ function POMDPs.value(tr::MCTSTree, s)
 end
 
 function POMDPs.value(planner::MCTSPlanner{<:Union{POMDP,MDP}, S, A}, s::S, a::A) where {S,A}
-    if planner.tree == nothing
+    if planner.tree === nothing
         plan!(planner, s)
     end
     return value(planner.tree, s, a)
@@ -288,8 +288,8 @@ function simulate(planner::AbstractMCTSPlanner, node::StateNode, depth::Int64)
 
     # once depth is zero return
     if isterminal(planner.mdp, s)
-	return 0.0
-    elseif depth == 0 
+        return 0.0
+    elseif depth == 0
         return estimate_value(planner.solved_estimate, planner.mdp, s, depth)
     end
 
