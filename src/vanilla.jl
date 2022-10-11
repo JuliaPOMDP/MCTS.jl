@@ -130,12 +130,11 @@ struct StateNode{S,A}
     tree::MCTSTree{S,A}
     id::Int
 end
-# StateNode(tree::MCTSTree{S}, s::S) where S = StateNode(tree, tree.state_map[s])
 
 """
     get_state_node(tree::MCTSTree, s)
 
-Return the StateNode in the tree corresponding to s.
+Return the StateNode in the tree corresponding to state s.
 """
 get_state_node(tree::MCTSTree{S}, s::S) where S = StateNode(tree, tree.state_map[s])
 
@@ -177,19 +176,6 @@ end
 Delete existing decision tree.
 """
 function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} p.tree = nothing end
-
-"""
-    get_state_node(tree::MCTSTree, s, planner::MCTSPlanner)
-
-Return the StateNode in the tree corresponding to s. If there is no such node, add it using the planner.
-"""
-# function get_state_node(tree::MCTSTree, s, planner::MCTSPlanner)
-#     if haskey(tree.state_map, s)
-#         return StateNode(tree, s)
-#     else
-#         return insert_node!(tree, planner, s)
-#     end
-# end
 
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
