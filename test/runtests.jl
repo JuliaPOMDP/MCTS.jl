@@ -40,8 +40,7 @@ state = GWPos(1,1)
     a = @inferred action(policy, state)
 
     tree = policy.tree
-    @test get_state_node(tree, state).id == 1
-    @test get_state_node(tree, state, policy).id == 1
+    @test tree.state_map[state] == 1
 
     clear_tree!(policy)
     @test isnothing(policy.tree)
