@@ -19,19 +19,19 @@ Fields:
         If this is a Solver, solve(solver, mdp) will be called to find the rollout policy
         If this is a Policy, the policy will be used for rollouts
         If this is a Function, a POMDPToolbox.FunctionPolicy with this function will be used for rollouts
-    max_depth::Union{Int, Nothing}
+    max_depth::Int
         Rollout depth. If this is -1, it will roll out to the `depth` argument of the `MCTSSolver` from the root node.
-    eps::Union{Float64, Nothing}
+    eps::Float64
         A small number; if γᵗ where γ is the discount factor and t is the time step becomes smaller than this, the rollout will be terminated.
 """
 mutable struct RolloutEstimator
     solver::Union{Solver,Policy,Function} # rollout policy or solver
-    max_depth::Union{Int, Nothing}
-    eps::Union{Float64, Nothing}
+    max_depth::Int
+    eps::Float64
 
     function RolloutEstimator(solver::Union{Solver,Policy,Function};
-                              max_depth::Union{Int, Nothing}=50,
-                              eps::Union{Float64, Nothing}=nothing)
+                              max_depth::Int=50,
+                              eps::Float64=0.0)
         new(solver, max_depth, eps)
     end
 end
@@ -44,8 +44,8 @@ This is within the policy when a RolloutEstimator is passed to an AbstractMCTSSo
 mutable struct SolvedRolloutEstimator{P<:Policy, RNG<:AbstractRNG}
     policy::P
     rng::RNG
-    max_depth::Union{Int, Nothing}
-    eps::Union{Float64, Nothing}
+    max_depth::Int
+    eps::Float64
 end
 
 convert_estimator(ev, solver, mdp) = ev
