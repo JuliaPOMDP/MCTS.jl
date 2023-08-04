@@ -161,3 +161,7 @@ end
 end
 
 @nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
+
+@testset "Discussion 514" begin
+    include("discussion_514.jl")
+end
