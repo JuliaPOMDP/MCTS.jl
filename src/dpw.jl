@@ -64,6 +64,7 @@ function POMDPTools.action_info(p::DPWPlanner, s; tree_in_info=false)
 
         sanode = best_sanode(tree, snode)
         a = tree.a_labels[sanode] # choose action with highest approximate value
+        info[:best_Q] = tree.q[sanode] # export the approximate value for the action
     catch ex
         a = convert(actiontype(p.mdp), default_action(p.solver.default_action, p.mdp, s, ex))
         info[:exception] = ex
