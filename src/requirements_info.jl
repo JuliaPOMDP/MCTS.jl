@@ -23,7 +23,7 @@ function POMDPLinter.requirements_info(solver::AbstractMCTSSolver, problem::Unio
     requirements_info(policy, s)
 end
 
-function POMDPs.requirements_info(policy::AbstractMCTSPlanner, s)
+function POMDPLinter.requirements_info(policy::AbstractMCTSPlanner, s)
     if !isequal(deepcopy(s), s)
         @warn("""
              isequal(deepcopy(s), s) returned false. Is isequal() defined correctly?
