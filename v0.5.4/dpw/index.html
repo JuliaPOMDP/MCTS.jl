@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Double Progressive Widening · MCTS.jl</title><meta name="title" content="Double Progressive Widening · MCTS.jl"/><meta property="og:title" content="Double Progressive Widening · MCTS.jl"/><meta property="twitter:title" content="Double Progressive Widening · MCTS.jl"/><meta name="description" content="Documentation for MCTS.jl."/><meta property="og:description" content="Documentation for MCTS.jl."/><meta property="twitter:description" content="Documentation for MCTS.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">MCTS.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">MCTS</a></li><li><a class="tocitem" href="../vanilla/">Vanilla</a></li><li class="is-active"><a class="tocitem" href>Double Progressive Widening</a></li><li><a class="tocitem" href="../belief_mcts/">Belief MCTS</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Double Progressive Widening</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Double Progressive Widening</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaPOMDP/MCTS.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaPOMDP/MCTS.jl/blob/master/docs/src/dpw.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Double-Progressive-Widening"><a class="docs-heading-anchor" href="#Double-Progressive-Widening">Double Progressive Widening</a><a id="Double-Progressive-Widening-1"></a><a class="docs-heading-anchor-permalink" href="#Double-Progressive-Widening" title="Permalink"></a></h1><p>The double progressive widening DPW solver is useful for problems with large (e.g. continuous) state and action spaces. It gradually expands the tree&#39;s branching factor so that the algorithm explores deeply even with large spaces.</p><p>See the papers at <a href="https://hal.archives-ouvertes.fr/file/index/docid/542673/filename/c0mcts.pdf">https://hal.archives-ouvertes.fr/file/index/docid/542673/filename/c0mcts.pdf</a> and <a href="http://arxiv.org/abs/1405.5498">http://arxiv.org/abs/1405.5498</a> for a description.</p><p>The solver fields are used to specify solver parameters. All of them can be specified as keyword arguments to the solver constructor.</p><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="MCTS.DPWSolver" href="#MCTS.DPWSolver"><code>MCTS.DPWSolver</code></a> — <span class="docstring-category">Type</span></header><section><div><p>MCTS solver with DPW</p><p>Fields:</p><pre><code class="nohighlight hljs">depth::Int64
+    Maximum rollout horizon and tree depth.
+    default: 10
+
+exploration_constant::Float64
+    Specified how much the solver should explore.
+    In the UCB equation, Q + c*sqrt(log(t/N)), c is the exploration constant.
+    default: 1.0
+
+n_iterations::Int64
+    Number of iterations during each action() call.
+    default: 100
+
+max_time::Float64
+    Maximum amount of CPU time spent iterating through simulations.
+    default: Inf
+
+k_action::Float64
+alpha_action::Float64
+k_state::Float64
+alpha_state::Float64
+    These constants control the double progressive widening. A new state
+    or action will be added if the number of children is less than or equal to kN^alpha.
+    defaults: k:10, alpha:0.5
+
+keep_tree::Bool
+    If true, store the tree in the planner for reuse at the next timestep (and every time it is used in the future). There is a computational cost for maintaining the state dictionary necessary for this.
+    default: false
+
+enable_action_pw::Bool
+    If true, enable progressive widening on the action space; if false just use the whole action space.
+    default: true
+
+enable_state_pw::Bool
+    If true, enable progressive widening on the state space; if false just use the single next state (for deterministic problems).
+    default: true
+
+check_repeat_state::Bool
+check_repeat_action::Bool
+    When constructing the tree, check whether a state or action has been seen before (there is a computational cost to maintaining the dictionaries necessary for this)
+    default: true
+
+tree_in_info::Bool
+    If true, return the tree in the info dict when action_info is called. False by default because it can use a lot of memory if histories are being saved.
+    default: false
+
+rng::AbstractRNG
+    Random number generator
+
+estimate_value::Any (rollout policy)
+    Function, object, or number used to estimate the value at the leaf nodes.
+    If this is a function `f`, `f(mdp, s, depth)` will be called to estimate the value (depth can be ignored).
+    If this is an object `o`, `estimate_value(o, mdp, s, depth)` will be called.
+    If this is a number, the value will be set to that number.
+    default: RolloutEstimator(RandomSolver(rng))
+
+init_Q::Any
+    Function, object, or number used to set the initial Q(s,a) value at a new node.
+    If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+    If this is an object `o`, `init_Q(o, mdp, s, a)` will be called.
+    If this is a number, Q will always be set to that number.
+    default: 0.0
+
+init_N::Any
+    Function, object, or number used to set the initial N(s,a) value at a new node.
+    If this is a function `f`, `f(mdp, s, a)` will be called to set the value.
+    If this is an object `o`, `init_N(o, mdp, s, a)` will be called.
+    If this is a number, N will always be set to that number.
+    default: 0
+
+next_action::Any
+    Function or object used to choose the next action to be considered for progressive widening.
+    The next action is determined based on the MDP, the state, `s`, and the current `DPWStateNode`, `snode`.
+    If this is a function `f`, `f(mdp, s, snode)` will be called to set the value.
+    If this is an object `o`, `next_action(o, mdp, s, snode)` will be called.
+    default: RandomActionGenerator(rng)
+
+default_action::Any
+    Function, action, or Policy used to determine the action if POMCP fails with exception `ex`.
+    If this is a Function `f`, `f(pomdp, belief, ex)` will be called.
+    If this is a Policy `p`, `action(p, belief)` will be called.
+    If it is an object `a`, `default_action(a, pomdp, belief, ex)` will be called, and if this method is not implemented, `a` will be returned directly.
+    default: `ExceptionRethrow()`
+
+reset_callback::Function
+    Function used to reset/reinitialize the MDP to a given state `s`.
+    Useful when the simulator state is not truly separate from the MDP state.
+    `f(mdp, s)` will be called.
+    default: `(mdp, s)-&gt;false` (optimized out)
+
+show_progress::Bool
+    Show progress bar during simulation.
+    default: false
+
+timer::Function:
+    Timekeeping method. Search iterations ended when `timer() - start_time ≥ max_time`.</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaPOMDP/MCTS.jl/blob/393976bae97c8188129792cfb53e44efbd53f8ac/src/dpw_types.jl#L1-L102">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../vanilla/">« Vanilla</a><a class="docs-footer-nextpage" href="../belief_mcts/">Belief MCTS »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.1.2 on <span class="colophon-date" title="Monday 23 October 2023 21:05">Monday 23 October 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
