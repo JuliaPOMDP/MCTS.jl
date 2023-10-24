@@ -38,9 +38,11 @@ state = GWPos(1,1)
 
 @testset "basic" begin
     a = @inferred action(policy, state)
+    a, info = action_info(policy, state)
 
     tree = policy.tree
     @test tree.state_map[state] == 1
+    @test info[:tree].state_map[state] == 1
 
     clear_tree!(policy)
     @test isnothing(policy.tree)
