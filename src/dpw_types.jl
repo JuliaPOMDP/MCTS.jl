@@ -217,7 +217,7 @@ mutable struct DPWTree{S,A}
 end
 
 
-function insert_state_node!(tree::DPWTree{S,A}, s::S, maintain_s_lookup=true) where {S,A}
+function insert_state_node!(tree::DPWTree, s, maintain_s_lookup=true)
     push!(tree.total_n, 0)
     push!(tree.children, Int[])
     push!(tree.s_labels, s)
@@ -229,7 +229,7 @@ function insert_state_node!(tree::DPWTree{S,A}, s::S, maintain_s_lookup=true) wh
 end
 
 
-function insert_action_node!(tree::DPWTree{S,A}, snode::Int, a::A, n0::Int, q0::Float64, maintain_a_lookup=true) where {S,A}
+function insert_action_node!(tree::DPWTree, snode::Int, a, n0::Int, q0::Float64, maintain_a_lookup=true)
     push!(tree.n, n0)
     push!(tree.q, q0)
     push!(tree.a_labels, a)

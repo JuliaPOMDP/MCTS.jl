@@ -24,7 +24,7 @@ To see the methods that you need to implement to use MCTS with your MDP (assume 
 using POMDPs
 using MCTS
 
-immutable MyMDP <: MDP{Int,Int} end
+struct MyMDP <: MDP{Int,Int} end
 POMDPs.actions(::MyMDP) = [1,2,3]
 
 @requirements_info MCTSSolver() MyMDP() 1
@@ -38,7 +38,7 @@ For action(::AbstractMCTSPlanner, ::Any):
 For simulate(::AbstractMCTSPlanner, ::Any, ::Int64) (in action(::AbstractMCTSPlanner, ::Any)):
   [✔] discount(::MyMDP)
   [✔] isterminal(::MyMDP, ::Int64)
-  [X] gen(::DDN{(:s, :r)}, ::MyMDP, ::Int64, ::Int64, ::MersenneTwister)
+  [X] gen(::MyMDP, ::Int64, ::Int64, ::MersenneTwister)
 For insert_node!(::AbstractMCTSPlanner, ::Any) (in simulate(::AbstractMCTSPlanner, ::Any, ::Int64)):
   [✔] actions(::MyMDP, ::Int64)
   [✔] iterator(::Tuple)
