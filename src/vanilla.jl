@@ -57,12 +57,12 @@ Fields:
     timer::Function:
         Timekeeping method. Search iterations ended when `timer() - start_time ≥ max_time`.
 """
-struct MCTSSolver{EV, Q, N, T} <: AbstractMCTSSolver
+struct MCTSSolver{EV, Q, N, T, RNG<:AbstractRNG} <: AbstractMCTSSolver
     n_iterations::Int64
     max_time::Float64
     depth::Int64
     exploration_constant::Float64
-    rng::AbstractRNG
+    rng::RNG
     estimate_value::EV
     init_Q::Q
     init_N::N
