@@ -3,7 +3,6 @@ using POMDPs
 using POMDPModels
 using Random
 using BenchmarkTools
-using Random
 using Dates, LibGit2
 
 function generate_benchmark_name(; haslength = 8)

@@ -7,25 +7,29 @@ end
 
 
 n_iter = 1000
-depth = 10
+depths = [10, 100, 1000]
 ec = 10.0
 RNG = MersenneTwister(1)
 
-solver = MCTSSolver(
+GC.enable_logging(false)
+
+get_solver(depth) = MCTSSolver(
     n_iterations=n_iter,
     depth=depth,
     exploration_constant=ec,
-    enable_tree_vis=true,
-    sizehint=100_000,
+    enable_tree_vis=false,
+    # sizehint=100_000,
     rng=RNG
 )
 
-GC.enable_logging(false)
+gw_sizes = [(10,10), (1_000,1_000), (1_000_000,1_000_000)]
 
-small_mdp = SimpleGridWorld(;size=(10,10))
-small_planner = solve(solver, small_mdp)
-SUITE["vanilla"]["action_small"] = @benchmarkable  benchmark_action(42, $RNG, $small_mdp, $small_planner)
-
-large_mdp = SimpleGridWorld(;size=(100,1000))
-large_planner = solve(solver, large_mdp)
-SUITE["vanilla"]["action_large"] = @benchmarkable  benchmark_action(42, $RNG, $large_mdp, $large_planner)
+for size in gw_sizes
+    for depth in depths
+        mdp = SimpleGridWorld(;size=size)
+        planner = solve(get_solver(depth), mdp)
+        name = "gw_$(size[1])x$(size[2])_d$depth"
+        # println("gw_$(size[1])x$(size[2])_d$depth")
+        SUITE["vanilla"][name] = @benchmarkable  benchmark_action(42, $RNG, $mdp, $planner)
+    end
+end
