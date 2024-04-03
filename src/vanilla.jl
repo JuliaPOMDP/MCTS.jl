@@ -57,7 +57,7 @@ Fields:
     timer::Function:
         Timekeeping method. Search iterations ended when `timer() - start_time ≥ max_time`.
 """
-mutable struct MCTSSolver <: AbstractMCTSSolver
+struct MCTSSolver <: AbstractMCTSSolver
     n_iterations::Int64
     max_time::Float64
     depth::Int64
@@ -69,6 +69,7 @@ mutable struct MCTSSolver <: AbstractMCTSSolver
     reuse_tree::Bool
     enable_tree_vis::Bool
     timer::Function
+    sizehint::Int64
 end
 
 """
@@ -86,12 +87,13 @@ function MCTSSolver(;n_iterations::Int64=100,
                      init_N=0,
                      reuse_tree::Bool=false,
                      enable_tree_vis::Bool=false,
-                     timer=() -> 1e-9 * time_ns())
+                     timer=() -> 1e-9 * time_ns(),
+                     sizehint::Int64=0)
     return MCTSSolver(n_iterations, max_time, depth, exploration_constant, rng, estimate_value, init_Q, init_N,
-                      reuse_tree, enable_tree_vis, timer)
+                      reuse_tree, enable_tree_vis, timer, sizehint)
 end
 
-mutable struct MCTSTree{S,A}
+struct MCTSTree{S,A}
     state_map::Dict{S,Int}
 
     # these vectors have one entry for each state node
@@ -108,6 +110,7 @@ mutable struct MCTSTree{S,A}
 
     function MCTSTree{S,A}(sz::Int=1000) where {S,A}
         sz = min(sz, 100_000)
+        # @info "sizehint is $sz"
 
         return new(Dict{S, Int}(),
 
@@ -166,7 +169,8 @@ end
 
 function MCTSPlanner(solver::MCTSSolver, mdp::Union{POMDP,MDP})
     # tree = Dict{statetype(mdp), StateNode{actiontype(mdp)}}()
-    tree = MCTSTree{statetype(mdp), actiontype(mdp)}(solver.n_iterations)
+    sizehint = solver.sizehint==0 ? solver.n_iterations : solver.sizehint
+    tree = MCTSTree{statetype(mdp), actiontype(mdp)}(sizehint)
     se = convert_estimator(solver.estimate_value, solver, mdp)
     return MCTSPlanner(solver, mdp, tree, se, solver.rng)
 end
@@ -380,6 +384,38 @@ end
 """
 Return the best action node based on the UCB score with exploration constant c
 """
+# function best_sanode_UCB(snode::StateNode, c::Float64)
+#     best_UCB = -Inf
+#     best = first(children(snode))
+#     sn = total_n(snode)
+#     for sanode in children(snode)
+
+# 	# if sn==0, log(sn) = -Inf. We want to avoid this.
+#         # in most cases, if n(sanode)==0, UCB will be Inf, which is desired,
+# 	# but if sn==1 as well, then we have 0/0, which is NaN
+#         if c == 0 || sn == 0 || (sn == 1 && n(sanode) == 0)
+#             UCB = q(sanode)
+#         else
+#             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
+#         end
+
+#         if isnan(UCB)
+#             @show sn
+#             @show n(sanode)
+#             @show q(sanode)
+#         end
+
+#         @assert !isnan(UCB)
+#         @assert !isequal(UCB, -Inf)
+
+#         if UCB > best_UCB
+#             best_UCB = UCB
+#             best = sanode
+#         end
+#     end
+#     return best
+# end
+
 function best_sanode_UCB(snode::StateNode, c::Float64)
     if c==0
         return argmax(q, children(snode))
@@ -392,19 +428,20 @@ function best_sanode_UCB(snode::StateNode, c::Float64)
         # if action was not used, use it. This also handles the case sn==0, 
         # since sn==0 is possible only when for all available actions n(sanode)==0
         if n(sanode) == 0
-            return sanode
+            best = sanode
+            break
         else
             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
         end
 		
-        # if isnan(UCB)
-        #     @show sn
-        #     @show n(sanode)
-        #     @show q(sanode)
-        # end
+        if isnan(UCB)
+            @show sn
+            @show n(sanode)
+            @show q(sanode)
+        end
 		
-        # @assert !isnan(UCB)
-        # @assert !isequal(UCB, -Inf)
+        @assert !isnan(UCB)
+        @assert !isequal(UCB, -Inf)
 		
         if UCB > best_UCB
             best_UCB = UCB

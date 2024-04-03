@@ -18,7 +18,7 @@ get_solver(depth) = MCTSSolver(
     depth=depth,
     exploration_constant=ec,
     enable_tree_vis=false,
-    # sizehint=100_000,
+    # sizehint=sizehint,
     rng=RNG
 )
 
