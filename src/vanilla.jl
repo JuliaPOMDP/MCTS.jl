@@ -325,7 +325,7 @@ end
 function insert_node!(tree::MCTSTree, planner::MCTSPlanner, s)
     push!(tree.s_labels, s)
     tree.state_map[s] = length(tree.s_labels)
-    push!(tree.child_ids, [])
+    push!(tree.child_ids, Int[])
     total_n = 0
     for a in actions(planner.mdp, s)
         n = init_N(planner.solver.init_N, planner.mdp, s, a)
