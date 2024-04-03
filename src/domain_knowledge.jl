@@ -41,7 +41,7 @@ SolvedRolloutEstimator
 
 This is within the policy when a RolloutEstimator is passed to an AbstractMCTSSolver
 """
-mutable struct SolvedRolloutEstimator{P<:Policy, RNG<:AbstractRNG}
+struct SolvedRolloutEstimator{P<:Policy, RNG<:AbstractRNG}
     policy::P
     rng::RNG
     max_depth::Int
