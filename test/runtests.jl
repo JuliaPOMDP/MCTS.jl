@@ -38,10 +38,11 @@ state = GWPos(1,1)
 
 @testset "basic" begin
     a = @inferred action(policy, state)
+    a, info = action_info(policy, state)
 
     tree = policy.tree
-    @test get_state_node(tree, state).id == 1
-    @test get_state_node(tree, state, policy).id == 1
+    @test tree.state_map[state] == 1
+    @test info[:tree].state_map[state] == 1
 
     clear_tree!(policy)
     @test isnothing(policy.tree)
@@ -162,3 +163,7 @@ end
 end
 
 @nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
+
+@testset "Discussion 514" begin
+    include("discussion_514.jl")
+end

@@ -9,7 +9,8 @@ makedocs(
         "vanilla.md",
         "dpw.md",
         "belief_mcts.md",
-    ]
+    ],
+    warnonly = [:missing_docs]
 )
 
 deploydocs(

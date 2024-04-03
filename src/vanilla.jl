@@ -130,14 +130,13 @@ struct StateNode{S,A}
     tree::MCTSTree{S,A}
     id::Int
 end
-StateNode(tree::MCTSTree{S}, s::S) where S = StateNode(tree, tree.state_map[s])
 
 """
     get_state_node(tree::MCTSTree, s)
 
-Return the StateNode in the tree corresponding to s.
+Return the StateNode in the tree corresponding to state s.
 """
-get_state_node(tree::MCTSTree, s) = StateNode(tree, s)
+get_state_node(tree::MCTSTree{S}, s::S) where S = StateNode(tree, tree.state_map[s])
 
 
 # accessors for state nodes
@@ -178,19 +177,6 @@ Delete existing decision tree.
 """
 function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} p.tree = nothing end
 
-"""
-    get_state_node(tree::MCTSTree, s, planner::MCTSPlanner)
-
-Return the StateNode in the tree corresponding to s. If there is no such node, add it using the planner.
-"""
-function get_state_node(tree::MCTSTree, s, planner::MCTSPlanner)
-    if haskey(tree.state_map, s)
-        return StateNode(tree, s)
-    else
-        return insert_node!(tree, planner, s)
-    end
-end
-
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
 POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, mdp)
@@ -201,8 +187,8 @@ end
 
 function POMDPTools.action_info(p::AbstractMCTSPlanner, s)
     tree = plan!(p, s)
-    best = best_sanode_Q(StateNode(tree, s))
-    return action(best), (tree=tree,)
+    best = best_sanode_Q(get_state_node(tree, s))
+    return action(best), (tree=tree, best_Q=q(best))
 end
 
 POMDPs.action(p::AbstractMCTSPlanner, s) = first(action_info(p, s))
@@ -233,7 +219,7 @@ function POMDPs.value(planner::MCTSPlanner{<:Union{POMDP,MDP}, S, A}, s::S, a::A
 end
 
 function POMDPs.value(tr::MCTSTree{S,A}, s::S, a::A) where {S,A}
-    for san in children(StateNode(tr, s)) # slow search through children
+    for san in children(get_state_node(tr, s)) # slow search through children
         if action(san) == a
             return q(san)
         end
