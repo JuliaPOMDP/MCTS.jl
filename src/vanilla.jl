@@ -57,18 +57,18 @@ Fields:
     timer::Function:
         Timekeeping method. Search iterations ended when `timer() - start_time ≥ max_time`.
 """
-struct MCTSSolver <: AbstractMCTSSolver
+struct MCTSSolver{EV, Q, N, T} <: AbstractMCTSSolver
     n_iterations::Int64
     max_time::Float64
     depth::Int64
     exploration_constant::Float64
     rng::AbstractRNG
-    estimate_value::Any
-    init_Q::Any
-    init_N::Any
+    estimate_value::EV
+    init_Q::Q
+    init_N::N
     reuse_tree::Bool
     enable_tree_vis::Bool
-    timer::Function
+    timer::T
     sizehint::Int64
 end
 
@@ -159,8 +159,8 @@ end
 @inline q(n::ActionNode) = n.tree.q[n.id]
 
 
-mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
-	solver::MCTSSolver # containts the solver parameters
+mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, SO<:MCTSSolver, RNG} <: AbstractMCTSPlanner{P}
+	solver::SO # containts the solver parameters
 	mdp::P # model
     tree::MCTSTree{S,A} # the search tree
     solved_estimate::SE
