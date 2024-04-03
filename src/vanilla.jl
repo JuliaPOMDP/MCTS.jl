@@ -162,7 +162,7 @@ end
 mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
 	solver::MCTSSolver # containts the solver parameters
 	mdp::P # model
-    tree::Union{Nothing,MCTSTree{S,A}} # the search tree
+    tree::MCTSTree{S,A} # the search tree
     solved_estimate::SE
     rng::RNG
 end
@@ -179,7 +179,9 @@ end
 """
 Delete existing decision tree.
 """
-function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} p.tree = nothing end
+function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} 
+    p.tree = MCTSTree{statetype(p.mdp), actiontype(p.mdp)}(length(p.tree.s_labels)) # TODO: There could be different sizehint for state nodes and action nodes
+end
 
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
@@ -201,7 +203,7 @@ POMDPs.action(p::AbstractMCTSPlanner, s) = first(action_info(p, s))
 Query the tree for a value estimate at state s. If the planner does not already have a tree, run the planner first.
 """
 function POMDPs.value(planner::MCTSPlanner, s)
-    if planner.tree === nothing
+    if isempty(planner.tree)
         plan!(planner, s)
     end
     return value(planner.tree, s)
@@ -216,7 +218,7 @@ function POMDPs.value(tr::MCTSTree, s)
 end
 
 function POMDPs.value(planner::MCTSPlanner{<:Union{POMDP,MDP}, S, A}, s::S, a::A) where {S,A}
-    if planner.tree === nothing
+    if isempty(planner.tree)
         plan!(planner, s)
     end
     return value(planner.tree, s, a)

@@ -45,7 +45,7 @@ state = GWPos(1,1)
     @test info[:tree].state_map[state] == 1
 
     clear_tree!(policy)
-    @test isnothing(policy.tree)
+    @test isempty(policy.tree)
 end
 
 @testset "value" begin
