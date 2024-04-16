@@ -18,10 +18,11 @@ end
 
 
 SUITE = BenchmarkGroup()
-SUITE["vanilla"] = BenchmarkGroup(["gridworld","vanilla"])
+SUITE["vanilla"] = BenchmarkGroup()
 include("vanilla_gridworld.jl")
 
 # Load or tune benchmarking parameters. You should only compare performance with the same parameters.
+# Hoever, its unlikely these benchmarks will have more than one evaluation per sample since they take quite long.
 paramspath = joinpath(dirname(@__FILE__), "params.json")
 if isfile(paramspath)
     loadparams!(SUITE, BenchmarkTools.load(paramspath)[1], :evals)
