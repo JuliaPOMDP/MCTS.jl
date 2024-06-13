@@ -1,0 +1,8 @@
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+MCTS = "e12ccd36-dcad-5f33-8774-9175229e7b33"
+POMDPModels = "355abbd5-f08e-5560-ac9e-8b5f2592a0ca"
+POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
+ProfileView = "c46f51b8-102a-5cf2-8d2c-8597cb0e0da7"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"

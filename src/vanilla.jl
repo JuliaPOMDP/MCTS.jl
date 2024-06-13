@@ -24,18 +24,19 @@ Fields
 - `enable_tree_vis::Bool=false`: If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.
 - `timer::Function=()->1e-9*time_ns()`: Timekeeping method. Search iterations ended when `timer() - start_time ≥ max_time`.
 """
-mutable struct MCTSSolver <: AbstractMCTSSolver
+struct MCTSSolver{EV, Q, N, T, RNG<:AbstractRNG} <: AbstractMCTSSolver
     n_iterations::Int64
     max_time::Float64
     depth::Int64
     exploration_constant::Float64
-    rng::AbstractRNG
-    estimate_value::Any
-    init_Q::Any
-    init_N::Any
+    rng::RNG
+    estimate_value::EV
+    init_Q::Q
+    init_N::N
     reuse_tree::Bool
     enable_tree_vis::Bool
-    timer::Function
+    timer::T
+    sizehint::Int64
 end
 
 """
@@ -53,12 +54,13 @@ function MCTSSolver(;n_iterations::Int64=100,
                      init_N=0,
                      reuse_tree::Bool=false,
                      enable_tree_vis::Bool=false,
-                     timer=() -> 1e-9 * time_ns())
+                     timer=() -> 1e-9 * time_ns(),
+                     sizehint::Int64=0)
     return MCTSSolver(n_iterations, max_time, depth, exploration_constant, rng, estimate_value, init_Q, init_N,
-                      reuse_tree, enable_tree_vis, timer)
+                      reuse_tree, enable_tree_vis, timer, sizehint)
 end
 
-mutable struct MCTSTree{S,A}
+struct MCTSTree{S,A}
     state_map::Dict{S,Int}
 
     # these vectors have one entry for each state node
@@ -75,6 +77,7 @@ mutable struct MCTSTree{S,A}
 
     function MCTSTree{S,A}(sz::Int=1000) where {S,A}
         sz = min(sz, 100_000)
+        # @info "sizehint is $sz"
 
         return new(Dict{S, Int}(),
 
@@ -123,17 +126,18 @@ end
 @inline q(n::ActionNode) = n.tree.q[n.id]
 
 
-mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPlanner{P}
-	solver::MCTSSolver # containts the solver parameters
+mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, SO<:MCTSSolver, RNG} <: AbstractMCTSPlanner{P}
+	solver::SO # containts the solver parameters
 	mdp::P # model
-    tree::Union{Nothing,MCTSTree{S,A}} # the search tree
+    tree::MCTSTree{S,A} # the search tree
     solved_estimate::SE
     rng::RNG
 end
 
 function MCTSPlanner(solver::MCTSSolver, mdp::Union{POMDP,MDP})
     # tree = Dict{statetype(mdp), StateNode{actiontype(mdp)}}()
-    tree = MCTSTree{statetype(mdp), actiontype(mdp)}(solver.n_iterations)
+    sizehint = solver.sizehint==0 ? solver.n_iterations : solver.sizehint
+    tree = MCTSTree{statetype(mdp), actiontype(mdp)}(sizehint)
     se = convert_estimator(solver.estimate_value, solver, mdp)
     return MCTSPlanner(solver, mdp, tree, se, solver.rng)
 end
@@ -142,7 +146,9 @@ end
 """
 Delete existing decision tree.
 """
-function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} p.tree = nothing end
+function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} 
+    p.tree = MCTSTree{statetype(p.mdp), actiontype(p.mdp)}(length(p.tree.s_labels)) # TODO: There could be different sizehint for state nodes and action nodes
+end
 
 
 # no computation is done in solve - the solver is just given the mdp model that it will work with
@@ -164,7 +170,7 @@ POMDPs.action(p::AbstractMCTSPlanner, s) = first(action_info(p, s))
 Query the tree for a value estimate at state s. If the planner does not already have a tree, run the planner first.
 """
 function POMDPs.value(planner::MCTSPlanner, s)
-    if planner.tree === nothing
+    if isempty(planner.tree)
         plan!(planner, s)
     end
     return value(planner.tree, s)
@@ -179,7 +185,7 @@ function POMDPs.value(tr::MCTSTree, s)
 end
 
 function POMDPs.value(planner::MCTSPlanner{<:Union{POMDP,MDP}, S, A}, s::S, a::A) where {S,A}
-    if planner.tree === nothing
+    if isempty(planner.tree)
         plan!(planner, s)
     end
     return value(planner.tree, s, a)
@@ -288,7 +294,7 @@ end
 function insert_node!(tree::MCTSTree, planner::MCTSPlanner, s)
     push!(tree.s_labels, s)
     tree.state_map[s] = length(tree.s_labels)
-    push!(tree.child_ids, [])
+    push!(tree.child_ids, Int[])
     total_n = 0
     for a in actions(planner.mdp, s)
         n = init_N(planner.solver.init_N, planner.mdp, s, a)
@@ -347,6 +353,38 @@ end
 """
 Return the best action node based on the UCB score with exploration constant c
 """
+# function best_sanode_UCB(snode::StateNode, c::Float64)
+#     best_UCB = -Inf
+#     best = first(children(snode))
+#     sn = total_n(snode)
+#     for sanode in children(snode)
+
+# 	# if sn==0, log(sn) = -Inf. We want to avoid this.
+#         # in most cases, if n(sanode)==0, UCB will be Inf, which is desired,
+# 	# but if sn==1 as well, then we have 0/0, which is NaN
+#         if c == 0 || sn == 0 || (sn == 1 && n(sanode) == 0)
+#             UCB = q(sanode)
+#         else
+#             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
+#         end
+
+#         if isnan(UCB)
+#             @show sn
+#             @show n(sanode)
+#             @show q(sanode)
+#         end
+
+#         @assert !isnan(UCB)
+#         @assert !isequal(UCB, -Inf)
+
+#         if UCB > best_UCB
+#             best_UCB = UCB
+#             best = sanode
+#         end
+#     end
+#     return best
+# end
+
 function best_sanode_UCB(snode::StateNode, c::Float64)
     if c==0
         return argmax(q, children(snode))
@@ -359,19 +397,20 @@ function best_sanode_UCB(snode::StateNode, c::Float64)
         # if action was not used, use it. This also handles the case sn==0, 
         # since sn==0 is possible only when for all available actions n(sanode)==0
         if n(sanode) == 0
-            return sanode
+            best = sanode
+            break
         else
             UCB = q(sanode) + c*sqrt(log(sn)/n(sanode))
         end
 		
-        # if isnan(UCB)
-        #     @show sn
-        #     @show n(sanode)
-        #     @show q(sanode)
-        # end
+        if isnan(UCB)
+            @show sn
+            @show n(sanode)
+            @show q(sanode)
+        end
 		
-        # @assert !isnan(UCB)
-        # @assert !isequal(UCB, -Inf)
+        @assert !isnan(UCB)
+        @assert !isequal(UCB, -Inf)
 		
         if UCB > best_UCB
             best_UCB = UCB
