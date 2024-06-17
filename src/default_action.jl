@@ -3,9 +3,18 @@ struct ExceptionRethrow end
 default_action(::ExceptionRethrow, mdp, s, ex) = rethrow(ex)
 
 function default_action(f::Function, mdp, s, ex)
-    a = f(s, ex)
-    warn_default(ex, a)
-    return a
+    try
+        a = f(mdp,s,ex)
+        warn_default(ex,a)
+        return a
+    catch e
+        @warn("""
+                Modify the function definition to take three arguments, i.e., f(mdp,s,ex) instead of f(s,ex). The older version will be deprecated soon.""",
+                :MCTS)
+        a = f(s, ex)
+        warn_default(ex, a)
+        return a
+    end
 end
 
 function default_action(p::POMDPs.Policy, mdp, s, ex)
