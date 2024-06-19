@@ -8,8 +8,7 @@ function default_action(f::Function, mdp, s, ex)
         warn_default(ex,a)
         return a
     catch e
-        @warn("""
-                Modify the function definition to take three arguments, i.e., f(mdp,s,ex) instead of f(s,ex). The older version will be deprecated soon.""",
+        Base.depwarn("""Modify the function definition to take three arguments, i.e., f(mdp,s,ex) instead of f(s,ex). The older version will be deprecated soon.""",
                 :MCTS)
         a = f(s, ex)
         warn_default(ex, a)
