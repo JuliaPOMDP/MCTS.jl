@@ -129,14 +129,18 @@ mutable struct MCTSPlanner{P<:Union{MDP,POMDP}, S, A, SE, RNG} <: AbstractMCTSPl
     tree::Union{Nothing,MCTSTree{S,A}} # the search tree
     solved_estimate::SE
     rng::RNG
+    callback::Function
 end
 
-function MCTSPlanner(solver::MCTSSolver, mdp::Union{POMDP,MDP})
+function MCTSPlanner(solver::MCTSSolver, mdp::Union{POMDP,MDP}, callback::Function = x -> x)
     # tree = Dict{statetype(mdp), StateNode{actiontype(mdp)}}()
     tree = MCTSTree{statetype(mdp), actiontype(mdp)}(solver.n_iterations)
     se = convert_estimator(solver.estimate_value, solver, mdp)
-    return MCTSPlanner(solver, mdp, tree, se, solver.rng)
+    return MCTSPlanner(solver, mdp, tree, se, solver.rng, callback)
 end
+
+# no computation is done in solve - the solver is just given the mdp model that it will work with
+POMDPs.solve(args...) = MCTSPlanner(args...)
 
 
 """
@@ -144,9 +148,6 @@ Delete existing decision tree.
 """
 function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} p.tree = nothing end
 
-
-# no computation is done in solve - the solver is just given the mdp model that it will work with
-POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, mdp)
 
 @POMDP_require POMDPs.action(policy::AbstractMCTSPlanner, state) begin
     @subreq simulate(policy, state, policy.solver.depth)
@@ -207,11 +208,11 @@ function build_tree(planner::AbstractMCTSPlanner, s)
     n_iterations = planner.solver.n_iterations
     depth = planner.solver.depth
 
+    tree = MCTSTree{statetype(planner.mdp), actiontype(planner.mdp)}(n_iterations)
     if planner.solver.reuse_tree
         tree = planner.tree
-    else
-        tree = MCTSTree{statetype(planner.mdp), actiontype(planner.mdp)}(n_iterations)
     end
+    planner.tree = tree
 
     sid = get(tree.state_map, s, 0)
     if sid == 0
@@ -225,6 +226,7 @@ function build_tree(planner::AbstractMCTSPlanner, s)
     # build the tree
     for n = 1:n_iterations
         simulate(planner, root, depth)
+        planner.callback(planner, n)
         if timer() - start_s >= planner.solver.max_time
             break
         end
