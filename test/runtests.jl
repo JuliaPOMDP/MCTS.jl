@@ -162,6 +162,23 @@ end
     @test_logs (:warn,) (:warn,) (:warn,) action(p, state)
 end
 
+# Example usage of callback function during runtime of tree search.
+# This simple example just prints out the current state of the search
+# tree, but could be used for more sophisticated visualizations or
+# diagnostics.
+@testset "callbacks" begin
+    mdp = SimpleGridWorld()
+    callback_call_count = 0
+    function callback(planner, iteration_index)
+        callback_call_count += 1
+        @info planner.tree
+    end
+    solver = MCTSSolver(n_iterations=10, callback=callback)
+    policy = solve(solver, mdp)
+    a = action(policy, GWPos(1, 1))
+    @test callback_call_count == 10
+end
+
 @nbinclude("../notebooks/Domain_Knowledge_Example.ipynb")
 
 @testset "Discussion 514" begin
