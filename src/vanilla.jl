@@ -151,7 +151,6 @@ function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} p.tree = nothing end
 # no computation is done in solve - the solver is just given the mdp model that it will work with
 POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, mdp)
 
-
 @POMDP_require POMDPs.action(policy::AbstractMCTSPlanner, state) begin
     @subreq simulate(policy, state, policy.solver.depth)
 end
