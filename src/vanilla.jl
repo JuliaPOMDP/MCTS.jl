@@ -141,14 +141,15 @@ function MCTSPlanner(solver::MCTSSolver, mdp::Union{POMDP,MDP})
     return MCTSPlanner(solver, mdp, tree, se, solver.rng)
 end
 
-# no computation is done in solve - the solver is just given the mdp model that it will work with
-POMDPs.solve(args...) = MCTSPlanner(args...)
-
 
 """
 Delete existing decision tree.
 """
 function clear_tree!(p::MCTSPlanner{S,A}) where {S,A} p.tree = nothing end
+
+
+# no computation is done in solve - the solver is just given the mdp model that it will work with
+POMDPs.solve(solver::MCTSSolver, mdp::Union{POMDP,MDP}) = MCTSPlanner(solver, mdp)
 
 
 @POMDP_require POMDPs.action(policy::AbstractMCTSPlanner, state) begin
