@@ -23,6 +23,7 @@ Fields
 - `reuse_tree::Bool=false`: If this is true, the tree information is re-used for calculating the next plan. Of course, clear_tree! can always be called to override this.
 - `enable_tree_vis::Bool=false`: If this is true, extra information needed for tree visualization will be recorded. If it is false, the tree cannot be visualized.
 - `timer::Function=()->1e-9*time_ns()`: Timekeeping method. Search iterations ended when `timer() - start_time ≥ max_time`.
+- `callback::Function=((planner, iter)->nothing)`: Function that is called after each iteration. Can be used for inspecting or visualizing the state of the search tree at runtime.
 """
 mutable struct MCTSSolver <: AbstractMCTSSolver
     n_iterations::Int64
@@ -36,6 +37,7 @@ mutable struct MCTSSolver <: AbstractMCTSSolver
     reuse_tree::Bool
     enable_tree_vis::Bool
     timer::Function
+    callback::Function
 end
 
 """
@@ -53,9 +55,10 @@ function MCTSSolver(;n_iterations::Int64=100,
                      init_N=0,
                      reuse_tree::Bool=false,
                      enable_tree_vis::Bool=false,
-                     timer=() -> 1e-9 * time_ns())
+                     timer=() -> 1e-9 * time_ns(),
+                     callback::Function = (x...)->nothing)
     return MCTSSolver(n_iterations, max_time, depth, exploration_constant, rng, estimate_value, init_Q, init_N,
-                      reuse_tree, enable_tree_vis, timer)
+                      reuse_tree, enable_tree_vis, timer, callback)
 end
 
 mutable struct MCTSTree{S,A}
@@ -207,11 +210,11 @@ function build_tree(planner::AbstractMCTSPlanner, s)
     n_iterations = planner.solver.n_iterations
     depth = planner.solver.depth
 
+    tree = MCTSTree{statetype(planner.mdp), actiontype(planner.mdp)}(n_iterations)
     if planner.solver.reuse_tree
         tree = planner.tree
-    else
-        tree = MCTSTree{statetype(planner.mdp), actiontype(planner.mdp)}(n_iterations)
     end
+    planner.tree = tree
 
     sid = get(tree.state_map, s, 0)
     if sid == 0
@@ -225,6 +228,7 @@ function build_tree(planner::AbstractMCTSPlanner, s)
     # build the tree
     for n = 1:n_iterations
         simulate(planner, root, depth)
+        planner.solver.callback(planner, n)
         if timer() - start_s >= planner.solver.max_time
             break
         end
